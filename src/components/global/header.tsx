@@ -2,18 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, BarChart3, Globe, Lock, Pin, Sparkles, Settings, LogOut, ChevronRight, FileText, Frame, FolderPlus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationModal from "./notification-modal";
 import { Plus } from "lucide-react";
 
-interface HeaderProps {
-  title?: string;
-  subtitle?: string;
-}
 
-export default function Header({ title = "Today's Travel Story", subtitle = "300+ new memories for you" }: HeaderProps) {
+export default function Header() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
@@ -61,21 +57,25 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
   }, [isNotificationOpen]);
 
   const sidebarItems = [
-    { icon: Home, label: "Home", hasArrow: false, route: "/home" },
-    { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard" },
-    { icon: Globe, label: "Public frames", hasArrow: true , func:()=> setIsFrameType("public") },
-    { icon: Lock, label: "Private frames", hasArrow: true , func:()=> setIsFrameType("private") },
-    { icon: Pin, label: "Personal Storage", hasArrow: true , func:()=> setIsFrameType("personal") },
-    { icon: Sparkles, label: "AI Content generator", hasArrow: false, route: "/AiGenerator" },
-    { icon: Settings, label: "Settings", hasArrow: false },
-    { icon: LogOut, label: "Logout", hasArrow: false, isDestructive: true },
+    { icon: Home, label: "Home", hasArrow: false, route: "/home", title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Globe, label: "Public frames", hasArrow: true , func:()=> setIsFrameType("public"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Lock, label: "Private frames", hasArrow: true , func:()=> setIsFrameType("private"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Pin, label: "Personal Storage", hasArrow: true , func:()=> setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Sparkles, label: "AI Content generator", hasArrow: false, route: "/AiGenerator", title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Settings, label: "Settings", hasArrow: false, title: "Create Post", subtitle: "Shared with everyone.", route: "/settings" },
+    { icon: LogOut, label: "Logout", hasArrow: false, isDestructive: true, title: "Create Post", subtitle: "Shared with everyone.", },
   ];
 
   const contentCards = [
-    { image: "/images/icons/one.png", title: "Create Post", subtitle: "Shared with everyone.", color: "bg-blue-100" },
-    { image: "/images/icons/two.png", title: "Create Frames", subtitle: "Shared with everyone.", color: "bg-purple-100" },
-    { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100" },
+    { image: "/images/icons/one.png", title: "Create Post", subtitle: "Shared with everyone.", color: "bg-blue-100" ,route: "/CreatedPost" },
+    { image: "/images/icons/two.png", title: "Create Frames", subtitle: "Shared with everyone.", color: "bg-purple-100" ,route: "/CreateFrames" },
+    { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100" ,route: "/CreatePersonalStorage" },
   ];
+  const handleCardClick = (route: string) => {
+  router.push(route);
+  setIsMenuOpen(false);
+};
  const frames = [
     {
       id: 1,
@@ -114,6 +114,14 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
     },
     
   ];
+  const pathname = usePathname();
+
+  const activeItem = sidebarItems.find(
+  (item) => item.route?.toLowerCase() === pathname.toLowerCase()
+);
+
+const headerTitle = activeItem?.label || "Dashboard";
+const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
   return (
     <>
       {/* Backdrop Overlay */}
@@ -141,8 +149,12 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
             </button>
 
             <div>
-              <h1 className="text-xl font-[800] text-gray-900">{title}</h1>
-              {subtitle && <p className="text-[14px] text-black">{subtitle}</p>}
+              <h1 className="text-xl font-[800] text-gray-900">
+  {headerTitle}
+</h1>
+<p className="text-[14px] text-black">
+  {headerSubtitle}
+</p>
             </div>
           </div>
 
@@ -267,8 +279,8 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
                     {contentCards.map((card, index) => {
                       return (
                         <button
-                          type="button"
-                          onClick={() => console.log("Card clicked:", card.title)}
+                         onClick={() => handleCardClick(card.route)}
+
                           key={index}
                           className="flex-1 bg-[#FAFAFA] rounded-full p-0 items-center shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-100"
                         >

@@ -92,7 +92,7 @@ export default function TravelStoryPage() {
 
       {/* ====== FRAMES GRID (only when Frames clicked) ====== */}
       {isFrames && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pl-20">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 pl-10">
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}

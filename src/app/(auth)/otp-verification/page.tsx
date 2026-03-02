@@ -1,13 +1,13 @@
- "use client";
- 
- import { useEffect, useRef, useState } from "react";
- import { Button } from "@/components/ui/button";
- import Link from "next/link";
- import Image from "next/image";
- import { useRouter, useSearchParams } from "next/navigation";
- 
- export default function OtpVerificationPage() {
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+
+export default function OtpVerificationPage() {
+  const [otp, setOtp] = useState<any[]>(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
@@ -44,7 +44,7 @@
 
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
@@ -94,10 +94,7 @@
         {/* Subtitle */}
         <p className="mb-8 text-sm text-gray-600 text-center">
           Enter the OTP sent to{" "}
-          <span className="font-semibold">
-            {email ?? "your email"}
-          </span>
-          .
+          <span className="font-semibold">{email ?? "your email"}</span>.
         </p>
 
         {/* Form */}
@@ -108,7 +105,9 @@
               {otp.map((value, index) => (
                 <input
                   key={index}
-                  ref={(el) => (inputsRef.current[index] = el)}
+                  ref={(el) => {
+                    inputsRef.current[index] = el;
+                  }}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
@@ -164,5 +163,3 @@
     </div>
   );
 }
-
-

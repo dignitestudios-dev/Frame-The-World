@@ -3,7 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import AnalyzingModal from "./AnalyzingModalProps";
 
-export default function Imagepage({ preview ,setIsImage ,handleRemoveImage ,handleImageUpload }: { preview: string | null }) {
+export default function Imagepage({
+  preview,
+  setIsImage,
+  handleRemoveImage,
+  handleImageUpload,
+}: {
+  preview: string | null;
+  setIsImage: React.Dispatch<React.SetStateAction<boolean>>;
+  handleRemoveImage: () => void;
+  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  // component code
+
   const [showModal, setShowModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 

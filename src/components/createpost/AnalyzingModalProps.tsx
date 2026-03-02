@@ -15,10 +15,13 @@ interface AnalyzingModalProps {
   onClose?: () => void;
   onAiEdit?: () => void;
   onChangeImage?: () => void;
+setIsImage: React.Dispatch<React.SetStateAction<boolean>>;
+
+  handleRemoveImage?: () => void;
 }
 
 const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
-    setIsImage,
+  setIsImage,
     handleRemoveImage,
   isOpen,
   onClose,
@@ -254,7 +257,7 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
         
         onDiscard={() => {
           setIsImage(false);
-          handleRemoveImage();
+           handleRemoveImage?.(); 
         }}
         onCancel={() => setIsDiscardModalOpen(false)}
       />

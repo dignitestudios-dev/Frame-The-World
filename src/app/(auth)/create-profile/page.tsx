@@ -9,8 +9,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 export default function CreateProfilePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email");
+  // const searchParams = useSearchParams();
+  // const email = searchParams.get("email");
+  const email = undefined; // or hardcode a placeholder
+
 
   const [bio, setBio] = useState("");
   const [companyName, setCompanyName] = useState("");

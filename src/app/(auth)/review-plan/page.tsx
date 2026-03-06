@@ -7,9 +7,12 @@ import Image from "next/image";
 
 export default function ReviewPlanPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") ?? "monthly";
-  const method = searchParams.get("method") ?? "google-pay";
+  // const searchParams = useSearchParams();
+  // const plan = searchParams.get("plan") ?? "monthly";
+    const plan = "monthly";
+
+  // const method = searchParams.get("method") ?? "google-pay";
+  const method = "google-pay";
 
   const isMonthly = plan === "monthly";
   const price = isMonthly ? "49.99" : "499.99";

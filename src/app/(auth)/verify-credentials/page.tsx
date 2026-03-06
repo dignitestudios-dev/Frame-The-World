@@ -9,15 +9,18 @@ import Link from "next/link";
 
 export default function VerifyCredentialsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email");
+  // const searchParams = useSearchParams();
+  // const email = searchParams.get("email");
+  const email = "email";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: send IATA/CLIA to backend for verification
 
-    const queryEmail = email ? `&email=${encodeURIComponent(email)}` : "";
-    router.push(`/otp-verification?mode=signup${queryEmail}`);
+    // const queryEmail = email ? `&email=${encodeURIComponent(email)}` : "";
+    // router.push(`/otp-verification?mode=signup${queryEmail}`);
+        router.push(`/otp-verification?mode=signup`);
+
   };
 
   return (

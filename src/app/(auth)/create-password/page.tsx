@@ -16,8 +16,8 @@ export default function CreatePasswordPage() {
   const [toastType, setToastType] = useState<"success" | "error">("error");
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email");
+  // const searchParams = useSearchParams();
+  // const email = searchParams.get("email");
 
   const showToast = (message: string, type: "success" | "error" = "error") => {
     setToastMessage(message);
@@ -40,8 +40,10 @@ export default function CreatePasswordPage() {
 
     // TODO: call API to actually reset password using token/email
 
-    const query = email ? `?email=${encodeURIComponent(email)}` : "";
-    router.push(`/password-updated${query}`);
+    // const query = email ? `?email=${encodeURIComponent(email)}` : "";
+    // router.push(`/password-updated${query}`);
+        router.push(`/password-updated`);
+
   };
 
   return (

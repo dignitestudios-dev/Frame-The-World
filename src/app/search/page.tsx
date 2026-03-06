@@ -17,7 +17,7 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header with Search title */}
-      <Header title="Search" subtitle="" />
+      <Header />
 
       {/* Main Content */}
       <div className="px-6 py-6">

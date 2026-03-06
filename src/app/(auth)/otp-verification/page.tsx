@@ -11,10 +11,10 @@
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   const router = useRouter();
-  const email = searchParams.get("email");
-  const mode = searchParams.get("mode") ?? "reset";
+  // const email = searchParams.get("email");
+  // const mode = searchParams.get("mode") ?? "reset";
 
   useEffect(() => {
     if (canResend) return;
@@ -51,21 +51,16 @@
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = otp.join("");
-    // TODO: verify `code` with backend
+ const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  const code = otp.join("");
+  // TODO: verify `code` with backend
 
-    if (code.length === otp.length) {
-      const query = email ? `?email=${encodeURIComponent(email)}` : "";
-
-      if (mode === "signup") {
-        router.push(`/create-profile${query}`);
-      } else {
-        router.push(`/create-password${query}`);
-      }
-    }
-  };
+  if (code.length === otp.length) {
+    // Hardcoded routes
+    router.push(`/create-profile`); // or `/create-password`
+  }
+};
 
   const handleResend = () => {
     // TODO: call API to resend OTP here
@@ -95,8 +90,8 @@
         <p className="mb-8 text-sm text-gray-600 text-center">
           Enter the OTP sent to{" "}
           <span className="font-semibold">
-            {email ?? "your email"}
-          </span>
+  your email
+</span>
           .
         </p>
 
@@ -105,19 +100,21 @@
           {/* OTP Input Boxes */}
           <div className="flex flex-col items-center gap-4">
             <div className="flex gap-3">
-              {otp.map((value, index) => (
-                <input
-                  key={index}
-                  ref={(el) => (inputsRef.current[index] = el)}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={value}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="h-14 w-14 rounded-2xl border border-gray-200 bg-gray-50 text-center text-xl font-semibold focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
-                />
-              ))}
+             {otp.map((value, index) => (
+  <input
+    key={index}
+    ref={(el) => {
+      inputsRef.current[index] = el;
+    }}
+    type="text"
+    inputMode="numeric"
+    maxLength={1}
+    value={value}
+    onChange={(e) => handleChange(index, e.target.value)}
+    onKeyDown={(e) => handleKeyDown(index, e)}
+    className="h-14 w-14 rounded-2xl border border-gray-200 bg-gray-50 text-center text-xl font-semibold focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+  />
+))}
             </div>
           </div>
 

@@ -1,17 +1,101 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { InfiniteMovingCards } from "../ui/infinite-moving-cards";
+import React from "react";
+import { cn } from "@/lib/utils";
 
 const InfiniteMovingCardsDemo = () => {
   return (
     <div className="h-160 rounded-md flex flex-col antialiased bg-white dark:bg-black dark:bg-grid-white/[0.05] items-center justify-center relative overflow-hidden">
-      <InfiniteMovingCards
-        items={testimonials}
-        direction="right"
-        speed="slow"
-        pauseOnHover={false}
-      />
+      <InfiniteMovingCardsTestimonials items={testimonials} direction="left" speed="slow" />
+    </div>
+  );
+};
+
+interface TestimonialItem {
+  quote: string;
+  name: string;
+  title: string;
+}
+
+interface InfiniteMovingCardsProps {
+  items: TestimonialItem[];
+  direction?: "left" | "right";
+  speed?: "slow" | "normal" | "fast";
+  pauseOnHover?: boolean;
+}
+
+const InfiniteMovingCardsTestimonials: React.FC<InfiniteMovingCardsProps> = ({
+  items,
+  direction = "left",
+  speed = "normal",
+  pauseOnHover = true,
+}) => {
+  const [duplicatedItems] = React.useState([...items, ...items, ...items]);
+
+  const getAnimationDuration = () => {
+    switch (speed) {
+      case "slow":
+        return "60s";
+      case "fast":
+        return "20s";
+      case "normal":
+      default:
+        return "40s";
+    }
+  };
+
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  return (
+    <div
+      ref={ref}
+      className="overflow-hidden w-full"
+      onMouseEnter={() => {
+        if (pauseOnHover && ref.current) {
+          ref.current.style.animationPlayState = "paused";
+        }
+      }}
+      onMouseLeave={() => {
+        if (pauseOnHover && ref.current) {
+          ref.current.style.animationPlayState = "running";
+        }
+      }}
+    >
+      <style jsx>{`
+        @keyframes scroll-left {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        @keyframes scroll-right {
+          0% {
+            transform: translateX(-50%);
+          }
+          100% {
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+      <div
+        className="flex gap-4 w-fit"
+        style={{
+          animation: `${direction === "left" ? "scroll-left" : "scroll-right"} ${getAnimationDuration()} linear infinite`,
+        }}
+      >
+        {duplicatedItems.map((item, idx) => (
+          <div
+            key={idx}
+            className="flex-shrink-0 max-w-sm p-6 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700"
+          >
+            <p className="text-sm text-slate-700 dark:text-slate-300 italic mb-4">"{item.quote}"</p>
+            <p className="font-semibold text-slate-900 dark:text-white">{item.name}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">{item.title}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

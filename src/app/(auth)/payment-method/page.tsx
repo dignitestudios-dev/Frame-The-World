@@ -6,8 +6,10 @@ import Image from "next/image";
 
 export default function PaymentMethodPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") ?? "monthly";
+  // const searchParams = useSearchParams();
+  // const plan = searchParams.get("plan") ?? "monthly";
+    const plan = "monthly";
+
 
   const handleSelect = (method: "google-pay" | "apple-pay") => {
     router.push(`/review-plan?plan=${plan}&method=${method}`);

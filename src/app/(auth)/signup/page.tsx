@@ -18,7 +18,7 @@ export default function SignupPage() {
     if (!trimmedEmail) return;
 
     // TODO: call signup API here
-    router.push(`/verify-credentials?email=${encodeURIComponent(trimmedEmail)}`);
+    router.push(`/verify-credentials`);
   };
 
   return (

@@ -6,8 +6,8 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
 export default function PasswordUpdatedPage() {
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email");
+  // const searchParams = useSearchParams();
+  const email = "undenifined";
 
   return (
     <div className="w-full max-w-[32em]">

@@ -2,48 +2,16 @@
 
 import Image from "next/image";
 import { Search, Bell, Bookmark, ArrowLeft, Hamburger, EllipsisVertical } from "lucide-react";
+import Header from "@/components/global/header";
 
 export default function TravelStoryPage() {
   return (
-    <div className="min-h-screen bg-[#f6f7fb] px-6 py-4">
+    <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
       {/* ================= HEADER ================= */}
-      <header className="flex items-center justify-between border-b pb-4 mb-8">
-        <div className="flex items-center gap-4">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
-            ≡
-          </div>
-
-          <div>
-            <h1 className="text-lg font-semibold">Today’s Travel Story</h1>
-            <p className="text-sm text-gray-500">300+ new memories for you</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/images/1.jpg"
-              alt="User"
-              width={36}
-              height={36}
-              className="rounded-full"
-            />
-            <span className="text-sm font-medium">Leo Denzin</span>
-            <span>🦊</span>
-          </div>
-
-          <button className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
-            <Search className="h-5 w-5 text-white" />
-          </button>
-
-          <button className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
-            <Bell className="h-5 w-5 text-white" />
-          </button>
-        </div>
-      </header>
+      <Header/>
 
       {/* ================= MAIN ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-10 max-w-[1500px] mx-auto">
+      <div className="grid grid-cols-1 mt-8 p-4 pt-0 lg:grid-cols-[420px_1fr] gap-10 max-w-[1500px] mx-auto">
         
         {/* ================= LEFT FEATURE ================= */}
      <div className="flex flex-col gap-4">

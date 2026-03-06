@@ -211,22 +211,45 @@ export default function Subscription() {
       </div>
 
       {/* --- CANCEL MODAL --- */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-start mb-6">
-              <div className="bg-red-50 p-4 rounded-full"><AlertCircle className="h-8 w-8 text-red-500" /></div>
-              <button onClick={() => setShowCancelModal(false)} className="text-gray-400 hover:text-gray-600"><X className="h-6 w-6" /></button>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Cancel Subscription?</h3>
-            <p className="text-gray-500 mb-8 leading-relaxed">Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing cycle.</p>
-            <div className="flex gap-4">
-              <button onClick={() => setShowCancelModal(false)} className="flex-1 py-3.5 rounded-full border border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-colors">Go Back</button>
-              <button onClick={handleConfirmCancel} className="flex-1 py-3.5 rounded-full bg-red-500 text-white font-bold shadow-lg shadow-red-200 hover:bg-red-600">Confirm Cancel</button>
-            </div>
-          </div>
+     {showCancelModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div className="bg-white rounded-[40px] w-full max-w-[400px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+      
+      {/* Header with Gradient and Question Mark Icon */}
+      <div className="h-32 bg-blue-100 flex items-center justify-center pt-4">
+        <div className="w-20 h-20 rounded-full bg-[#FFF9C4] border-2 border-[#FFEB3B] flex items-center justify-center shadow-sm">
+          <span className="text-[#FBC02D] text-4xl font-bold">?</span>
         </div>
-      )}
+      </div>
+
+      {/* Content Section */}
+      <div className="px-8 pb-10 text-center mt-2">
+        <h3 className="text-[28px] font-bold text-gray-900 mb-3 leading-tight">
+          Cancel Subscription
+        </h3>
+        <p className="text-gray-400 text-[15px] mb-4 leading-relaxed max-w-[260px] mx-auto">
+          Are you sure you want to cancel this subscription
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4">
+          <button 
+            onClick={handleConfirmCancel} 
+            className="flex-1 py-4 rounded-2xl bg-[#D4000026] text-[#EF5350] font-bold text-[15px] hover:bg-[#FFD1D1] transition-colors"
+          >
+            End Subscription
+          </button>
+          <button 
+            onClick={() => setShowCancelModal(false)} 
+            className="flex-1 py-4 rounded-2xl bg-gradient-to-b from-[#CBFE8B] to-[#81DE76] text-black font-bold text-[15px] shadow-md hover:brightness-105 transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

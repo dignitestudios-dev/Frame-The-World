@@ -1,23 +1,40 @@
 "use client";
 
+import React, { useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, Download, BarChart2, MoreVertical, Upload, ThumbsUp, Layers } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Download, 
+  BarChart2, 
+  MoreVertical, 
+  ThumbsUp, 
+  Layers 
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/global/header";
+import OptionsModal from "@/components/global/OptionsModal"; 
 
-export default function PostDetailsPage() {
+
+export default function ProfileDetails() {
   const router = useRouter();
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
       <Header />
+
+      {/* OPTIONS MODAL */}
+      <OptionsModal 
+        isOpen={isOptionsOpen} 
+        onClose={() => setIsOptionsOpen(false)} 
+      />
 
       <main className="max-w-[1400px] mx-auto py-8">
         
         {/* HERO IMAGE CONTAINER */}
         <div className="relative w-full h-[500px] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl">
           <Image
-            src="/images/1.jpg" // Replace with your actual mountain/mist image path
+            src="/images/1.jpg" 
             alt="Mountain Mist"
             fill
             priority
@@ -46,13 +63,18 @@ export default function PostDetailsPage() {
           </div>
 
           <div className="flex gap-2">
-            <button className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#6CACDF] to-[#0000FE] hover:bg-[#4a6cf7] flex items-center justify-center shadow-md transition-all">
+            <button className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#6CACDF] to-[#0000FE] hover:opacity-90 flex items-center justify-center shadow-md transition-all active:scale-95">
               <Download className="w-5 h-5 text-white" />
             </button>
-            <button className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#6CACDF] to-[#0000FE] hover:bg-[#4a6cf7] flex items-center justify-center shadow-md transition-all">
+            <button className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#6CACDF] to-[#0000FE] hover:opacity-90 flex items-center justify-center shadow-md transition-all active:scale-95">
               <BarChart2 className="w-5 h-5 text-white" />
             </button>
-            <button className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#6CACDF] to-[#0000FE] hover:bg-[#4a6cf7] flex items-center justify-center shadow-md transition-all">
+            
+            {/* TRIGGER BUTTON: Opens the Modal */}
+            <button 
+              onClick={() => setIsOptionsOpen(true)}
+              className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#6CACDF] to-[#0000FE] hover:opacity-90 flex items-center justify-center shadow-md transition-all active:scale-95"
+            >
               <MoreVertical className="w-5 h-5 text-white" />
             </button>
           </div>
@@ -112,7 +134,7 @@ export default function PostDetailsPage() {
                 preserveAspectRatio="none"
               >
                 <defs>
-                  <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#748ffc" stopOpacity="0.4" />
                     <stop offset="100%" stopColor="#748ffc" stopOpacity="0" />
                   </linearGradient>
@@ -120,7 +142,7 @@ export default function PostDetailsPage() {
                 {/* Visual Area Path */}
                 <path
                   d="M0,250 C150,220 200,100 300,150 C400,200 500,50 650,120 C800,190 900,100 1000,180 V300 H0 Z"
-                  fill="url(#gradient)"
+                  fill="url(#chartGradient)"
                 />
                 {/* Line Path */}
                 <path

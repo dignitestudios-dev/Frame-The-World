@@ -1,145 +1,110 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import React from "react";
+import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards';
 
-export const InfiniteMovingCards = ({
-  items,
-  direction = "left",
-  speed = "fast",
-  pauseOnHover = true,
-  className,
-  orientation = "horizontal",
-}: {
-  items: {
-    quote?: string;
-    name?: string;
-    title?: string;
-    image?: string;
-  }[];
-  direction?: "left" | "right" | "top" | "bottom";
-  speed?: "fast" | "normal" | "slow";
-  pauseOnHover?: boolean;
-  className?: string;
-  orientation?: "horizontal" | "vertical";
-}) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const scrollerRef = React.useRef<HTMLUListElement>(null);
+export default function MaintenancePage() {
+  // Mapping your local images from public/images/
+  const columnOne = [
+    { image: "/images/1.jpg", name: "Design 01" },
+    { image: "/images/2.jpg", name: "Design 02" },
+    { image: "/images/3.jpg", name: "Design 03" },
+    { image: "/images/4.jpg", name: "Design 04" },
+  ];
 
-  useEffect(() => {
-    addAnimation();
-  }, []);
-  const [start, setStart] = useState(false);
-  function addAnimation() {
-    if (containerRef.current && scrollerRef.current) {
-      const scrollerContent = Array.from(scrollerRef.current.children);
-
-      scrollerContent.forEach((item) => {
-        const duplicatedItem = item.cloneNode(true);
-        if (scrollerRef.current) {
-          scrollerRef.current.appendChild(duplicatedItem);
-        }
-      });
-
-      getDirection();
-      getSpeed();
-      setStart(true);
-    }
-  }
-  const getDirection = () => {
-    if (containerRef.current) {
-      if (direction === "left" || direction === "top") {
-        containerRef.current.style.setProperty(
-          "--animation-direction",
-          "forwards",
-        );
-      } else {
-        containerRef.current.style.setProperty(
-          "--animation-direction",
-          "reverse",
-        );
-      }
-    }
-  };
-  const getSpeed = () => {
-    if (containerRef.current) {
-      if (speed === "fast") {
-        containerRef.current.style.setProperty("--animation-duration", "20s");
-      } else if (speed === "normal") {
-        containerRef.current.style.setProperty("--animation-duration", "40s");
-      } else {
-        containerRef.current.style.setProperty("--animation-duration", "200s");
-      }
-    }
-  };
-
-  const isVertical = orientation === "vertical";
+  const columnTwo = [
+    { image: "/images/3.jpg", name: "Design 03" },
+    { image: "/images/4.jpg", name: "Design 04" },
+    { image: "/images/1.jpg", name: "Design 01" },
+    { image: "/images/2.jpg", name: "Design 02" },
+  ];
 
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "scroller relative z-20 overflow-hidden",
-        isVertical
-          ? "h-full w-full"
-          : "max-w-7xl [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
-        className,
-      )}
-    >
-      <ul
-        ref={scrollerRef}
-        className={cn(
-          isVertical
-            ? "flex flex-col h-max min-h-full shrink-0 flex-nowrap gap-3"
-            : "flex w-max min-w-full shrink-0 flex-nowrap gap-4 py-4",
-          start && (isVertical ? "animate-scroll-vertical" : "animate-scroll"),
-          pauseOnHover && "hover:[animation-play-state:paused]",
-        )}
-      >
-        {items.map((item, idx) => (
-          <li
-            key={idx}
-            className={cn(
-              "relative shrink-0",
-              isVertical
-                ? "h-[400px] w-full"
-                : "w-[350px] max-w-full rounded-2xl border border-b-0 border-zinc-200 bg-[linear-gradient(180deg,#fafafa,#f5f5f5)] px-8 py-6 md:w-[450px] dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#27272a,#18181b)]",
-            )}
-          >
-            {item.image ? (
-              <div className="relative h-full w-full rounded-lg overflow-hidden">
-                <Image
-                  src={item.image}
-                  alt={item.name || `Image ${idx}`}
-                  fill
-                  className="object-cover grayscale"
-                />
-              </div>
-            ) : (
-              <blockquote>
-                <div
-                  aria-hidden="true"
-                  className="user-select-none pointer-events-none absolute -top-0.5 -left-0.5 -z-1 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"
-                ></div>
-                <span className="relative z-20 text-sm leading-[1.6] font-normal text-neutral-800 dark:text-gray-100">
-                  {item.quote}
-                </span>
-                <div className="relative z-20 mt-6 flex flex-row items-center">
-                  <span className="flex flex-col gap-1">
-                    <span className="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400">
-                      {item.name}
-                    </span>
-                    <span className="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400">
-                      {item.title}
-                    </span>
-                  </span>
-                </div>
-              </blockquote>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <main className="relative h-screen w-full overflow-hidden bg-white">
+      {/* Required CSS for your InfiniteMovingCards vertical logic */}
+      <style jsx global>{`
+        @keyframes scroll-vertical {
+          to {
+            transform: translateY(calc(-50% - 0.75rem));
+          }
+        }
+        .animate-scroll-vertical {
+          animation: scroll-vertical var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
+        }
+      `}</style>
+
+      {/* Background Layer: 3-Column Pinterest Flow */}
+      <div className="absolute inset-0 z-0 flex justify-center gap-6 px-4 opacity-40">
+        <InfiniteMovingCards
+          items={columnOne}
+          direction="top"
+          speed="slow"
+          orientation="vertical"
+          className="w-full md:w-1/3"
+        />
+        <InfiniteMovingCards
+          items={columnTwo}
+          direction="bottom"
+          speed="normal"
+          orientation="vertical"
+          className="hidden md:block md:w-1/3"
+        />
+        <InfiniteMovingCards
+          items={columnOne}
+          direction="top"
+          speed="fast"
+          orientation="vertical"
+          className="hidden lg:block lg:w-1/3"
+        />
+      </div>
+
+      {/* Content Layer: Glassmorphism effect */}
+      <div className="relative z-10 flex h-full flex-col items-center justify-center bg-white/50 backdrop-blur-2xl px-6 text-center">
+        <div className="max-w-4xl">
+          {/* Minimalist Logo/Icon */}
+          <div className="mx-auto mb-10 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-slate-950 shadow-2xl">
+            <div className="h-6 w-1 bg-white mx-0.5 animate-bounce" />
+            <div className="h-8 w-1 bg-white mx-0.5 animate-bounce [animation-delay:0.2s]" />
+            <div className="h-6 w-1 bg-white mx-0.5 animate-bounce [animation-delay:0.4s]" />
+          </div>
+
+          <h1 className="mb-6 text-5xl font-black tracking-tighter text-slate-950 md:text-8xl">
+            Currently Under <br />
+            <span className="text-rose-600">Maintenance</span>
+          </h1>
+
+          <div className="space-y-4">
+            <p className="text-xl font-semibold text-slate-700 md:text-3xl">
+              We’re behind the scenes fine-tuning things.
+            </p>
+            <p className="text-lg text-slate-500 md:text-xl">
+              Please check back soon — we’re launching something beautiful.
+            </p>
+          </div>
+
+          <div className="mt-12 flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+            <button className="w-full sm:w-auto rounded-full bg-slate-950 px-10 py-5 text-lg font-bold text-white transition-transform hover:scale-105 active:scale-95 shadow-2xl">
+              Notify Me
+            </button>
+            <div className="flex items-center gap-3 px-6 py-4 rounded-full border border-slate-200 bg-white/80">
+              <span className="flex h-3 w-3">
+                <span className="absolute inline-flex h-3 w-3 animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-rose-500"></span>
+              </span>
+              <span className="text-sm font-bold uppercase tracking-widest text-slate-600">
+                Live Updates
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Subtle Bottom Text */}
+        <footer className="absolute bottom-12 w-full text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">
+            Coming Soon 2026
+          </p>
+        </footer>
+      </div>
+    </main>
   );
-};
+}

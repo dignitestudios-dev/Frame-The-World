@@ -68,7 +68,7 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
   ];
 
   const contentCards = [
-    { image: "/images/icons/one.png", title: "Create Post", subtitle: "Shared with everyone.", color: "bg-blue-100" ,route: "/CreatedPost" },
+    { image: "/images/icons/one.png", title: "Create Post", subtitle: "Shared with everyone.", color: "bg-blue-100" ,route: "/Createdpost" },
     { image: "/images/icons/two.png", title: "Create Frames", subtitle: "Shared with everyone.", color: "bg-purple-100" ,route: "/CreateFrames" },
     { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100" ,route: "/CreatePersonalStorage" },
   ];
@@ -167,7 +167,9 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
                 alt="User"
                 width={60}
                 height={60}
-                className="rounded-full"
+                className="rounded-full cursor-pointer"
+                                          onClick={() => router.push("/Profile")}
+
               />
               <span className="font-medium text-sm text-gray-900">Leo Denzin</span>
               {/* Level Badge */}
@@ -322,7 +324,7 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
               </div>
 
                {isFrameType === "public" ? (
-               <div className=" flex flex-col justify-center items-center gap-4">
+               <div className=" mb-34 flex flex-col justify-center items-center gap-4">
                   <div className="flex justify-center items-center gap-6">
 
                   {frames.map((frame) => (
@@ -360,7 +362,7 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
                 </div>
                 
               )  : isFrameType === "private" ? (
-                <div className=" flex flex-col justify-center items-center gap-4">
+                <div className="mb-34 flex flex-col justify-center items-center gap-4">
                   <div className="flex justify-center items-center gap-6">
 
                   {frames.map((frame) => (
@@ -385,11 +387,16 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
               </div>
                   ))}
                   </div>
-                  <button className="w-[90px] text-[16px] font-[500] text-center bg-[#F5F5F5]  py-1 rounded-full text-black">See All</button>
+                  <button  onClick={() => {
+    router.push("/Profile");
+    setIsMenuOpen(false);
+    setIsFrameType(null);
+  }}
+   className="w-[90px] text-[16px] font-[500] text-center bg-[#F5F5F5]  py-1 rounded-full text-black">See All</button>
                 </div>
 
                ): isFrameType === "personal" ? (
-                <div className=" flex flex-col justify-center items-center gap-4">
+                <div className="mb-34 flex flex-col justify-center items-center gap-4">
                   <div className="flex justify-center items-center gap-6">
 
                     {frames.map((frame) => (
@@ -435,7 +442,12 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
               </div>
             ))}
                   </div>
-                  <button  className="w-[90px] text-[16px] font-[500] text-center bg-[#F5F5F5]  py-1 rounded-full text-black">See All</button>
+                  <button  onClick={() => {
+    router.push("/Profile");
+    setIsMenuOpen(false);
+    setIsFrameType(null);
+  }}
+    className="w-[90px] text-[16px] font-[500] text-center bg-[#F5F5F5]  py-1 rounded-full text-black">See All</button>
                 </div>
                ): (
                 <div className="w-full flex justify-center items-center  bottom-0 ">

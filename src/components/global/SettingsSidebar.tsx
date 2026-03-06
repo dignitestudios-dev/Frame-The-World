@@ -14,7 +14,7 @@ const menuItems = [
 
 export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   return (
-    <div className="w-90 space-y-3 bg-gray-200/50 rounded-3xl p-6">
+    <div className="w-90 h-[785px] space-y-3 bg-gray-200/50 rounded-3xl p-6">
       {menuItems.map((item) => (
         <div
           key={item}

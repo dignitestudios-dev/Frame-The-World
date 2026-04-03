@@ -26,7 +26,7 @@ export default function AuthLayout({
           <InfiniteMovingCards
             items={allImages}
             direction="bottom"
-            speed="slow"
+            speed="super-slow"
             pauseOnHover={false}
             orientation="vertical"
             className="h-full w-full"
@@ -37,7 +37,7 @@ export default function AuthLayout({
           <InfiniteMovingCards
             items={[...allImages.slice(1), ...allImages.slice(0, 1)]}
             direction="top"
-            speed="slow"
+            speed="super-slow"
             pauseOnHover={false}
             orientation="vertical"
             className="h-full w-full"
@@ -48,7 +48,7 @@ export default function AuthLayout({
           <InfiniteMovingCards
             items={[...allImages.slice(2), ...allImages.slice(0, 2)]}
             direction="bottom"
-            speed="slow"
+            speed="super-slow"
             pauseOnHover={false}
             orientation="vertical"
             className="h-full w-full"
@@ -59,7 +59,7 @@ export default function AuthLayout({
           <InfiniteMovingCards
             items={allImages}
             direction="top"
-            speed="slow"
+            speed="super-slow"
             pauseOnHover={false}
             orientation="vertical"
             className="h-full w-full"
@@ -70,7 +70,7 @@ export default function AuthLayout({
           <InfiniteMovingCards
             items={[...allImages.slice(1), ...allImages.slice(0, 1)]}
             direction="bottom"
-            speed="slow"
+            speed="super-slow"
             pauseOnHover={false}
             orientation="vertical"
             className="h-full w-full"
@@ -81,7 +81,7 @@ export default function AuthLayout({
           <InfiniteMovingCards
             items={[...allImages.slice(2), ...allImages.slice(0, 2)]}
             direction="top"
-            speed="slow"
+            speed="super-slow"
             pauseOnHover={false}
             orientation="vertical"
             className="h-full w-full"

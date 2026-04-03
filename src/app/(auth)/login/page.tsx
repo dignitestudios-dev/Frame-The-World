@@ -6,21 +6,40 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, LoginFormData } from "@/schemas/Auth";
+import { useAuthStore } from "@/store/authStore";
+import { useMutation } from "@tanstack/react-query";
+import { loginApi } from "@/services/authApi";
 
 export default function LoginPage() {
   const router = useRouter();
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const login = useAuthStore((state) => state.login);
+  // React Hook Form setup with Zod
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // TODO: add real authentication here
+  const onSubmit = (data: LoginFormData) => {
+    console.log("Login data:", data);
+    // TODO: call your login API here
     setToastMessage("Login successful");
     setToastOpen(true);
 
     router.push("/home");
+    return useMutation({
+      mutationFn: loginApi,
+      onSuccess: (data) => {
+        login(data); // save user + token in zustand
+      },
+    });
   };
 
   return (
@@ -33,20 +52,26 @@ export default function LoginPage() {
       />
       <div className="rounded-2xl bg-white p-[4em] shadow-xl">
         {/* Title */}
-        <h1 className="mb-2 text-3xl font-bold text-gray-900 text-center text-shadow">Login</h1>
+        <h1 className="mb-2 text-3xl font-bold text-gray-900 text-center text-shadow">
+          Login
+        </h1>
 
         {/* Subtitle */}
         <p className="mb-8 text-sm text-gray-600 text-center">
-          Enter your details to begin your journey. <br></br>Only{" "}
-          <span className="inline-flex items-center gap-1">
-            <Check className="h-4 w-4 text-green-500" />
-            verified
-          </span>{" "}
-          travel professionals can contribute.
+          Enter your details to begin your journey. <br></br>{" "}
+          <span className="flex  items-baseline justify-center">
+            Only
+            <img
+              src={"/images/check-mark.png"}
+              alt="check-mark-icon"
+              className="ml-1 w-3.25 h-2.75 mr-1"
+            />
+            verified travel professionals can contribute.
+          </span>
         </p>
 
         {/* Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {/* Email */}
           <div>
             <Input
@@ -54,7 +79,13 @@ export default function LoginPage() {
               type="email"
               placeholder="Email"
               className="w-full"
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           {/* Password */}
@@ -64,14 +95,20 @@ export default function LoginPage() {
               type="password"
               placeholder="Password"
               className="w-full"
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {/* Forgot Password */}
           <div className="flex justify-end -mt-1 mb-2">
             <Link
               href="/forget-password"
-              className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+              className="text-sm gradient-text font-medium hover:text-blue-700 hover:underline"
             >
               Forgot Password?
             </Link>
@@ -80,39 +117,47 @@ export default function LoginPage() {
           {/* Login Button */}
           <Button
             type="submit"
-            className="w-full mt-3 bg-gradient-to-r rounded-full from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 h-12  font-medium  mb-4 shadow-lg shadow-blue-400"
+            className="w-full mt-3 gradient-bg text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4"
           >
             Login
           </Button>
 
-
           {/* Terms and Conditions - NO CHECKBOX */}
-          <div className="text-sm text-gray-600 mb-6 mt-6 text-center">
+          <div className="text-sm font-medium text-[#000000] mb-6 mt-6 text-center">
             I accept the{" "}
-            <Link href="#" className="text-blue-600 hover:underline">
+            <Link
+              href="#"
+              className="gradient-text  bg-clip-text text-transparent font-bold hover:underline"
+            >
               Terms & conditions
             </Link>{" "}
             and{" "}
-            <Link href="#" className="text-blue-600 hover:underline">
+            <Link
+              href="#"
+              className="gradient-text bg-clip-text text-transparent hover:underline"
+            >
               Privacy policy
             </Link>
           </div>
 
           {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
+          <div className="relative my-4">
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">Or Continue with</span>
+              <span className="bg-white font-medium text-[15px] px-2 text-[#000000]">
+                Or Continue with
+              </span>
             </div>
           </div>
-
           {/* Social Login */}
+          <img
+            src="/images/border-image.png"
+            className="w-48 mx-auto"
+            alt="border-image.png"
+          />
           <div className="flex gap-4 justify-center">
             <button
               type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm hover:bg-gray-50 transition-colors"
+              className="flex  h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm hover:bg-gray-50 transition-colors"
               aria-label="Login with Google"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24">
@@ -148,7 +193,10 @@ export default function LoginPage() {
           {/* Sign Up Link */}
           <div className="mt-6 text-center text-sm text-gray-600">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-blue-600 hover:underline font-medium">
+            <Link
+              href="/signup"
+              className="gradient-text hover:underline font-medium"
+            >
               Create now
             </Link>
           </div>

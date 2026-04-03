@@ -1,23 +1,27 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { SignupFormData, signupSchema } from "@/schemas/Auth";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmedEmail = email.trim();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+  });
 
-    if (!trimmedEmail) return;
-
-    // TODO: call signup API here
+  const onSubmit = (data: SignupFormData) => {
+    console.log("Form Submitted:", data);
+    // TODO: Call signup API here
     router.push(`/verify-credentials`);
   };
 
@@ -29,23 +33,22 @@ export default function SignupPage() {
           Signup
         </h1>
 
-        {/* Subtitle */}
-        <p className="mb-2 text-sm text-gray-600 text-center">
-          Enter your details to begin your journey.
-        </p>
-
         {/* Contribution Note */}
         <p className="mb-8 text-sm text-gray-600 text-center">
-          Only{" "}
-          <span className="inline-flex items-center gap-1">
-            <Check className="h-4 w-4 text-green-500" />
-            <span className="text-green-600">verified</span>
-          </span>{" "}
-          travel professionals can contribute.
+          Enter your details to begin your journey. <br />
+          <span className="flex items-baseline justify-center">
+            Only
+            <img
+              src={"/images/check-mark.png"}
+              alt="check-mark-icon"
+              className="ml-1 w-3.25 h-2.75 mr-1"
+            />
+            verified travel professionals can contribute.
+          </span>
         </p>
 
         {/* Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {/* Name */}
           <div>
             <Input
@@ -53,7 +56,11 @@ export default function SignupPage() {
               type="text"
               placeholder="Name"
               className="w-full"
+              {...register("name")}
             />
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -63,9 +70,11 @@ export default function SignupPage() {
               type="email"
               placeholder="Email"
               className="w-full"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -75,47 +84,61 @@ export default function SignupPage() {
               type="password"
               placeholder="Password"
               className="w-full"
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {/* Signup Button */}
           <Button
             type="submit"
-            className="w-full mt-3 bg-gradient-to-r rounded-full from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4 shadow-lg shadow-blue-400"
+            className="w-full mt-3 gradient-bg text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4 shadow-lg shadow-blue-400"
           >
             Signup
           </Button>
 
           {/* Terms and Conditions */}
-          <div className="text-sm text-gray-600 mb-6 mt-6 text-center">
+          <div className="text-sm font-medium text-[#000000] mb-6 mt-6 text-center">
             I accept the{" "}
-            <Link href="#" className="text-blue-600 hover:underline">
+            <Link
+              href="#"
+              className="gradient-text bg-clip-text text-transparent font-bold hover:underline"
+            >
               Terms & conditions
             </Link>{" "}
             and{" "}
-            <Link href="#" className="text-blue-600 hover:underline">
+            <Link
+              href="#"
+              className="gradient-text bg-clip-text text-transparent hover:underline"
+            >
               Privacy policy
             </Link>
           </div>
 
           {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
+          <div className="relative my-4">
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">
+              <span className="bg-white font-medium text-[15px] px-2 text-[#000000]">
                 Or Register with
               </span>
             </div>
           </div>
+          <img
+            src="/images/border-image.png"
+            className="w-48 mx-auto"
+            alt="border-image.png"
+          />
 
           {/* Social Login */}
-          <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center">
             <button
               type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm hover:bg-gray-50 transition-colors"
-              aria-label="Register with Google"
+              className="flex  h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm hover:bg-gray-50 transition-colors"
+              aria-label="Login with Google"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24">
                 <path
@@ -139,7 +162,7 @@ export default function SignupPage() {
             <button
               type="button"
               className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm hover:bg-gray-50 transition-colors"
-              aria-label="Register with Apple"
+              aria-label="Login with Apple"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
@@ -152,7 +175,7 @@ export default function SignupPage() {
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-blue-600 hover:underline font-medium"
+              className="gradient-text hover:underline font-medium"
             >
               Log In
             </Link>

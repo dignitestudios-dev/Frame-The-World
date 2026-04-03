@@ -64,7 +64,7 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
     { icon: Pin, label: "Personal Storage", hasArrow: true , func:()=> setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Sparkles, label: "AI Content generator", hasArrow: false, route: "/AiGenerator", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Settings, label: "Settings", hasArrow: false, title: "Create Post", subtitle: "Shared with everyone.", route: "/settings" },
-    { icon: LogOut, label: "Logout", hasArrow: false, isDestructive: true, title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: LogOut, label: "Logout", hasArrow: false, isDestructive: true, title: "Create Post", subtitle: "Shared with everyone.",route: "/login" },
   ];
 
   const contentCards = [

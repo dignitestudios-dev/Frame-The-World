@@ -8,7 +8,7 @@ interface InfiniteMovingCardsProps {
     name: string;
   }>;
   direction?: "top" | "bottom";
-  speed?: "slow" | "normal" | "fast";
+  speed?: "super-slow"|"slow" | "normal" | "fast";
   pauseOnHover?: boolean;
   orientation?: "vertical" | "horizontal";
   className?: string;
@@ -30,6 +30,8 @@ export function InfiniteMovingCards({
 
   const getAnimationDuration = () => {
     switch (speed) {
+        case "super-slow":
+      return "120s"; // double the current slow
       case "slow":
         return "60s";
       case "fast":

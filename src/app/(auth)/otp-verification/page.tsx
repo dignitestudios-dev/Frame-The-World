@@ -141,7 +141,7 @@
           {/* Verify Button */}
           <Button
             type="submit"
-            className="w-full mt-3 bg-gradient-to-r rounded-full from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4 shadow-lg shadow-blue-400"
+            className="w-full mt-3 gradient-bg text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4 shadow-lg shadow-blue-400"
           >
             Verify &amp; Continue
           </Button>

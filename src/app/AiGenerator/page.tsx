@@ -140,7 +140,7 @@ const CaptionGenerator: React.FC = () => {
               className={`w-full py-4 rounded-full font-medium text-base transition-all ${
                 selectedFiles.length === 0
                   ? "bg-[#6CACDF] text-white cursor-not-allowed"
-                  : "bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white py-4 rounded-full font-medium text-base shadow-md hover:shadow-xl transition-all"
+                  : "bg-linear-to-b from-[#6CACDF] to-[#0000FE] text-white py-4 rounded-full font-medium text-base shadow-md hover:shadow-xl transition-all"
               }`}
             >
               Generate
@@ -148,7 +148,7 @@ const CaptionGenerator: React.FC = () => {
           </div>
 
           {/* Right Side - Result Placeholder */}
-          <div className="bg-blue-50/80 rounded-3xl flex items-center justify-center min-h-[500px]">
+          <div className="bg-blue-50/80 rounded-3xl flex items-center justify-center min-h-125">
             {!generated ? (
               // 🔹 Placeholder (Before Generate)
               <div className="text-center">
@@ -164,7 +164,7 @@ const CaptionGenerator: React.FC = () => {
               </div>
             ) : (
               // 🔹 Generated Content
-              <div className="relative rounded-3xl p-8 min-h-[500px] w-full bg-gradient-to-b from-[#EEF4FF] to-[#E3ECFF]">
+              <div className="relative rounded-3xl p-8 min-h-125 w-full bg-linear-to-b from-[#EEF4FF] to-[#E3ECFF]">
                 <div className="space-y-6">
                   <p className="text-gray-700 text-base leading-relaxed">
                     Lost in the calm whispers of the river, where every wave tells a story.
@@ -172,7 +172,7 @@ const CaptionGenerator: React.FC = () => {
                 </div>
 
                 <div className="absolute bottom-6 right-6 flex items-center gap-4">
-                  <button className="w-10 h-10 rounded-xl bg-gradient-to-b from-[#6CACDF] to-[#0000FE] flex items-center justify-center shadow-md hover:scale-105 transition">
+                  <button className="w-10 h-10 rounded-xl bg-linear-to-b from-[#6CACDF] to-[#0000FE] flex items-center justify-center shadow-md hover:scale-105 transition">
                     <Copy size={18} className="text-white" />
                   </button>
 

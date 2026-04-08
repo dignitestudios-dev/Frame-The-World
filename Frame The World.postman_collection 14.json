@@ -1,0 +1,1716 @@
+{
+  "info": {
+    "_postman_id": "5eebbde7-3586-4bdc-bc7e-084b42f989c5",
+    "name": "Frame The World",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53485571",
+    "_collection_link": "https://go.postman.co/collection/53485571-5eebbde7-3586-4bdc-bc7e-084b42f989c5?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Post",
+      "item": [
+        {
+          "name": "Get All Posts (Search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts/all",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                "all"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "countries",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "countries",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "states",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "states",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "longitude",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "latitude",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "categories",
+                  "value": "asdasd",
+                  "disabled": true
+                },
+                {
+                  "key": "categories",
+                  "value": "69cb6fa8b921de3fdd51368f",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Own Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts/own?limit=10&page",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                "own"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "page",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Feed Post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts?page=1&limit=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Featured Post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts/featured?page=1&limit=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                "featured"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upvote Post",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts/:postId/upvote",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                ":postId",
+                "upvote"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "69cb9ecf3dc21143fcb7f467"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts/:postId/download",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                ":postId",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "69d33a3f30f0ca02386e0b27"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "media",
+                  "type": "file",
+                  "uuid": "391077bf-6923-4e91-8b11-5f1941a5eb9f",
+                  "src": "/C:/Users/Abdullah-Soomro/Downloads/222.png"
+                },
+                {
+                  "key": "caption",
+                  "value": "{{$randomCity}}",
+                  "type": "text",
+                  "uuid": "bea7fb95-246f-40ab-8e28-f883ef144136"
+                },
+                {
+                  "key": "categories[0]",
+                  "value": "69cb6fa6b921de3fdd513689",
+                  "type": "text",
+                  "uuid": "705bbc54-bbb9-4e33-bf71-1ab9f965d261"
+                },
+                {
+                  "key": "categories[1]",
+                  "value": "69cb6fa7b921de3fdd51368c",
+                  "type": "text",
+                  "uuid": "c3e0b4c0-6a97-4a53-b081-1ce2272a03f2"
+                },
+                {
+                  "key": "categories[2]",
+                  "value": "69cb6fa8b921de3fdd51368f",
+                  "type": "text",
+                  "uuid": "f96b9c25-e599-49ef-b324-69b26a4f43d2"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/posts",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update By Id",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "caption",
+                  "value": "{{$randomCity}}",
+                  "type": "text",
+                  "uuid": "bea7fb95-246f-40ab-8e28-f883ef144136"
+                },
+                {
+                  "key": "country",
+                  "value": "{{$randomCountry}}",
+                  "type": "text",
+                  "uuid": "0e157077-19cd-4189-a10c-9bc71040f69b"
+                },
+                {
+                  "key": "state",
+                  "value": "{{$randomCity}}",
+                  "type": "text",
+                  "uuid": "748dadc8-3b81-45f2-aa82-912f9b9a676e"
+                },
+                {
+                  "key": "longitude",
+                  "value": "123.45",
+                  "type": "text",
+                  "uuid": "9356b152-4326-439f-b340-45182d8d74b5"
+                },
+                {
+                  "key": "latitude",
+                  "value": "33.07",
+                  "type": "text",
+                  "uuid": "9260801d-35b6-4a58-8240-8be7ef7b1b93"
+                },
+                {
+                  "key": "isContentReleaseAccepted",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "16af3cac-d02e-4914-900c-8c9443c64862"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "uuid": "e5a6b814-e8a9-463c-b768-d7cdb01ea780",
+                  "src": "/C:/Users/Abdullah-Soomro/Downloads/111.avif"
+                },
+                {
+                  "key": "categories[0]",
+                  "value": "69cb6fa6b921de3fdd513689",
+                  "type": "text",
+                  "uuid": "5f4aab40-149f-48a9-817d-4b3a07fcd552"
+                },
+                {
+                  "key": "categories[1]",
+                  "value": "69cb6fa6b921de3fdd513689",
+                  "type": "text",
+                  "uuid": "b5ef7fae-3788-4d11-803b-ac3574731a4a"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/posts/:postId",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                ":postId"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "69d4941e45331fbe6ae3302a"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts/:postId",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                ":postId"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "69d493f9624ccf092c84820f"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete By Id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/posts/:postId",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "posts",
+                ":postId"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "69cb9ecf3dc21143fcb7f467"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"temp11@yopmail.com\",\r\n    \"method\": \"email\",\r\n    \"password\": \"Test@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/signup",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "signup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "devicemodel",
+                "value": "IPhone 11 Pro",
+                "type": "text"
+              },
+              {
+                "key": "deviceuniqueid",
+                "value": "UUID_IPhone11Pro",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"temp11@yopmail.com\",\r\n    \"otp\": \"504255\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/verify-email",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "verify-email"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Singin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let json;\r",
+                  "\r",
+                  "try {\r",
+                  "    json = pm.response.json();\r",
+                  "} catch (err) {\r",
+                  "    console.log(\"Response is not valid JSON\");\r",
+                  "}\r",
+                  "\r",
+                  "if (json?.data?.token) {\r",
+                  "    pm.collectionVariables.set(\"AUTH_TOKEN\", json.data.token);\r",
+                  "    console.log(\"Token saved to collection:\", json.data.token);\r",
+                  "} else {\r",
+                  "    console.log(\"Token NOT found in response at data.token\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "devicemodel",
+                "value": "IPhone 11 Pro",
+                "type": "text"
+              },
+              {
+                "key": "deviceuniqueid",
+                "value": "UUID_IPhone11Pro",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"temp11@yopmail.com\",\r\n    \"method\": \"email\",\r\n    \"password\": \"Test@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resend Email Verification OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"temp11@yopmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/email-verification-otp",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "email-verification-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"temp11@yopmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/forgot",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "forgot"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"temp11@yopmail.com\",\r\n    \"otp\": \"300702\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/verify-otp",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"resetToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzAzOTc1ZjBiNzk0YTQ1MWI1NjA3ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0MjkyNDQ4LCJleHAiOjE3NzQyOTMzNDh9.FQdBUKz8GeVBI9cfH1C8qClcbPEApwd6u7jQneGk6NU\",\r\n    \"password\": \"Test@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/update-password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "update-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"password\": \"Test@123\",\r\n    \"newPassword\" : \"123123123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/change-password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"password\": \"Test@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/set-password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "set-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/auth/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Complete Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzI4YzQ5ZDM2OGFiNDYxOWJiZjk1YSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0MzU3NTc3LCJleHAiOjE3NzQ5NjIzNzd9.qcNcXpNpMryIXwVa5OpHfwloK4nGQRmU1Y3RjoaBOJ0",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Huzaifa Ali",
+                  "type": "text",
+                  "uuid": "d489d3a9-2794-4d77-b8da-8a3ace82a9c4"
+                },
+                {
+                  "key": "bio",
+                  "value": "Backend Dev",
+                  "type": "text",
+                  "uuid": "5226d734-76bb-4149-b164-5eee3a222be2"
+                },
+                {
+                  "key": "company[name]",
+                  "value": "Frame The World",
+                  "type": "text",
+                  "uuid": "4f3e05b5-4abb-4e18-a69b-65d3f5850abb"
+                },
+                {
+                  "key": "company[address][street]",
+                  "value": "Shahrah-e-Faisal",
+                  "type": "text",
+                  "uuid": "95392162-9e70-4bb0-a9dd-7e51f7db4300"
+                },
+                {
+                  "key": "company[address][city]",
+                  "value": "Karachi",
+                  "type": "text",
+                  "uuid": "a8166257-8554-43e2-b9df-df41afa22a91"
+                },
+                {
+                  "key": "company[address][country]",
+                  "value": "Pakistan",
+                  "type": "text",
+                  "uuid": "6db00c66-d811-4ca8-b762-a4533043c2bd"
+                },
+                {
+                  "key": "profilePicture",
+                  "type": "file",
+                  "uuid": "c35a7efe-911c-4296-8c50-f72cf9871d8d",
+                  "src": "/C:/Users/HP/Downloads/ChatGPT Image Feb 10, 2026, 10_21_23 PM.png"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3050/users/complete-profile",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "users",
+                "complete-profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Identity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzNhY2Q0NTZlZDAxMTgyMjM0OTkxZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NDMxNDQ0LCJleHAiOjE3NzUwMzYyNDR9.O7AGzFTjeXoBbxh48Y0oE_q1cVtZb1lh43spqCiG0_I",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"iata\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3050/users/verify-identity",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "users",
+                "verify-identity"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzNhY2Q0NTZlZDAxMTgyMjM0OTkxZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NDMxNDQ0LCJleHAiOjE3NzUwMzYyNDR9.O7AGzFTjeXoBbxh48Y0oE_q1cVtZb1lh43spqCiG0_I",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profilePicture",
+                  "type": "file",
+                  "uuid": "c294444c-3b3b-4e2a-9d80-1bee582e2d48",
+                  "src": "/C:/Users/HP/Downloads/e769430f-7210-467e-9bf2-c9b502361d3c.webp",
+                  "disabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "Huzaifa",
+                  "type": "text",
+                  "uuid": "e836e0a8-4a95-42c6-96a7-52c3889b18b5"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3050/users/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "users",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Category",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUwNzIwNGZjMGE1ODgwZjc2YmI5NCIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTIwMDk3LCJleHAiOjE3NzUxMjQ4OTd9.FsjfzvJY9yDRC57JKB60bgGU0CJjDM-lSWCx-u6c_5U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Sports",
+                  "type": "text",
+                  "uuid": "b6d2913b-30ba-4469-987b-372981add4bc"
+                },
+                {
+                  "key": "description",
+                  "value": "soasdhkajsdhkj",
+                  "type": "text",
+                  "uuid": "ce35c426-8c5a-4032-9d72-c58fbf0ec319"
+                },
+                {
+                  "key": "parent",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "9f587a89-a358-4054-a4ae-dc6952104d3e"
+                },
+                {
+                  "key": "icon",
+                  "type": "file",
+                  "uuid": "cdd05927-a4e7-4977-9d65-f31982a71dad",
+                  "value": null
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3050/categories/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "categories",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUwNzIwNGZjMGE1ODgwZjc2YmI5NCIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTIwMDk3LCJleHAiOjE3NzUxMjQ4OTd9.FsjfzvJY9yDRC57JKB60bgGU0CJjDM-lSWCx-u6c_5U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Sportssss",
+                  "type": "text",
+                  "uuid": "b6d2913b-30ba-4469-987b-372981add4bc"
+                },
+                {
+                  "key": "description",
+                  "value": "hey",
+                  "type": "text",
+                  "uuid": "ce35c426-8c5a-4032-9d72-c58fbf0ec319"
+                },
+                {
+                  "key": "parent",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "9f587a89-a358-4054-a4ae-dc6952104d3e",
+                  "disabled": true
+                },
+                {
+                  "key": "icon",
+                  "type": "file",
+                  "uuid": "cdd05927-a4e7-4977-9d65-f31982a71dad",
+                  "value": null,
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3050/categories/:id",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "69c507ac4fc0a5880f76bb9f"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUwNzIwNGZjMGE1ODgwZjc2YmI5NCIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTIwMDk3LCJleHAiOjE3NzUxMjQ4OTd9.FsjfzvJY9yDRC57JKB60bgGU0CJjDM-lSWCx-u6c_5U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3050/categories/:id",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "69c507ac4fc0a5880f76bb9f"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUwNzIwNGZjMGE1ODgwZjc2YmI5NCIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTIwMDk3LCJleHAiOjE3NzUxMjQ4OTd9.FsjfzvJY9yDRC57JKB60bgGU0CJjDM-lSWCx-u6c_5U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3050/categories?page=1&limit=10&isActive=false",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "isActive",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Badge",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUzMDUwYzcxN2RlNTM4ZjQ2ZDg3NiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTMwNjQwLCJleHAiOjE3NzUxMzU0NDB9.KvT08oYQi5s73pDUaN88U6XMM4pDyG_mJy4QuR_jzxA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Rising Stars",
+                  "type": "text",
+                  "uuid": "b6d2913b-30ba-4469-987b-372981add4bc"
+                },
+                {
+                  "key": "description",
+                  "value": "Early recognition from the community",
+                  "type": "text",
+                  "uuid": "ce35c426-8c5a-4032-9d72-c58fbf0ec319"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3050/badges/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "badges",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUzMDUwYzcxN2RlNTM4ZjQ2ZDg3NiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTMwNjQwLCJleHAiOjE3NzUxMzU0NDB9.KvT08oYQi5s73pDUaN88U6XMM4pDyG_mJy4QuR_jzxA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "b6d2913b-30ba-4469-987b-372981add4bc"
+                },
+                {
+                  "key": "description",
+                  "value": "hey",
+                  "type": "text",
+                  "uuid": "ce35c426-8c5a-4032-9d72-c58fbf0ec319"
+                },
+                {
+                  "key": "parent",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "9f587a89-a358-4054-a4ae-dc6952104d3e",
+                  "disabled": true
+                },
+                {
+                  "key": "icon",
+                  "type": "file",
+                  "uuid": "cdd05927-a4e7-4977-9d65-f31982a71dad",
+                  "value": null,
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3050/badges/:id",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "badges",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "69c53078c717de538f46d87c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUzMDUwYzcxN2RlNTM4ZjQ2ZDg3NiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTMwNjQwLCJleHAiOjE3NzUxMzU0NDB9.KvT08oYQi5s73pDUaN88U6XMM4pDyG_mJy4QuR_jzxA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3050/badges/:id",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "badges",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "69c507ac4fc0a5880f76bb9f"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzUzMDUwYzcxN2RlNTM4ZjQ2ZDg3NiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzc0NTMwNjQwLCJleHAiOjE3NzUxMzU0NDB9.KvT08oYQi5s73pDUaN88U6XMM4pDyG_mJy4QuR_jzxA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3050/badges?page=1&limit=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "badges"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Own Badges",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3050/badges/own?page=1&limit=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3050",
+              "path": [
+                "badges",
+                "own"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Frame",
+      "item": [
+        {
+          "name": "Get All",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/frames?page=1&limit=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get own",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/frames/own",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames",
+                "own"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "coverImage",
+                  "type": "file",
+                  "uuid": "b65fc261-935e-45ca-8157-ddb6936cf254",
+                  "src": "/C:/Users/Abdullah-Soomro/Downloads/444.png"
+                },
+                {
+                  "key": "title",
+                  "value": "{{$randomCity}}",
+                  "type": "text",
+                  "uuid": "cdb3a89a-12d1-4e19-8140-cd83ac54fed6"
+                },
+                {
+                  "key": "longitude",
+                  "value": "123.45",
+                  "type": "text",
+                  "uuid": "a5081647-f9a8-4d79-a76a-8612c82adcc6"
+                },
+                {
+                  "key": "latitude",
+                  "value": "33.08",
+                  "type": "text",
+                  "uuid": "79360f99-1348-4650-8367-89c2e8c868f0"
+                },
+                {
+                  "key": "isPrivate",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "dea20109-2690-4c69-a30c-4308e502d508"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/frames",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update By Id",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "{{$randomCity}}",
+                  "type": "text",
+                  "uuid": "cdb3a89a-12d1-4e19-8140-cd83ac54fed6"
+                },
+                {
+                  "key": "longitude",
+                  "value": "123.45",
+                  "type": "text",
+                  "uuid": "a5081647-f9a8-4d79-a76a-8612c82adcc6"
+                },
+                {
+                  "key": "latitude",
+                  "value": "33.08",
+                  "type": "text",
+                  "uuid": "79360f99-1348-4650-8367-89c2e8c868f0"
+                },
+                {
+                  "key": "isPrivate",
+                  "value": "false",
+                  "type": "text",
+                  "uuid": "dea20109-2690-4c69-a30c-4308e502d508"
+                },
+                {
+                  "key": "coverImage",
+                  "type": "file",
+                  "uuid": "5a7cae87-3868-46bf-9559-f1628e3c1af5",
+                  "src": "/C:/Users/Abdullah-Soomro/Downloads/444.png"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/frames/:frameId",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames",
+                ":frameId"
+              ],
+              "variable": [
+                {
+                  "key": "frameId",
+                  "value": "69cb98529f7d1a14293cd4ad"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/frames/:framesId",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames",
+                ":framesId"
+              ],
+              "variable": [
+                {
+                  "key": "framesId",
+                  "value": "69cb98529f7d1a14293cd4ad"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add post to frame",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"postId\" : \"69ca33ebf2f905e2c137f643\" \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/frames/:framesId/posts",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames",
+                ":framesId",
+                "posts"
+              ],
+              "variable": [
+                {
+                  "key": "framesId",
+                  "value": "69cb98529f7d1a14293cd4ad"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete By Id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/frames/:framesId",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames",
+                ":framesId"
+              ],
+              "variable": [
+                {
+                  "key": "framesId",
+                  "value": "69cb98529f7d1a14293cd4ad"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove post from frame",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/frames/:framesId/posts/:postId",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "frames",
+                ":framesId",
+                "posts",
+                ":postId"
+              ],
+              "variable": [
+                {
+                  "key": "framesId",
+                  "value": "69cb98529f7d1a14293cd4ad"
+                },
+                {
+                  "key": "postId",
+                  "value": "69ca33ebf2f905e2c137f643"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ping",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}",
+          "host": [
+            "{{BASE_URL}}"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{AUTH_TOKEN}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "AUTH_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "BASE_URL",
+      "value": ""
+    }
+  ]
+}

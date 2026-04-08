@@ -5,8 +5,9 @@ import { ArrowRight, Bookmark, ChevronRight } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import SaveModal from "@/components/global/SaveModal"; // ✅ adjust path if needed
-
+import SaveModal from "@/components/global/SaveModal"; 
+import { useGuestModal } from "@/providers/GuestModalProvider";
+import { GridCardSkeleton } from "@/components/global/Skeletons";
 
 export default function TravelStoryPage() {
   const [activeTab, setActiveTab] = useState<"forYou" | "featured" | "frames">("forYou");
@@ -16,10 +17,9 @@ export default function TravelStoryPage() {
   const [scrollLeft, setScrollLeft] = useState(0);
   const [isSaveOpen, setIsSaveOpen] = useState(false); // State to control modal visibility
 
-
   const isFrames = activeTab === "frames";
   const router = useRouter();
-
+  const { executeWithCheck } = useGuestModal();
 
 
 const handleMouseDown = (e: React.MouseEvent) => {
@@ -101,7 +101,7 @@ const handleMouseDown = (e: React.MouseEvent) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              router.push("/framedetails");
+              executeWithCheck(() => router.push("/framedetails"));
             }}
             className="
               absolute bottom-3 right-3
@@ -161,8 +161,7 @@ const handleMouseDown = (e: React.MouseEvent) => {
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-                          onClick={() => router.push("/framedetails")}
-
+              onClick={() => executeWithCheck(() => router.push("/framedetails"))}
               className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px]"
             >
               {/* Outer Image */}
@@ -209,14 +208,14 @@ const handleMouseDown = (e: React.MouseEvent) => {
       )}
 
 
-
-
       {/* Masonry Grid (default for other tabs) */}
       {!isFrames && (
         <div className="max-w-[1400px] mx-auto">
-          <div                           onClick={() => router.push("/postdetails")}
-
-           className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] gap-6 cursor-pointer">
+          <div 
+            onClick={() => executeWithCheck(() => router.push("/postdetails"))}
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] gap-6 cursor-pointer"
+          >
+            {/* Note: In the future, wrap this with actual loading state from useQuery */}
             {Array.from({ length: 20 }).map((_, i) => {
               const isTall = i % 5 === 0 || i % 7 === 0;
 
@@ -233,16 +232,15 @@ const handleMouseDown = (e: React.MouseEvent) => {
                     className="object-cover"
                   />
 
-                 <button
-  onClick={(e) => {
-    e.stopPropagation(); // Prevent card navigation
-    setIsSaveOpen(true); // Open SaveModal
-  }}
-  className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow"
->
-  <Bookmark className="h-4 w-4 text-gray-700" />
-</button>
-
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card navigation
+                      executeWithCheck(() => setIsSaveOpen(true)); // Open SaveModal
+                    }}
+                    className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow"
+                  >
+                    <Bookmark className="h-4 w-4 text-gray-700" />
+                  </button>
                 </div>
               );
             })}

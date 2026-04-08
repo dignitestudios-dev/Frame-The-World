@@ -1,50 +1,74 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createPasswordSchema, CreatePasswordFormData } from "@/schemas/Auth";
+import { useMutation } from "@tanstack/react-query";
+import { updatePasswordApi } from "@/services/authApi";
+import { useAuthStore } from "@/store/authStore";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export default function CreatePasswordPage() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("error");
 
   const router = useRouter();
-  // const searchParams = useSearchParams();
-  // const email = searchParams.get("email");
+  const { resetToken, authEmail, clearAuthFlow } = useAuthStore();
 
-  const showToast = (message: string, type: "success" | "error" = "error") => {
-    setToastMessage(message);
-    setToastType(type);
-    setToastOpen(true);
-  };
+  // Redirect if no reset token
+  useEffect(() => {
+    if (!resetToken) {
+      router.replace("/forget-password");
+    }
+  }, [resetToken, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<CreatePasswordFormData>({
+    resolver: zodResolver(createPasswordSchema),
+    mode: "onChange",
+  });
 
-    if (password.length < 8) {
-      showToast("Password must be at least 8 characters long.", "error");
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: updatePasswordApi,
+    onSuccess: (data) => {
+      setToastMessage(data?.message || "Password updated successfully!");
+      setToastType("success");
+      setToastOpen(true);
+      clearAuthFlow();
+      setTimeout(() => {
+        router.push("/password-updated");
+      }, 1000);
+    },
+    onError: (error) => {
+      setToastMessage(getApiErrorMessage(error));
+      setToastType("error");
+      setToastOpen(true);
+    },
+  });
+
+  const onSubmit = (data: CreatePasswordFormData) => {
+    if (!resetToken) {
+      setToastMessage("Reset token not found. Please start over.");
+      setToastType("error");
+      setToastOpen(true);
       return;
     }
-
-    if (password !== confirmPassword) {
-      showToast("Passwords do not match. Please try again.", "error");
-      return;
-    }
-
-    // TODO: call API to actually reset password using token/email
-
-    // const query = email ? `?email=${encodeURIComponent(email)}` : "";
-    // router.push(`/password-updated${query}`);
-        router.push(`/password-updated`);
-
+    mutate({ resetToken, password: data.password });
   };
+
+  if (!resetToken) return null;
 
   return (
     <div className="w-full max-w-[32em]">
@@ -87,7 +111,7 @@ export default function CreatePasswordPage() {
         </p>
 
         {/* Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <label
               htmlFor="password"
@@ -100,10 +124,13 @@ export default function CreatePasswordPage() {
               type="password"
               placeholder="Enter new password"
               className="w-full"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.password.message}
+              </p>
+            )}
             <p className="mt-1 text-xs text-gray-400">
               Must be at least 8 characters long.
             </p>
@@ -121,21 +148,39 @@ export default function CreatePasswordPage() {
               type="password"
               placeholder="Re-enter new password"
               className="w-full"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
+              {...register("confirmPassword")}
             />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
           <Button
             type="submit"
-            className="w-full mt-4 gradient-bg text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4 "
+            disabled={isPending || !isValid}
+            className={`w-full mt-4 h-12 font-medium mb-4 transition-all ${
+              isPending || !isValid 
+                ? "bg-gray-300 cursor-not-allowed shadow-none text-gray-500" 
+                : "gradient-bg text-white hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-400"
+            }`}
           >
-            Reset Password
+
+            {isPending ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Resetting...
+              </span>
+            ) : (
+              "Reset Password"
+            )}
           </Button>
         </form>
       </div>
     </div>
   );
 }
-

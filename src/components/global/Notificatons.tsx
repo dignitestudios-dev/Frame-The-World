@@ -24,13 +24,13 @@ export default function Notifications() {
   };
 
   return (
-    <div className="flex-1 bg-white rounded-[32px] overflow-hidden shadow-sm min-h-[700px]">
+    <div className="flex-1 bg-white rounded-2xl md:rounded-[32px] overflow-hidden shadow-sm h-auto md:min-h-[700px]">
       {/* Header */}
-      <div className="py-6 border-b border-gray-100 text-center">
+      <div className="py-4 md:py-6 border-b border-gray-100 text-center">
         <h2 className="text-xl font-bold text-gray-800">Notifications</h2>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {settings.map((item) => (
           <div
             key={item.id}
@@ -40,7 +40,7 @@ export default function Notifications() {
                 : "bg-white border border-gray-100 shadow-sm"
             }`}
           >
-            <span className={`text-[15px] font-bold ${item.enabled ? "text-gray-800" : "text-gray-500"}`}>
+            <span className={`text-[14px] md:text-[15px] font-bold ${item.enabled ? "text-gray-800" : "text-gray-500"}`}>
               {item.label}
             </span>
 

@@ -3,20 +3,38 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, BarChart3, Globe, Lock, Pin, Sparkles, Settings, LogOut, ChevronRight, FileText, Frame, FolderPlus } from "lucide-react";
+import { Home, BarChart3, Globe, Lock, Pin, Sparkles, Settings, LogOut, ChevronRight, FileText, Frame, FolderPlus, CloudCog } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationModal from "./notification-modal";
 import { Plus } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { useMutation } from "@tanstack/react-query";
+import { logoutApi } from "@/services/authApi";
+import { useGuestModal } from "@/providers/GuestModalProvider";
 
-
-export default function Header() {
+export default function Header() {  
   const router = useRouter();
+  const { logout, user } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal" | null>(null);
+  const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal" | null>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
+  const { executeWithCheck } = useGuestModal();
+
+  const { mutate: logoutMutate } = useMutation({
+    mutationFn: logoutApi,
+    onSettled: () => {
+      logout();
+      router.push("/login");
+      setIsMenuOpen(false);
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutate();
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -64,8 +82,17 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
     { icon: Pin, label: "Personal Storage", hasArrow: true , func:()=> setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Sparkles, label: "AI Content generator", hasArrow: false, route: "/AiGenerator", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Settings, label: "Settings", hasArrow: false, title: "Create Post", subtitle: "Shared with everyone.", route: "/settings" },
-    { icon: LogOut, label: "Logout", hasArrow: false, isDestructive: true, title: "Create Post", subtitle: "Shared with everyone.",route: "/login" },
+    { 
+      icon: LogOut, 
+      label: "Logout", 
+      hasArrow: false, 
+      isDestructive: true, 
+      title: "Create Post", 
+      subtitle: "Shared with everyone.",
+      func: handleLogout 
+    },
   ];
+
 
   const contentCards = [
     { image: "/images/icons/one.png", title: "Create Post", subtitle: "Shared with everyone.", color: "bg-blue-100" ,route: "/Createdpost" },
@@ -73,9 +100,11 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
     { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100" ,route: "/CreatePersonalStorage" },
   ];
   const handleCardClick = (route: string) => {
-  router.push(route);
-  setIsMenuOpen(false);
-};
+    executeWithCheck(() => {
+      router.push(route);
+      setIsMenuOpen(false);
+    });
+  };
  const frames = [
     {
       id: 1,
@@ -122,6 +151,7 @@ const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal"
 
 const headerTitle = activeItem?.label || "Dashboard";
 const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
+console.log(user,"user---response")
   return (
     <>
       {/* Backdrop Overlay */}
@@ -132,132 +162,145 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
         />
       )}
 
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-8 py-4">
-        <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 md:px-8 py-3 md:py-4 transition-all">
+        <div className="flex items-center justify-between max-w-[1440px] mx-auto">
           {/* Left side - Logo and Title */}
-          <div className="flex items-center gap-4 relative" ref={menuRef}>
+          <div className="flex items-center gap-3 md:gap-4 relative" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="cursor-pointer"
+              className="cursor-pointer active:scale-95 transition-transform"
             >
               <Image
                 src="/images/menu.png"
                 alt="Menu"
-                height={50}
-                width={50}
+                height={40}
+                width={40}
+                className="md:w-[50px] md:h-[50px]"
               />
             </button>
 
-            <div>
-              <h1 className="text-xl font-[800] text-gray-900">
-  {headerTitle}
-</h1>
-<p className="text-[14px] text-black">
-  {headerSubtitle}
-</p>
+            <div className="overflow-hidden">
+              <h1 className="text-lg md:text-xl font-[800] text-gray-900 truncate">
+                {headerTitle}
+              </h1>
+              <p className="text-[12px] md:text-[14px] text-black hidden xs:block truncate">
+                {headerSubtitle}
+              </p>
             </div>
           </div>
 
           {/* Right side - User info and actions */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 md:gap-6">
             {/* User profile with level badge */}
             <div className="flex items-center gap-2">
-              <Image
-                src="/images/admin.png"
-                alt="User"
-                width={60}
-                height={60}
-                className="rounded-full cursor-pointer"
-                                          onClick={() => router.push("/Profile")}
-
-              />
-              <span className="font-medium text-sm text-gray-900">Leo Denzin</span>
-              {/* Level Badge */}
+              <div 
+                className="flex cursor-pointer items-center gap-2" 
+                onClick={() => executeWithCheck(() => router.push("/Profile"))}
+              >
+                <div className="relative">
+                  <Image
+                    src={user?.profilePicture?.location || user?.profilePicture || "/images/admin.png"}
+                    alt="User"
+                    width={36}
+                    height={36}
+                    className="rounded-full cursor-pointer object-cover h-[36px] md:w-[40px] md:h-[40px] border border-gray-100"
+                  />
+                </div>
+                <span className="font-semibold text-xs md:text-sm text-gray-900 hidden sm:block truncate max-w-[100px]">
+                  {user?.name || "User"}
+                </span>
+              </div>
+              
+              {/* Level Badge - Hide on tiny screens */}
               <div className="relative">
                 <Image
                   src="/images/awarrd.png"
                   alt="Award"
-                  width={36}
-                  height={36}
-                  className="rounded-full"
+                  width={30}
+                  height={30}
+                  className="rounded-full md:w-[36px] md:h-[36px]"
                 />
               </div>
             </div>
 
             {/* Search button */}
-            <Link href="/search">
+            <button 
+              onClick={() => executeWithCheck(() => router.push("/search"))}
+              className="active:scale-90 transition-transform"
+            >
               <Image
                 src="/images/search.png"
                 alt="Search"
-                height={50}
-                width={50}
-                className="cursor-pointer"
+                height={40}
+                width={40}
+                className="md:w-[50px] md:h-[50px]"
               />
-            </Link>
+            </button>
 
             {/* Bell button */}
             <button
-              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-              className="cursor-pointer"
+              onClick={() => executeWithCheck(() => setIsNotificationOpen(!isNotificationOpen))}
+              className="cursor-pointer active:scale-90 transition-transform"
             >
               <Image
                 src="/images/notifaction.png"
                 alt="Notification"
-                height={50}
-                width={50}
+                height={40}
+                width={40}
+                className="md:w-[50px] md:h-[50px]"
               />
             </button>
           </div>
         </div>
       </header>
 
-    
-
       {isMenuOpen && (
         <div 
           ref={megaMenuRef}
-          className="sticky top-0 left-0 right-0 z-[60] bg-white rounded-b-3xl shadow-2xl border-b border-gray-200 animate-[slideDown_0.3s_ease-out]"
+          className="fixed md:sticky top-16 md:top-20 left-0 right-0 z-[60] bg-white rounded-b-3xl shadow-2xl border-b border-gray-200 animate-[slideDown_0.3s_ease-out] overflow-y-auto max-h-[90vh] md:max-h-none"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex h-[30em]">
+          <div className="flex flex-col md:flex-row min-h-auto md:h-[32em]">
             {/* Left Sidebar */}
-
-
-<div className="grid grid-cols-4 ">
-
-
-            <div className="w-[20em] col-span-1 bg-gray-50 rounded-bl-3xl border-r border-gray-200 overflow-y-auto scrollbar-hidden">
-              <div className="p-6 space-y-2">
+            <div className="w-full md:w-[20em] bg-gray-50 md:rounded-bl-3xl border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto scrollbar-hidden shrink-0">
+              <div className="p-4 md:p-6 space-y-1 md:space-y-2">
                 {sidebarItems.map((item, index) => {
                   const Icon = item.icon;
                   const handleClick = (e: React.MouseEvent) => {
-                    e.stopPropagation(); // Prevent event bubbling
-                    if (item.route) {
-                      router.push(item.route);
-                      setIsMenuOpen(false);
+                    e.stopPropagation();
+                    if (item.label === "Logout") {
+                      if (item.func) item.func();
+                      return;
                     }
-                    if (item.func) {
-                      item.func();
+                    if (item.label === "Home") {
+                      if (item.route) {
+                        router.push(item.route);
+                        setIsMenuOpen(false);
+                      }
+                      return;
                     }
-                    // Menu stays open if no route is defined
+                    executeWithCheck(() => {
+                      if (item.route) {
+                        router.push(item.route);
+                        setIsMenuOpen(false);
+                      }
+                      if (item.func) item.func();
+                    });
                   };
                   
                   return (
                     <button
                       key={index}
                       onClick={handleClick}
-                      className={`w-full flex items-center  justify-between px-4 py-3 text-left rounded-xl hover:bg-gray-100 transition-all ${item.isDestructive
-                        ? "bg-red-50 hover:bg-red-100"
-                        : ""
-                        }`}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-xl hover:bg-gray-100 transition-all ${
+                        item.isDestructive ? "bg-red-50/50 hover:bg-red-100" : ""
+                      }`}
                     >
                       <div className="flex items-center gap-3">
                         <Icon
-                          className={`h-5 w-5 ${item.isDestructive ? "text-red-500" : "text-blue-600"
-                            }`}
+                          className={`h-5 w-5 ${item.isDestructive ? "text-red-500" : "text-blue-600"}`}
                         />
-                        <span className={`font-medium text-sm ${item.isDestructive ? "text-red-600" : "text-gray-900"
-                          }`}>
+                        <span className={`font-semibold text-sm ${item.isDestructive ? "text-red-600" : "text-gray-900"}`}>
                           {item.label}
                         </span>
                       </div>
@@ -270,24 +313,21 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
               </div>
             </div>
 
-
-            <div className="w-[68em] col-span-3  flex flex-col items-center justify-center ">
-
-              {/* Right Content Area */}
-              <div className="flex-1 p-7 bg-white rounded-br-3xl flex items-start justify-center">
-                <div className=" w-full flex items-center justify-center gap-6">
-                  {/* Top Cards */}
-                  <div className="flex gap-4 flex-1">
+            {/* Right Content Area */}
+            <div className="flex-1 flex flex-col items-center justify-center bg-white md:rounded-br-3xl overflow-hidden min-h-[300px]">
+              <div className="w-full p-4 md:p-7 flex flex-col h-full">
+                {/* Top Action Cards */}
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-6 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-3 flex-1">
                     {contentCards.map((card, index) => {
                       return (
                         <button
-                         onClick={() => handleCardClick(card.route)}
-
+                          onClick={() => handleCardClick(card.route)}
                           key={index}
-                          className="flex-1 bg-[#FAFAFA] rounded-full p-0 items-center shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-100"
+                          className="flex-1 bg-[#FAFAFA] rounded-xl sm:rounded-full p-2 items-center shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-100 group"
                         >
-                          <div className="flex items-center text-left gap-0">
-                            <div className="w-12 h-12 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center m-2">
+                          <div className="flex items-center text-left gap-3 sm:gap-1">
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                               <Image
                                 src={card.image}
                                 alt={card.title}
@@ -296,9 +336,9 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
                                 className="object-contain"
                               />
                             </div>
-                            <div>
-                              <h3 className="font-bold text-gray-900 text-[14px] mb-0">{card.title}</h3>
-                              <p className="text-[12px] text-gray-500">{card.subtitle}</p>
+                            <div className="pr-2">
+                              <h3 className="font-bold text-gray-900 text-xs md:text-sm">{card.title}</h3>
+                              <p className="text-[10px] md:text-[12px] text-gray-500 line-clamp-1">{card.subtitle}</p>
                             </div>
                           </div>
                         </button>
@@ -306,173 +346,80 @@ const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
                     })}
                   </div>
 
-                  {/* User Profile on Right */}
-                 
-                  <div className="flex-shrink-0">
+                  {/* Profile Picture (visible on Desktop/Tablet) */}
+                  <div className="hidden md:flex shrink-0 items-center justify-center">
                     <Image
-                      src="/images/admin.png"
+                      src={user?.profilePicture?.location || user?.profilePicture || "/images/admin.png"}
                       alt="User"
-                      width={70}
-                      height={70}
-                      className="rounded-full border-7 border-blue-600"
-                      />
-                  </div>
-
-
-
-                </div>
-              </div>
-
-               {isFrameType === "public" ? (
-               <div className=" mb-34 flex flex-col justify-center items-center gap-4">
-                  <div className="flex justify-center items-center gap-6">
-
-                  {frames.map((frame) => (
-                    <div
-                    key={frame.id}
-                    className="shrink-0 flex flex-col items-center "
-                    >
-                {/* Image Container */}
-                <div className="relative w-[100px] h-[100px] rounded-[22px] overflow-hidden">
-                  <Image
-                    src={frame.image}
-                    alt={frame.name}
-                    fill
-                    className="object-cover"
+                      width={50}
+                      height={50}
+                      className="rounded-full border-[3px] border-blue-600 object-cover h-[50px] w-[50px]"
                     />
-                </div>
-
-                {/* Frame Name */}
-                <p className="mt-2 text-xs text-center text-black">
-                  {frame.name}
-                </p>
-              </div>
-                  ))}
                   </div>
-                  <button
-  onClick={() => {
-    router.push("/Profile");
-    setIsMenuOpen(false);
-    setIsFrameType(null);
-  }}
-  className="w-[90px] text-[16px] font-[500] bg-[#F5F5F5] py-1 rounded-full"
->
-  See All
-</button>
-                </div>
-                
-              )  : isFrameType === "private" ? (
-                <div className="mb-34 flex flex-col justify-center items-center gap-4">
-                  <div className="flex justify-center items-center gap-6">
-
-                  {frames.map((frame) => (
-                    <div
-                    key={frame.id}
-                    className="shrink-0 flex flex-col items-center "
-                    >
-                {/* Image Container */}
-                <div className="relative w-[100px] h-[100px] rounded-[22px] overflow-hidden">
-                  <Image
-                    src={frame.image}
-                    alt={frame.name}
-                    fill
-                    className="object-cover"
-                    />
                 </div>
 
-                {/* Frame Name */}
-                <p className="mt-2 text-xs text-center text-black">
-                  {frame.name}
-                </p>
-              </div>
-                  ))}
-                  </div>
-                  <button  onClick={() => {
-    router.push("/Profile");
-    setIsMenuOpen(false);
-    setIsFrameType(null);
-  }}
-   className="w-[90px] text-[16px] font-[500] text-center bg-[#F5F5F5]  py-1 rounded-full text-black">See All</button>
-                </div>
-
-               ): isFrameType === "personal" ? (
-                <div className="mb-34 flex flex-col justify-center items-center gap-4">
-                  <div className="flex justify-center items-center gap-6">
-
-                    {frames.map((frame) => (
-              <div
-                key={frame.id}
-                className="flex-shrink-0 flex flex-col items-center"
-              >
-                {/* Image Container with Lock */}
-                <div className="relative w-[120px] h-[120px] rounded-[24px] overflow-hidden shadow-[0_4px_10px_2px_rgba(0,0,0,0.25)]">
-                  <Image
-                    src={frame.image}
-                    alt={frame.name}
-                    fill
-                    className="object-cover"
-                  />
-
-                  {/* Dark Overlay */}
-                 
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      {/* Lock Icon with Plus */}
-                      <div className="relative ">
-                        <div className="w-[70px] h-[70px] backdrop-blur-2xl rounded-full bg-white/20 flex items-center justify-center">
-                          <Image
-                            src="/images/solarlock.png"
-                            alt="Lock"
-                            width={40}
-                            height={40}
-                            className="object-contain w-10 h-10"
-                          />
-                       
-                          <Plus className="w-3 h-3 text-white stroke-3" />
-                       
+                {/* Main Dynamic Content Area */}
+                <div className="flex-1 flex flex-col justify-center">
+                  {isFrameType ? (
+                    <div className="flex flex-col items-center gap-4 py-4">
+                      {/* Horizontally scrollable frames preview on mobile */}
+                      <div className="w-full overflow-x-auto scrollbar-hidden pb-2">
+                        <div className="flex md:justify-center items-center gap-4 md:gap-6 px-4 md:px-0">
+                          {frames.map((frame, idx) => (
+                            <div key={`${frame.id}-${idx}`} className="shrink-0 flex flex-col items-center">
+                              <div className={`relative ${isFrameType === 'personal' ? 'w-[100px] h-[100px] md:w-[120px] md:h-[120px]' : 'w-[80px] h-[80px] md:w-[100px] md:h-[100px]'} rounded-[20px] md:rounded-[24px] overflow-hidden shadow-md group`}>
+                                <Image
+                                  src={frame.image}
+                                  alt={frame.name}
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform"
+                                />
+                                {isFrameType === "personal" && (
+                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <div className="w-10 h-10 md:w-14 md:h-14 backdrop-blur-md rounded-full bg-white/20 flex items-center justify-center">
+                                      <Image src="/images/solarlock.png" alt="Lock" width={20} height={20} className="md:w-6 md:h-6" />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="mt-2 text-[10px] md:text-xs text-center text-black font-medium truncate w-[80px] md:w-[100px]">
+                                {frame.name}
+                              </p>
+                            </div>
+                          ))}
                         </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          router.push("/Profile");
+                          setIsMenuOpen(false);
+                          setIsFrameType(null);
+                        }}
+                        className="px-8 py-2 text-sm font-semibold bg-[#F5F5F5] hover:bg-gray-200 transition-colors rounded-full"
+                      >
+                        See All
+                      </button>
                     </div>
-              
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center min-h-[200px]">
+                      <div className="relative w-full max-w-full px-6">
+                        <Image
+                          src="/images/menuimage.png"
+                          alt="Menu Preview"
+                          height={1000}
+                          width={1000}
+                          className="object-contain w-full drop-shadow-2xl"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {/* Frame Name */}
-                <p className="mt-2 text-xs text-center text-black font-medium">
-                  {frame.name}
-                </p>
               </div>
-            ))}
-                  </div>
-                  <button  onClick={() => {
-    router.push("/Profile");
-    setIsMenuOpen(false);
-    setIsFrameType(null);
-  }}
-    className="w-[90px] text-[16px] font-[500] text-center bg-[#F5F5F5]  py-1 rounded-full text-black">See All</button>
-                </div>
-               ): (
-                <div className="w-full flex justify-center items-center  bottom-0 ">
-                  <div className="w-full flex items-center justify-center ">
-
-                <Image
-                  src="/images/menuimage.png"
-                  alt="Notification"
-                  height={860}
-                  width={860}
-                  />
-                
-                  </div>
-                </div>
-              )}
-
             </div>
-</div>
-
           </div>
-
         </div>
       )}
 
-      
       {/* Notification Modal */}
       <NotificationModal
         isOpen={isNotificationOpen}

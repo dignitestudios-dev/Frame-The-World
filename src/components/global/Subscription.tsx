@@ -30,16 +30,16 @@ export default function Subscription() {
   // --- VIEW 3: REVIEW YOUR NEW PLAN ---
   if (view === "review") {
     return (
-      <div className="flex-1 bg-white rounded-[32px] overflow-hidden shadow-sm min-h-[700px] animate-in fade-in duration-300">
-        <div className="relative py-6 border-b border-gray-100">
+      <div className="flex-1 bg-white rounded-2xl md:rounded-[32px] overflow-hidden shadow-sm h-auto md:min-h-[700px] animate-in fade-in duration-300">
+        <div className="relative py-4 md:py-6 border-b border-gray-100">
           <button onClick={() => setView("upgrade")} className="absolute left-8 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-50 rounded-full transition-colors">
             <ArrowLeft className="h-6 w-6 text-black" />
           </button>
           <h2 className="text-center text-xl font-bold text-gray-800">Review Your New Plan</h2>
         </div>
 
-        <div className="p-10 flex flex-col items-center">
-          <div className="w-full max-w-md rounded-[24px] border-2 border-[#4F6EF7] bg-[#E8F0FF] p-6 flex flex-col items-center mb-8">
+        <div className="p-4 md:p-10 flex flex-col items-center">
+          <div className="w-full max-w-md rounded-[24px] border-2 border-[#4F6EF7] bg-[#E8F0FF] p-4 md:p-6 flex flex-col items-center mb-8">
             <h3 className="text-lg font-bold text-gray-800 mb-2">{selectedPlan.name}</h3>
             <div className="flex items-baseline mb-4">
               <span className="text-xl font-bold mr-0.5">$</span>
@@ -92,17 +92,17 @@ export default function Subscription() {
   // --- VIEW 2: UPGRADE PLAN SELECTION ---
   if (view === "upgrade") {
     return (
-      <div className="flex-1 bg-white rounded-[32px] overflow-hidden shadow-sm min-h-[700px] animate-in fade-in duration-300">
-        <div className="relative py-6 border-b border-gray-100">
-          <button onClick={() => setView("main")} className="absolute left-8 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-50 rounded-full transition-colors">
+      <div className="flex-1 bg-white rounded-2xl md:rounded-[32px] overflow-hidden shadow-sm h-auto md:min-h-[700px] animate-in fade-in duration-300">
+        <div className="relative py-4 md:py-6 border-b border-gray-100">
+          <button onClick={() => setView("main")} className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-50 rounded-full transition-colors">
             <ArrowLeft className="h-6 w-6 text-black" />
           </button>
           <h2 className="text-center text-xl font-bold text-gray-800">Upgrade Plan</h2>
         </div>
-        <div className="p-10">
-          <p className="text-center text-gray-400 mb-10 font-medium text-sm">Choose your new subscription plan!</p>
-          <div className="flex gap-6 max-w-5xl mx-auto">
-            <div onClick={() => handlePlanSelection("Monthly", "49.99", "/mo")} className="flex-1 rounded-[24px] p-8 border-2 border-[#4F6EF7] bg-[#E8F0FF] flex flex-col items-center cursor-pointer">
+        <div className="p-4 md:p-10">
+          <p className="text-center text-gray-400 mb-6 md:mb-10 font-medium text-sm">Choose your new subscription plan!</p>
+          <div className="flex flex-col md:flex-row gap-6 max-w-5xl mx-auto">
+            <div onClick={() => handlePlanSelection("Monthly", "49.99", "/mo")} className="flex-1 rounded-[24px] p-6 md:p-8 border-2 border-[#4F6EF7] bg-[#E8F0FF] flex flex-col items-center cursor-pointer">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Monthly</h3>
               <div className="flex items-baseline mb-8">
                 <span className="text-2xl font-bold mr-1">$</span>
@@ -142,13 +142,13 @@ export default function Subscription() {
 
   // --- VIEW 1: MAIN SUBSCRIPTION & CANCELLATION LOGIC ---
   return (
-    <div className="flex-1 bg-white rounded-[32px] overflow-hidden shadow-sm min-h-[700px] relative">
-      <div className="py-6 border-b border-gray-100 text-center">
+    <div className="flex-1 bg-white rounded-2xl md:rounded-[32px] overflow-hidden shadow-sm h-auto md:min-h-[700px] relative">
+      <div className="py-4 md:py-6 border-b border-gray-100 text-center">
         <h2 className="text-xl font-bold text-gray-800">Subscription</h2>
       </div>
 
-      <div className="p-8">
-        <div className="rounded-[24px] border-2 border-[#A5C0FF] bg-[#E8F0FF] p-8 flex flex-col items-center">
+      <div className="p-4 md:p-8">
+        <div className="rounded-[24px] border-2 border-[#A5C0FF] bg-[#E8F0FF] p-6 md:p-8 flex flex-col items-center">
           <h3 className="text-lg font-bold text-gray-800 mb-2">Monthly</h3>
           <div className="flex items-baseline mb-6">
             <span className="text-xl font-bold mr-0.5">$</span>
@@ -166,10 +166,10 @@ export default function Subscription() {
           </div>
 
           {!isCancelled ? (
-            <div className="grid grid-cols-3 gap-4 w-full max-w-2xl">
-              <button onClick={() => setShowCancelModal(true)} className="py-3.5 rounded-full border border-red-300 bg-[#F5D7E3] text-red-500 font-bold text-sm">Cancel</button>
-              <button onClick={() => setView("upgrade")} className="py-3.5 rounded-full border border-orange-200 bg-[#F0E6D2] text-orange-400 font-bold text-sm">Downgrade</button>
-              <button onClick={() => setView("upgrade")} className="py-3.5 rounded-full bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white font-bold text-sm shadow-md">Upgrade</button>
+            <div className="flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-4 w-full max-w-2xl">
+              <button onClick={() => setShowCancelModal(true)} className="py-3.5 rounded-full border border-red-300 bg-[#F5D7E3] text-red-500 font-bold text-sm order-3 md:order-1">Cancel</button>
+              <button onClick={() => setView("upgrade")} className="py-3.5 rounded-full border border-orange-200 bg-[#F0E6D2] text-orange-400 font-bold text-sm order-2 md:order-2">Downgrade</button>
+              <button onClick={() => setView("upgrade")} className="py-3.5 rounded-full bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white font-bold text-sm shadow-md order-1 md:order-3">Upgrade</button>
             </div>
           ) : (
             <button onClick={() => setIsCancelled(false)} className="w-full max-w-2xl py-3.5 rounded-full bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white font-bold text-sm shadow-lg">Renew</button>
@@ -185,8 +185,8 @@ export default function Subscription() {
 
         <div className="mt-10">
           <h3 className="text-lg font-bold text-black mb-4">Transaction History</h3>
-          <div className="overflow-hidden rounded-2xl border border-gray-100">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto rounded-2xl border border-gray-100 scrollbar-hidden">
+            <table className="w-full text-left min-w-[500px]">
               <thead>
                 <tr className="bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white">
                   <th className="px-6 py-4 text-xs font-semibold uppercase">Date</th>

@@ -3,11 +3,10 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 export default function PasswordUpdatedPage() {
-  // const searchParams = useSearchParams();
-  const email = "undenifined";
+  const { authEmail } = useAuthStore();
 
   return (
     <div className="w-full max-w-[32em]">
@@ -30,12 +29,12 @@ export default function PasswordUpdatedPage() {
         {/* Subtitle */}
         <p className="mb-6 text-sm text-gray-600">
           Your new password has been updated successfully
-          {email ? (
+          {authEmail ? (
             <>
               {" "}
               for{" "}
               <span className="font-semibold">
-                {email}
+                {authEmail}
               </span>
               .
             </>
@@ -55,5 +54,3 @@ export default function PasswordUpdatedPage() {
     </div>
   );
 }
-
-

@@ -67,10 +67,10 @@ export default function AppWalkthrough() {
 
 
   return (
-    <div className="relative w-full flex items-center justify-center ">
+    <div className="relative w-full flex items-center justify-center p-2 md:p-0">
       {/* Main Onboarding Card */}
-      <div className="relative w-full max-w-[30em] z-10">
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-b from-[#6CACDF] to-[#0000FE] min-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-full md:max-w-[30em] z-10">
+        <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-b from-[#6CACDF] to-[#0000FE] min-h-[500px] md:min-h-[80vh] flex flex-col">
           {/* Image grid section - top part (2/3 of card) */}
           <div className=" flex-1 flex items-center justify-center">
             {currentContent.imageWidth && currentContent.imageHeight ? (

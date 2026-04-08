@@ -1,20 +1,52 @@
- "use client";
- 
- import { useEffect, useRef, useState } from "react";
- import { Button } from "@/components/ui/button";
- import Link from "next/link";
- import Image from "next/image";
- import { useRouter, useSearchParams } from "next/navigation";
- 
- export default function OtpVerificationPage() {
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Toast } from "@/components/ui/toast";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/authStore";
+import {
+  verifyEmailApi,
+  verifyOtpApi,
+  resendEmailVerificationOtpApi,
+  forgotPasswordApi,
+} from "@/services/authApi";
+import { getApiErrorMessage } from "@/lib/apiError";
+
+export default function OtpVerificationPage() {
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-  // const searchParams = useSearchParams();
   const router = useRouter();
-  // const email = searchParams.get("email");
-  // const mode = searchParams.get("mode") ?? "reset";
+
+  const { authEmail, otpMode, setResetToken, login } = useAuthStore();
+
+  const code = otp.join("");
+  const isCodeValid = code.length === 5;
+
+  // Redirect if no email in store
+  useEffect(() => {
+    if (!authEmail) {
+      router.replace("/login");
+    }
+  }, [authEmail, router]);
+
+  // Masonry background images
+  const bgImages = [
+    "https://images.unsplash.com/photo-1500835595353-b0ad2e58b8df?w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1493246507139-91e8bef99c02?w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1433086566211-3729e28f32da?w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800&auto=format&fit=crop",
+  ];
 
   useEffect(() => {
     if (canResend) return;
@@ -51,108 +83,183 @@
     }
   };
 
- const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  const code = otp.join("");
-  // TODO: verify `code` with backend
-
-  if (code.length === otp.length) {
-    // Hardcoded routes
-    router.push(`/create-profile`); // or `/create-password`
-  }
-};
-
-  const handleResend = () => {
-    // TODO: call API to resend OTP here
-    setTimeLeft(30);
-    setCanResend(false);
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 5);
+    if (pastedData.length > 0) {
+      const newOtp = [...otp];
+      for (let i = 0; i < pastedData.length && i < 5; i++) {
+        newOtp[i] = pastedData[i];
+      }
+      setOtp(newOtp);
+      const focusIndex = Math.min(pastedData.length, 4);
+      inputsRef.current[focusIndex]?.focus();
+    }
   };
 
+  const verifyEmailMutation = useMutation({
+    mutationFn: verifyEmailApi,
+    onSuccess: (data) => {
+      setToastMessage(data?.message || "Email verified successfully!");
+      setToastType("success");
+      setToastOpen(true);
+      if (data?.data?.token || data?.token) {
+        login({
+          user: data?.data?.user || data?.user,
+          token: data?.data?.token || data?.token,
+        });
+      }
+      setTimeout(() => {
+        router.push("/verify-credentials");
+      }, 1000);
+    },
+    onError: (error) => {
+      setToastMessage(getApiErrorMessage(error));
+      setToastType("error");
+      setToastOpen(true);
+    },
+  });
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: verifyOtpApi,
+    onSuccess: (data) => {
+      setToastMessage(data?.message || "OTP verified successfully!");
+      setToastType("success");
+      setToastOpen(true);
+      if (data?.data?.resetToken || data?.resetToken) {
+        setResetToken(data?.data?.resetToken || data?.resetToken);
+      }
+      setTimeout(() => {
+        router.push("/create-password");
+      }, 1000);
+    },
+    onError: (error) => {
+      setToastMessage(getApiErrorMessage(error));
+      setToastType("error");
+      setToastOpen(true);
+    },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: () => {
+      if (otpMode === "signup") {
+        return resendEmailVerificationOtpApi({ email: authEmail! });
+      }
+      return forgotPasswordApi({ email: authEmail! });
+    },
+    onSuccess: (data) => {
+      setToastMessage(data?.message || "OTP resent successfully!");
+      setToastType("success");
+      setToastOpen(true);
+      setTimeLeft(30);
+      setCanResend(false);
+      setOtp(["", "", "", "", ""]);
+    },
+    onError: (error) => {
+      setToastMessage(getApiErrorMessage(error));
+      setToastType("error");
+      setToastOpen(true);
+    },
+  });
+
+  const isPending = verifyEmailMutation.isPending || verifyOtpMutation.isPending;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isCodeValid) return;
+    if (!authEmail) return;
+
+    if (otpMode === "signup") {
+      verifyEmailMutation.mutate({ email: authEmail, otp: code });
+    } else {
+      verifyOtpMutation.mutate({ email: authEmail, otp: code });
+    }
+  };
+
+  if (!authEmail) return null;
+
   return (
-    <div className="w-full max-w-[32em]">
-      <div className="rounded-2xl h-[40em] bg-white p-[4em] shadow-xl">
-        {/* Icon */}
-        <div className="flex justify-center">
-          <Image
-            src="/images/warning.png"
-            alt="OTP Verification"
-            width={80}
-            height={80}
-          />
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden p-6">
+      {/* Background Masonry Grid */}
+      <div className="absolute inset-0 -z-10 grid grid-cols-3 gap-2 opacity-10 blur-[1px] scale-110">
+        {bgImages.map((src, i) => (
+          <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl grayscale">
+             <img src={src} alt="Travel bg" className="h-full w-full object-cover" />
+          </div>
+        ))}
+      </div>
+
+      <Toast
+        open={toastOpen}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setToastOpen(false)}
+      />
+
+      <div className="relative w-full max-w-[32em] rounded-[2.5rem] bg-white p-12 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
+        <div className="flex justify-center mb-8">
+          <div className="relative h-20 w-20">
+             <Image src="/images/warning.png" alt="Verify" fill className="object-contain" />
+          </div>
         </div>
 
-        {/* Title */}
-        <h1 className="mb-2 text-2xl font-extrabold text-gray-900 text-center pt-4">
-          Verification
-        </h1>
+        <div className="text-center mb-10">
+          <h1 className="text-2xl font-black text-gray-900 mb-2">Verification</h1>
+          <p className="text-xs font-medium text-gray-400 px-8">
+            Enter the OTP sent to <span className="font-bold text-gray-900">{authEmail}</span>
+          </p>
+        </div>
 
-        {/* Subtitle */}
-        <p className="mb-8 text-sm text-gray-600 text-center">
-          Enter the OTP sent to{" "}
-          <span className="font-semibold">
-  your email
-</span>
-          .
-        </p>
-
-        {/* Form */}
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* OTP Input Boxes */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex gap-3">
-             {otp.map((value, index) => (
-  <input
-    key={index}
-    ref={(el) => {
-      inputsRef.current[index] = el;
-    }}
-    type="text"
-    inputMode="numeric"
-    maxLength={1}
-    value={value}
-    onChange={(e) => handleChange(index, e.target.value)}
-    onKeyDown={(e) => handleKeyDown(index, e)}
-    className="h-14 w-14 rounded-2xl border border-gray-200 bg-gray-50 text-center text-xl font-semibold focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
-  />
-))}
-            </div>
+        <form className="space-y-10" onSubmit={handleSubmit}>
+          <div className="flex justify-between gap-2" onPaste={handlePaste}>
+            {otp.map((value, index) => (
+              <input
+                key={index}
+                ref={(el) => {
+                  inputsRef.current[index] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={value}
+                onChange={(e) => handleChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="h-14 w-full rounded-2xl bg-[#f4f4f4] border-none text-center text-xl font-black text-gray-900 focus:ring-2 focus:ring-blue-100 transition-all"
+              />
+            ))}
           </div>
 
-          {/* Resend + Info */}
-          <div className="flex items-center justify-center text-xs text-gray-500">
+          <div className="text-center">
             {!canResend ? (
-              <span>
-                Didn&apos;t get link?{" "}
-                <span className="font-semibold text-gray-700">
-                  00:{timeLeft.toString().padStart(2, "0")}
-                </span>
-              </span>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                Didn't get link? <span className="text-gray-900">00:{timeLeft.toString().padStart(2, "0")}</span>
+              </p>
             ) : (
               <button
                 type="button"
-                onClick={handleResend}
-                className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                onClick={() => resendMutation.mutate()}
+                disabled={resendMutation.isPending}
+                className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline disabled:opacity-50"
               >
-                Resend Link
+                {resendMutation.isPending ? "Sending..." : "Resend Link"}
               </button>
             )}
           </div>
 
-          {/* Verify Button */}
           <Button
             type="submit"
-            className="w-full mt-3 gradient-bg text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4 shadow-lg shadow-blue-400"
+            disabled={isPending || !isCodeValid}
+            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${
+              isPending || !isCodeValid 
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" 
+                : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
+            }`}
           >
-            Verify &amp; Continue
+            {isPending ? "Verifying..." : "Verify & Continue"}
           </Button>
 
-          {/* Back to login */}
-          <div className="mt-4 text-center text-sm text-gray-600">
-            Remember your password?{" "}
-            <Link
-              href="/login"
-              className="text-blue-600 hover:underline font-medium"
-            >
+          <div className="text-center">
+            <Link href="/login" className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors">
               Back to Login
             </Link>
           </div>
@@ -161,5 +268,3 @@
     </div>
   );
 }
-
-

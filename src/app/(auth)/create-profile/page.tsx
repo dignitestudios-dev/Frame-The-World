@@ -1,157 +1,202 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
-import { ArrowLeft, Plus, ChevronRight } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Toast } from "@/components/ui/toast";
+import { ArrowLeft, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { profileSchema, ProfileFormData } from "@/schemas/Auth";
+import { useAuthStore } from "@/store/authStore";
 
 export default function CreateProfilePage() {
   const router = useRouter();
-  // const searchParams = useSearchParams();
-  // const email = searchParams.get("email");
-  const email = undefined; // or hardcode a placeholder
+  const { user, tempProfileData, setTempProfileData } = useAuthStore();
 
-
-  const [bio, setBio] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [companyLocation, setCompanyLocation] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: send profile data (bio, companyName, companyLocation) to backend
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("error");
 
-    router.push("/subscription");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    watch,
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    mode: "onChange",
+    defaultValues: tempProfileData || {
+      fullName: user?.name || "",
+    },
+  });
+
+  const onSubmit = (data: ProfileFormData) => {
+    // Save to store and proceed to Step 2
+    setTempProfileData({ ...data, avatarFile });
+    router.push("/category-preference");
   };
 
-  const remaining = 250 - bio.length;
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    const url = URL.createObjectURL(file);
+    setAvatarPreview(url);
+  };
+
+  const fullNameValue = watch("fullName") || "Your Name";
+
+  // Mock background images for the grid
+  const bgImages = [
+    "https://images.unsplash.com/photo-1500835595353-b0ad2e58b8df?w=800&auto=format&fit=crop", // Moon/Night
+    "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&auto=format&fit=crop", // Mountains
+    "https://images.unsplash.com/photo-1493246507139-91e8bef99c02?w=800&auto=format&fit=crop", // Lake
+    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop", // Valley
+    "https://images.unsplash.com/photo-1433086566211-3729e28f32da?w=800&auto=format&fit=crop", // Clouds
+    "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800&auto=format&fit=crop", // City
+    "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&auto=format&fit=crop", // Nature
+    "https://images.unsplash.com/photo-1505118380757-91f5f45d8de4?w=800&auto=format&fit=crop", // Beach
+    "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop", // Forest
+  ];
 
   return (
-    <div className="w-full max-w-[32em]">
-      <div className="relative rounded-2xl bg-white p-[2.5em] pt-6 shadow-xl">
-        {/* Top bar: back + skip */}
-        <div className="mb-4 flex items-center justify-between">
+    <div className="relative min-h-screen w-full flex items-center justify-end overflow-hidden p-6">
+      {/* Background Masonry-like Grid */}
+      <div className="absolute inset-0 -z-10 grid grid-cols-3 gap-2 opacity-10 blur-[1px] scale-110">
+        {bgImages.map((src, i) => (
+          <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl grayscale">
+             <img src={src} alt="Travel bg" className="h-full w-full object-cover" />
+          </div>
+        ))}
+      </div>
+
+      <Toast
+        open={toastOpen}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setToastOpen(false)}
+      />
+
+      <div className="relative w-full max-w-[32em] rounded-[2.5rem] bg-white p-12 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
+        {/* Skip button */}
+        <div className="absolute top-8 right-8">
           <button
             type="button"
-            onClick={() => router.back()}
-            className="flex h-8 w-8 items-center justify-center text-gray-700"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className="text-xs font-medium text-gray-500 hover:text-gray-700"
+            onClick={() => router.push("/subscription")}
+            className="text-xs font-black text-gray-900 hover:text-blue-600 transition-colors"
           >
             Skip
           </button>
         </div>
 
-        {/* Title */}
-        <h1 className="mb-1 text-center text-2xl font-extrabold text-gray-900">
-          Create Profile
-        </h1>
-        <p className="mb-8 text-center text-xs text-gray-500">
-          Upload picture and write about your journey
-        </p>
-
-        {/* Avatar upload */}
-        <div className="mb-4 flex flex-col items-center">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              const url = URL.createObjectURL(file);
-              setAvatarPreview(url);
-            }}
-          />
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex h-[7em] w-[7em] items-center justify-center rounded-full bg-gradient-to-b from-blue-100 to-blue-50 text-blue-500 shadow-inner border border-dashed border-blue-300 overflow-hidden"
-          >
-            {avatarPreview ? (
-              // Use basic img for preview to avoid Next Image restrictions with blob URLs
-              <img
-                src={avatarPreview}
-                alt="Profile preview"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <Plus className="h-8 w-8" />
-            )}
-          </button>
-          <p className="mt-3 text-sm font-medium text-gray-800">
-            {email ?? "Your name"}
-          </p>
+        {/* Title & Subtitle */}
+        <div className="text-center mb-10">
+          <h1 className="text-2xl font-black text-gray-900 mb-1">Create Profile</h1>
+          <p className="text-[10px] font-medium text-gray-400">Upload picture and write about your journey</p>
         </div>
 
-        {/* Bio textarea */}
-        <form className="space-y-6 mt-4" onSubmit={handleSubmit}>
-          <div className="rounded-3xl bg-gray-50 px-4 py-3">
-            <textarea
-              value={bio}
-              onChange={(e) =>
-                setBio(e.target.value.slice(0, 250))
-              }
-              placeholder="Tell us about your journey!"
-              className="h-[5em] w-full resize-none border-none bg-transparent text-sm text-gray-700 outline-none"
-            />
-            <div className="mt-1 text-right text-[10px] text-gray-400">
-              {bio.length}/250
-            </div>
+        <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
+          {/* Avatar Area */}
+          <div className="flex flex-col items-center gap-3">
+             <div className="relative">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                {/* Circular pattern dotted border as in image */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-blue-500/50 bg-blue-50/30 transition-all hover:scale-105 active:scale-95 group overflow-hidden"
+                >
+                  <div className="absolute inset-2 rounded-full " />
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover rounded-full" />
+                  ) : (
+                    <div className="text-blue-500">
+                       <Plus className="h-8 w-8 stroke-[1.5]" />
+                    </div>
+                  )}
+                </button>
+             </div>
+             <p className="text-xs font-black text-gray-900">{fullNameValue}</p>
           </div>
 
-          {/* Company details */}
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-gray-900">
-              Company details
-            </h2>
-            <p className="text-xs text-gray-500">
-              Enter your company name and location
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <Input
-              id="companyName"
-              type="text"
-              placeholder="Enter Company Name"
-              className="w-full rounded-full bg-gray-100 border-none text-sm focus:ring-2 focus:ring-blue-300"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-            />
-
-            <div className="flex items-center rounded-full bg-gray-100 pl-4 pr-2 text-sm text-gray-600 focus-within:ring-2 focus-within:ring-blue-300">
-              <input
-                id="companyLocation"
-                type="text"
-                placeholder="Select Company Location"
-                className="flex-1 bg-transparent py-3 text-sm outline-none"
-                value={companyLocation}
-                onChange={(e) => setCompanyLocation(e.target.value)}
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div>
+              <Input
+                placeholder="Name"
+                className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
+                {...register("fullName")}
               />
-              <button
-                type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              {errors.fullName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.fullName.message}</p>}
+            </div>
+
+            <div className="relative">
+              <textarea
+                {...register("bio")}
+                placeholder="Tell us about your journey!"
+                className="w-full min-h-[120px] rounded-2xl bg-[#f4f4f4] border-none p-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 resize-none"
+              />
+              <div className="absolute bottom-4 right-6 text-[10px] font-bold text-gray-400">
+                {watch("bio")?.length || 0}/250
+              </div>
+              {errors.bio && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.bio.message}</p>}
             </div>
           </div>
 
-          {/* Verify button */}
+          {/* Professional Details Section */}
+          <div className="space-y-4">
+             <div>
+                <h2 className="text-sm font-black text-gray-900">Company details</h2>
+                <p className="text-[10px] font-medium text-gray-400">Enter your company name and location</p>
+             </div>
+
+             <div className="space-y-3">
+                <Input
+                  placeholder="Enter Company Name"
+                  className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
+                  {...register("companyName")}
+                />
+                {errors.companyName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.companyName.message}</p>}
+
+                <div className="relative">
+                  <Input
+                    placeholder="Select Company Location"
+                    className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
+                    {...register("country")} // Using Country as the location placeholder
+                  />
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-500">
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                     </svg>
+                  </div>
+                </div>
+                {(errors.city || errors.country || errors.street) && (
+                  <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">Please complete professional location details</p>
+                )}
+             </div>
+          </div>
+
+          {/* Submit Button */}
           <Button
             type="submit"
-            className="mt-4 w-full rounded-full bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-500 hover:to-blue-800 h-12 font-medium shadow-lg shadow-blue-300"
+            disabled={!isValid}
+            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${
+              !isValid 
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" 
+                : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
+            }`}
           >
             Verify
           </Button>
@@ -160,5 +205,4 @@ export default function CreateProfilePage() {
     </div>
   );
 }
-
 

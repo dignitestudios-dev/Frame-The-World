@@ -11,35 +11,115 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/schemas/Auth";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation } from "@tanstack/react-query";
-import { loginApi } from "@/services/authApi";
+import { signinApi, socialAuthApi } from "@/services/authApi";
+import { getApiErrorMessage } from "@/lib/apiError";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider, appleProvider } from "@/lib/firebase";
 
 export default function LoginPage() {
   const router = useRouter();
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const login = useAuthStore((state) => state.login);
-  // React Hook Form setup with Zod
+  const setGuest = useAuthStore((state) => state.setGuest);
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: "onChange",
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log("Login data:", data);
-    // TODO: call your login API here
-    setToastMessage("Login successful");
-    setToastOpen(true);
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: signinApi,
+    onSuccess: (data) => {
+      const user = data.data?.user || data.user;
+      const token = data.data?.token || data.token;
+      
+      login({ user, token });
+      setToastMessage(data?.message || "Login successful");
+      setToastType("success");
+      setToastOpen(true);
+
+      setTimeout(() => {
+        if (user?.isProfileCompleted) {
+          router.push("/home");
+        } else {
+          useAuthStore.getState().setAuthEmail(user?.email);
+          useAuthStore.getState().setOtpMode("signup");
+          router.push("/otp-verification");
+        }
+      }, 1000);
+    },
+    onError: (error) => {
+      setToastMessage(getApiErrorMessage(error));
+      setToastType("error");
+      setToastOpen(true);
+    },
+  });
+
+  const { mutate: socialLoginMutate, isPending: isSocialPending } = useMutation({
+    mutationFn: socialAuthApi,
+    onSuccess: (data) => {
+      const user = data.data?.user || data.user;
+      const token = data.data?.token || data.token;
+      
+      login({ user, token });
+      setToastMessage(data?.message || "Login successful");
+      setToastType("success");
+      setToastOpen(true);
+
+      setTimeout(() => {
+        if (user?.isProfileCompleted) {
+          router.push("/home");
+        } else {
+          // Social auth users skip email OTP verification
+          router.push("/verify-credentials");
+        }
+      }, 1000);
+    },
+    onError: (error) => {
+      setToastMessage(getApiErrorMessage(error));
+      setToastType("error");
+      setToastOpen(true);
+    },
+  });
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      socialLoginMutate({ method: "google", idToken });
+    } catch (error: any) {
+      setToastMessage(error.message || "Google login failed");
+      setToastType("error");
+      setToastOpen(true);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, appleProvider);
+      const idToken = await result.user.getIdToken();
+      socialLoginMutate({ method: "apple", idToken });
+    } catch (error: any) {
+      setToastMessage(error.message || "Apple login failed");
+      setToastType("error");
+      setToastOpen(true);
+    }
+  };
+
+  const onSubmit = (data: LoginFormData) => {
+    mutate({ email: data.email, password: data.password });
+  };
+
+  const handleGuestMode = () => {
+    setGuest(true);
     router.push("/home");
-    return useMutation({
-      mutationFn: loginApi,
-      onSuccess: (data) => {
-        login(data); // save user + token in zustand
-      },
-    });
   };
 
   return (
@@ -47,7 +127,7 @@ export default function LoginPage() {
       <Toast
         open={toastOpen}
         message={toastMessage}
-        type="success"
+        type={toastType}
         onClose={() => setToastOpen(false)}
       />
       <div className="rounded-2xl bg-white p-[4em] shadow-xl">
@@ -114,12 +194,27 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Login Button */}
           <Button
             type="submit"
-            className="w-full mt-3 gradient-bg text-white hover:from-blue-600 hover:to-blue-700 h-12 font-medium mb-4"
+            disabled={isPending || !isValid}
+            className={`w-full mt-3 h-12 font-medium mb-4 text-white transition-all ${
+              isPending || !isValid 
+                ? "bg-gray-300 cursor-not-allowed" 
+                : "gradient-bg hover:shadow-lg shadow-blue-200"
+            }`}
           >
-            Login
+
+            {isPending ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Logging in...
+              </span>
+            ) : (
+              "Login"
+            )}
           </Button>
 
           {/* Terms and Conditions - NO CHECKBOX */}
@@ -157,7 +252,9 @@ export default function LoginPage() {
           <div className="flex gap-4 justify-center">
             <button
               type="button"
-              className="flex  h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm hover:bg-gray-50 transition-colors"
+              onClick={handleGoogleLogin}
+              disabled={isSocialPending}
+              className={`flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm transition-colors ${isSocialPending ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
               aria-label="Login with Google"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24">
@@ -181,11 +278,31 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm hover:bg-gray-50 transition-colors"
+              onClick={handleAppleLogin}
+              disabled={isSocialPending}
+              className={`flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm transition-colors ${isSocialPending ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
               aria-label="Login with Apple"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center">
+            <button
+              type="button"
+              onClick={handleGuestMode}
+              className="text-gray-500 font-medium hover:text-blue-600 transition-colors flex items-center gap-2 group"
+            >
+              Continue as Guest
+              <svg 
+                className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </button>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import Link from "next/link";
@@ -26,17 +26,17 @@ export default function OtpVerificationPage() {
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const router = useRouter();
 
-  const { authEmail, otpMode, setResetToken, login } = useAuthStore();
+  const { authEmail, otpMode, setResetToken, login, _hasHydrated } = useAuthStore();
 
   const code = otp.join("");
   const isCodeValid = code.length === 5;
 
   // Redirect if no email in store
   useEffect(() => {
-    if (!authEmail) {
+    if (_hasHydrated && !authEmail) {
       router.replace("/login");
     }
-  }, [authEmail, router]);
+  }, [_hasHydrated, authEmail, router]);
 
   // Masonry background images
   const bgImages = [
@@ -176,7 +176,13 @@ export default function OtpVerificationPage() {
     }
   };
 
-  if (!authEmail) return null;
+  if (!_hasHydrated || !authEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-end overflow-hidden p-6">

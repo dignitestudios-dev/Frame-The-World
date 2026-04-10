@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,14 +21,14 @@ export default function CreatePasswordPage() {
   const [toastType, setToastType] = useState<"success" | "error">("error");
 
   const router = useRouter();
-  const { resetToken, authEmail, clearAuthFlow } = useAuthStore();
+  const { resetToken, authEmail, clearAuthFlow, _hasHydrated } = useAuthStore();
 
   // Redirect if no reset token
   useEffect(() => {
-    if (!resetToken) {
+    if (_hasHydrated && !resetToken) {
       router.replace("/forget-password");
     }
-  }, [resetToken, router]);
+  }, [_hasHydrated, resetToken, router]);
 
   const {
     register,
@@ -46,8 +46,9 @@ export default function CreatePasswordPage() {
       setToastMessage(data?.message || "Password updated successfully!");
       setToastType("success");
       setToastOpen(true);
-      clearAuthFlow();
-      router.push("/password-updated");
+      setTimeout(() => {
+        router.push("/password-updated");
+      }, 1000);
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -66,7 +67,13 @@ export default function CreatePasswordPage() {
     mutate({ resetToken, password: data.password });
   };
 
-  if (!resetToken) return null;
+  if (!_hasHydrated || !resetToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[32em]">

@@ -26,6 +26,8 @@ interface AuthState {
   tempProfileData: any | null;
 
   // Actions
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   setAuthEmail: (email: string) => void;
   setResetToken: (token: string) => void;
   setOtpMode: (mode: "signup" | "reset" | null) => void;
@@ -44,11 +46,13 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isGuest: false,
+      _hasHydrated: false,
       authEmail: null,
       resetToken: null,
       otpMode: null,
       tempProfileData: null,
 
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
       setAuthEmail: (email) => set({ authEmail: email }),
       setResetToken: (token) => set({ resetToken: token }),
       setOtpMode: (mode) => set({ otpMode: mode }),
@@ -106,6 +110,9 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

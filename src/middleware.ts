@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // 1. Define Routes
-const PUBLIC_ROUTES = ["/login", "/signup", "/forget-password"];
+const PUBLIC_ROUTES = ["/login", "/signup", "/forget-password", "/otp-verification", "/create-password", "/password-updated"];
 const ONBOARDING_ROUTES = ["/verify-credentials", "/create-profile", "/category-preference"];
 
 export function middleware(request: NextRequest) {

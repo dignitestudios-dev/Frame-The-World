@@ -179,7 +179,7 @@ export default function OtpVerificationPage() {
   if (!authEmail) return null;
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden p-6">
+    <div className="relative min-h-screen w-full flex items-center justify-end overflow-hidden p-6">
       {/* Background Masonry Grid */}
       <div className="absolute inset-0 -z-10 grid grid-cols-3 gap-2 opacity-10 blur-[1px] scale-110">
         {bgImages.map((src, i) => (

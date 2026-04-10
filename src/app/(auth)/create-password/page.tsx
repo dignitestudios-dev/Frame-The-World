@@ -47,9 +47,7 @@ export default function CreatePasswordPage() {
       setToastType("success");
       setToastOpen(true);
       clearAuthFlow();
-      setTimeout(() => {
-        router.push("/password-updated");
-      }, 1000);
+      router.push("/password-updated");
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));

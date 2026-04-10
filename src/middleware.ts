@@ -28,9 +28,7 @@ export function middleware(request: NextRequest) {
       if (ONBOARDING_ROUTES.includes(pathname)) {
         return NextResponse.next();
       }
-      // Redirect from public routes or protected routes to the first step of onboarding
-      // Note: In a more complex app, we might check exactly which step they are on.
-      // For now, if they aren't on an onboarding route, pick one.
+   
       if (pathname === "/login" || pathname === "/signup" || !ONBOARDING_ROUTES.includes(pathname)) {
         // Only redirect if trying to access restricted areas
         const isAccessingRestricted = ["/home", "/Profile", "/settings", "/login", "/signup"].some(p => pathname.startsWith(p));
@@ -59,12 +57,6 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// 4. Configure Matcher
-// Match all paths except:
-// - api routes
-// - _next routes (static, image, etc)
-// - favicon.ico
-// - public images/assets
 export const config = {
   matcher: [
     "/((?!api|_next/static|_next/image|favicon.ico|images).*)",

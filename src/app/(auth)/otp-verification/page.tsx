@@ -232,7 +232,7 @@ export default function OtpVerificationPage() {
           <div className="text-center">
             {!canResend ? (
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Didn't get link? <span className="text-gray-900">00:{timeLeft.toString().padStart(2, "0")}</span>
+                Didn't get Otp? <span className="text-gray-900">00:{timeLeft.toString().padStart(2, "0")}</span>
               </p>
             ) : (
               <button
@@ -241,7 +241,7 @@ export default function OtpVerificationPage() {
                 disabled={resendMutation.isPending}
                 className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline disabled:opacity-50"
               >
-                {resendMutation.isPending ? "Sending..." : "Resend Link"}
+                {resendMutation.isPending ? "Sending..." : "Resend Otp"}
               </button>
             )}
           </div>

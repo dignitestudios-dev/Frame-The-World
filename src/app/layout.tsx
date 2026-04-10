@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   title: "Frame the World",
   description: "Frame the World",
   icons: {
-    icon: "/images/logo.png",
-    shortcut: "/images/logo.png",
-    apple: "/images/logo.png",
+    icon: "/images/app_logo.png",
+    shortcut: "/images/app_logo.png",
+    apple: "/images/app_logo.png",
   },
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({
           <GuestModalProvider>
             {children}
           </GuestModalProvider>
-        </ReactQueryProvider>        
+        </ReactQueryProvider>
       </body>
     </html>
   );

@@ -232,7 +232,7 @@ const handleMouseDown = (e: React.MouseEvent) => {
                     className="object-cover"
                   />
 
-                  <button
+                  {/* <button
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent card navigation
                       executeWithCheck(() => setIsSaveOpen(true)); // Open SaveModal
@@ -240,7 +240,7 @@ const handleMouseDown = (e: React.MouseEvent) => {
                     className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow"
                   >
                     <Bookmark className="h-4 w-4 text-gray-700" />
-                  </button>
+                  </button> */}
                 </div>
               );
             })}

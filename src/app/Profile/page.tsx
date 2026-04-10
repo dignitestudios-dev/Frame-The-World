@@ -5,7 +5,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
-import { Bookmark, Grid, Image as ImageIcon, Lock, LockIcon } from "lucide-react";
+import { Bookmark, Grid, Image as ImageIcon, Lock, LockIcon, X, Loader2 } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -20,8 +20,11 @@ export default function TravelStoryPage() {
   const [frameVisibility, setFrameVisibility] = useState("public");
   const router = useRouter();
   const { user } = useAuthStore();
+  const [selectedBadge, setSelectedBadge] = useState<any>(null);
 
-  const { data: badgesData, isLoading, isError } = useQuery({
+  const LOCK_ICON = "/images/badge-lock-icon.png";
+
+  const { data: badgesData, isLoading: isBadgesLoading } = useQuery({
     queryKey: ["getUserBadges"],
     queryFn: getBadgesApi,
   });
@@ -32,14 +35,12 @@ export default function TravelStoryPage() {
   const isFrames = activeTab === "frames";
   const isPosts = activeTab === "posts";
   const isSpace = activeTab === "space";
-
   const badges = [
     "/images/badge1.png",
     "/images/badge2.png",
     "/images/badge3.png",
     "/images/badge4.png",
   ];
-
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
       <Header />
@@ -49,7 +50,7 @@ export default function TravelStoryPage() {
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-12">
 
           {/* ================= LEFT PROFILE CARD ================= */}
-          {isLoading ? (
+          {isBadgesLoading ? (
             <ProfileSidebarSkeleton />
           ) : (
             <aside className="relative lg:sticky lg:top-20 bg-[#f1f3f6] rounded-[30px] p-8 overflow-hidden shadow-sm h-fit">
@@ -121,31 +122,43 @@ export default function TravelStoryPage() {
                 </div>
                 <div className="w-full mt-10">
                   <h3 className="text-xl font-bold mb-6 text-gray-900 text-left w-full">Achievements</h3>
-                  <div className="grid grid-cols-4 gap-y-6 gap-x-2">
-                    {badgesData?.data?.map((badge: any, i: number) => {
-                      const isUnlocked = badge?.isLocked;
-                      return (
-                        <div key={i} className="flex flex-col items-center gap-2">
-                          <div className="relative w-12 h-12">
-                            <Image
-                              src={!isUnlocked ? badge?.icon : "/images/badge4.png"}
-                              alt={!isUnlocked ? `Badge ${i + 1}` : "Locked badge"}
-                              fill
-                              className={`object-contain ${isUnlocked && "opacity-40"}`}
-                            />
+                  <div className="grid grid-cols-4 gap-y-6 gap-x-2 min-h-[100px] items-center justify-center">
+                    {isBadgesLoading ? (
+                      <div className="col-span-4 flex justify-center py-4">
+                        <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                      </div>
+                    ) : (
+                      badgesData?.data?.map((badge: any, i: number) => {
+                        const isLocked = badge?.isLocked;
+                        return (
+                          <div
+                            key={i}
+                            className="flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105"
+                            onClick={() => setSelectedBadge(badge)}
+                          >
+                            <div className="relative w-12 h-12">
+                              {isLocked && (
+                                <div className="absolute inset-0 bg-gray-100/30 rounded-full blur-md scale-75 z-0"></div>
+                              )}
+                              <Image
+                                src={isLocked ? LOCK_ICON : badge?.icon}
+                                alt={!isLocked ? badge?.name : "Locked badge"}
+                                fill
+                                className={`object-contain relative z-10 ${isLocked ? "opacity-80 grayscale-[0.5]" : ""}`}
+                              />
+                            </div>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter text-center line-clamp-1">
+                              {badge?.name}
+                            </p>
                           </div>
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter text-center">
-                            {badge?.name}
-                          </p>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
             </aside>
           )}
-          {/* ================= RIGHT CONTENT AREA ================= */}
           {/* ================= RIGHT CONTENT ================= */}
           <section className="">
             <div className="bg-[#e2e8f7] rounded-full flex mb-10 shadow-sm">
@@ -369,6 +382,53 @@ export default function TravelStoryPage() {
           </section>
         </div>
       </div>
+
+      {/* Badge Modal */}
+      {selectedBadge && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-300"
+          onClick={() => setSelectedBadge(null)}
+        >
+          <div
+            className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Pull Handle */}
+            <div className="absolute top-4 w-12 h-1.5 bg-gray-900 rounded-full opacity-10"></div>
+
+            <button
+              onClick={() => setSelectedBadge(null)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+
+            <div className="relative w-40 h-40 md:w-52 md:h-52 mb-8">
+              <div className={`absolute inset-0 bg-gradient-to-b from-gray-100 to-transparent rounded-full blur-2xl scale-90 ${selectedBadge.isLocked ? "opacity-20" : "opacity-40"}`}></div>
+              <Image
+                src={selectedBadge.isLocked ? LOCK_ICON : selectedBadge.icon}
+                alt={selectedBadge.name}
+                fill
+                className={`relative object-contain ${selectedBadge.isLocked ? "" : "animate-in bounce-in duration-700"}`}
+              />
+            </div>
+
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 text-center mb-4 tracking-tight">
+              {selectedBadge.name}
+            </h2>
+
+            <p className="text-sm md:text-base font-medium text-gray-500 text-center leading-relaxed">
+              {selectedBadge.description || "The user hasn't unlocked this achievement yet."}
+            </p>
+
+            <div className="mt-10 w-full flex justify-center">
+              <div className="h-1.5 w-32 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gray-200 w-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

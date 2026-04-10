@@ -11,6 +11,7 @@ import TermsandConditions from "@/components/global/TermsandConditions";
 import PrivacyPolicy from "@/components/global/PrivacyPolicy";
 import OnboardingPage from "../(auth)/onboarding/page";
 import AppWalkthrough from "@/components/global/AppWalkthrough";
+import Badges from "@/components/global/Badges";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("Account Information");
@@ -39,8 +40,9 @@ export default function SettingsPage() {
               <TermsandConditions />
             ) : activeTab === "Privacy Policy" ? (
               <PrivacyPolicy />
+            ) : activeTab === "Badges" ? (
+              <Badges />
             ) : (
-
               <div className="bg-white p-20 rounded-[32px] text-center font-bold text-gray-300">
                 {activeTab} Content
               </div>

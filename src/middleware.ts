@@ -10,9 +10,10 @@ export function middleware(request: NextRequest) {
   const isGuest = request.cookies.get("isGuest")?.value;
   const isProfileCompleted = request.cookies.get("isProfileCompleted")?.value === "true";
   const { pathname } = request.nextUrl;
-
+console.log(token,"token--")
   // 2. Logic for Guest Users
   if (isGuest) {
+    console.log(token,"token--1")
     // If guest tries to access login/signup/onboarding, redirect to home
     if (PUBLIC_ROUTES.includes(pathname) || ONBOARDING_ROUTES.includes(pathname)) {
       return NextResponse.redirect(new URL("/home", request.url));
@@ -21,7 +22,8 @@ export function middleware(request: NextRequest) {
   }
 
   // 3. Logic for Logged In Users
-  if (token) {
+  if (token!="undefined") {
+     console.log(token,"token")
     // If profile is NOT completed
     if (!isProfileCompleted) {
       // Allow them to stay on onboarding routes

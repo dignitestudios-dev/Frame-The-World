@@ -1,8 +1,9 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-export const baseURL = "https://api.dev.frametheworld.org";
 
+// export const baseURL = "https://api.dev.frametheworld.org";
+export const baseURL = "https://api.staging.frametheworld.org";
 const headers = {
   "Content-Type": "application/json",
 };

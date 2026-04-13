@@ -114,14 +114,14 @@ export default function AppWalkthrough() {
           </div>
 
           {/* Skip Button (only if not on subscription step) */}
-          {currentStep < totalSteps - 1 && (
+          {/* {currentStep < totalSteps - 1 && (
             <button
               onClick={() => setCurrentStep(totalSteps - 1)}
               className="absolute top-10 right-8 text-white/50 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors"
             >
               Skip
             </button>
-          )}
+          )} */}
         </div>
       </div>
 

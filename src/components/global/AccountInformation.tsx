@@ -12,11 +12,12 @@ interface FieldProps {
   editable: boolean;
   onChange: (value: string) => void;
   disabled?: boolean;
+  maxLength?: number;
 }
 
-function InfoField({ label, value, editable, onChange, disabled }: FieldProps) {
+function InfoField({ label, value, editable, onChange, disabled, maxLength }: FieldProps) {
   return (
-    <div className={`flex items-center justify-between rounded-full bg-gray-100 px-4 py-3 ${disabled ? "opacity-60" : ""}`}>
+    <div className={`flex items-center justify-between rounded-lg bg-gray-100 px-4 py-3 ${disabled ? "opacity-60" : ""}`}>
       <div className="flex-1">
         <p className="text-xs text-gray-500">{label}</p>
         {editable && !disabled ? (
@@ -24,13 +25,14 @@ function InfoField({ label, value, editable, onChange, disabled }: FieldProps) {
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="text-sm font-medium text-blue-400 bg-transparent border-none outline-none w-full"
+            maxLength={maxLength}
+            className="text-sm font-medium   text-blue-400 bg-transparent border-none outline-none w-full"
           />
         ) : (
           <p className="text-sm font-medium text-blue-400">{value || "---"}</p>
         )}
       </div>
-      {!editable && !disabled && <Pencil size={16} className="cursor-pointer text-blue-500" />}
+      {/* {!editable && !disabled && <Pencil size={16} className="cursor-pointer text-blue-500" />} */}
     </div>
   );
 }
@@ -179,13 +181,15 @@ export default function AccountInformation() {
             label="IATA Number"
             value={iataNumber}
             editable={isEditing}
-            onChange={setIataNumber}
+            onChange={(val) => setIataNumber(val.replace(/\D/g, "").slice(0, 8))}
+            maxLength={8}
           />
           <InfoField
             label="CLIA Number"
             value={cliaNumber}
             editable={isEditing}
-            onChange={setCliaNumber}
+            onChange={(val) => setCliaNumber(val.replace(/\D/g, "").slice(0, 8))}
+            maxLength={8}
           />
         </div>
       </section>

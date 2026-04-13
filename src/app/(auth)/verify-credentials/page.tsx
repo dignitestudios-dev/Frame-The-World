@@ -105,8 +105,13 @@ export default function VerifyCredentialsPage() {
               id="iata"
               type="text"
               placeholder="IATA number"
+              maxLength={8}
               className="w-full rounded-full bg-gray-100 border-none focus:ring-2 focus:ring-blue-300"
-              {...register("iata")}
+              {...register("iata", {
+                onChange: (e) => {
+                  e.target.value = e.target.value.replace(/\D/g, "").slice(0, 8);
+                },
+              })}
             />
             {errors.iata && (
               <p className="text-red-500 text-xs mt-1">{errors.iata.message}</p>
@@ -121,8 +126,13 @@ export default function VerifyCredentialsPage() {
             id="clia"
             type="text"
             placeholder="CLIA number"
+            maxLength={8}
             className="w-full rounded-full bg-gray-100 border-none focus:ring-2 focus:ring-blue-300"
-            {...register("clia")}
+            {...register("clia", {
+              onChange: (e) => {
+                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 8);
+              },
+            })}
           />
 
           <Button

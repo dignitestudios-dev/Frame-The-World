@@ -11,7 +11,9 @@ interface User {
   role?: string;
   company?: any;
   isProfileCompleted?: boolean;
-  isVerified?: boolean;
+  isSubscribed?: boolean;
+  isEmailVerified?: boolean;
+  identityStatus?: "pending" | "approved" | "rejected" | "not-provided" | string;
 }
 
 interface AuthState {

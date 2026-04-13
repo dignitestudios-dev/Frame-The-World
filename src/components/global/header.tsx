@@ -10,7 +10,7 @@ import { Plus } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation } from "@tanstack/react-query";
 import { logoutApi } from "@/services/authApi";
-import { useGuestModal } from "@/providers/GuestModalProvider";
+import { useAccessControl } from "@/providers/AccessControlProvider";
 
 export default function Header() {  
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal" | null>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
-  const { executeWithCheck } = useGuestModal();
+  const { executeWithCheck } = useAccessControl();
 
   const { mutate: logoutMutate } = useMutation({
     mutationFn: logoutApi,
@@ -100,10 +100,11 @@ export default function Header() {
     { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100" ,route: "/CreatePersonalStorage" },
   ];
   const handleCardClick = (route: string) => {
+    // Content cards like "Create Post" are restricted for pending users
     executeWithCheck(() => {
       router.push(route);
       setIsMenuOpen(false);
-    });
+    }, { isPendingAllowed: false });
   };
  const frames = [
     {
@@ -195,7 +196,7 @@ console.log(user,"user---response")
             <div className="flex items-center gap-2">
               <div 
                 className="flex cursor-pointer items-center gap-2" 
-                onClick={() => executeWithCheck(() => router.push("/Profile"))}
+                onClick={() => executeWithCheck(() => router.push("/Profile"), { isPendingAllowed: true })}
               >
                 <div className="relative">
                   <Image
@@ -225,7 +226,7 @@ console.log(user,"user---response")
 
             {/* Search button */}
             <button 
-              onClick={() => executeWithCheck(() => router.push("/search"))}
+              onClick={() => executeWithCheck(() => router.push("/search"), { isPendingAllowed: false })}
               className="active:scale-90 transition-transform"
             >
               <Image
@@ -239,7 +240,7 @@ console.log(user,"user---response")
 
             {/* Bell button */}
             <button
-              onClick={() => executeWithCheck(() => setIsNotificationOpen(!isNotificationOpen))}
+              onClick={() => executeWithCheck(() => setIsNotificationOpen(!isNotificationOpen), { isPendingAllowed: false })}
               className="cursor-pointer active:scale-90 transition-transform"
             >
               <Image
@@ -285,7 +286,7 @@ console.log(user,"user---response")
                         setIsMenuOpen(false);
                       }
                       if (item.func) item.func();
-                    });
+                    }, { isPendingAllowed: item.label === "Settings" || item.label === "Home" });
                   };
                   
                   return (

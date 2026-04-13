@@ -3,10 +3,11 @@
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuthStore } from "@/store/authStore";
 
 export default function PasswordUpdatedPage() {
-  const { authEmail, clearAuthFlow, _hasHydrated } = useAuthStore();
+  const { clearAuthFlow, _hasHydrated } = useAuthStore();
 
   // Clear flow on unmount
   useEffect(() => {
@@ -24,42 +25,41 @@ export default function PasswordUpdatedPage() {
   }
 
   return (
-    <div className="w-full max-w-[32em] animate-in fade-in zoom-in duration-500">
-      <div className="rounded-[2.5rem] bg-white p-12 shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col items-center">
-        {/* Success Icon with Animation */}
-        <div className="mb-8 relative">
-          <div className="absolute inset-0 bg-green-100 rounded-full scale-150 opacity-20 animate-ping"></div>
-          <div className="relative h-20 w-20 flex items-center justify-center bg-green-50 rounded-full">
-            <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-            </svg>
+    <div className="w-full max-w-[32em] animate-in fade-in zoom-in duration-700 bg-white p-10 rounded-lg">
+      <div className="flex flex-col items-center justify-between min-h-[60vh] md:min-h-0 md:justify-center text-center px-4 md:px-0">
+        
+        <div className="flex flex-col items-center mt-12 md:mt-0">
+          {/* Success Shield Icon */}
+          <div className="mb-4 relative ">
+            <Image
+              src="/images/success-icon.png"
+              alt="Success"
+              width={100}
+              height={100}
+              className=""              
+            />
           </div>
+
+          {/* Title - Bold and Tracking Tight */}
+          <h1 className="mb-4 text-3xl md:text-4xl font-[900] text-black tracking-tight">
+            Password Updated!
+          </h1>
+
+          {/* Subtitle - Gray and clean */}
+          <p className="text-[13px] md:text-base font-medium text-gray-500 leading-relaxed">
+            Your new password has been updated successfully.<br />
+            Back to Login Page.
+          </p>
         </div>
 
-        {/* Title */}
-        <h1 className="mb-3 text-3xl font-black text-gray-900 tracking-tight">
-          Success!
-        </h1>
-
-        {/* Subtitle */}
-        <p className="mb-10 text-sm font-medium text-gray-500 leading-relaxed px-4">
-          Your password has been updated
-          {authEmail ? (
-            <>
-              {" "}for <span className="text-gray-900 font-bold">{authEmail}</span>.
-            </>
-          ) : (
-            " successfully."
-          )}
-          {" "}You can now use your new password to log in.
-        </p>
-
-        {/* Login Button */}
-        <Link href="/login" className="w-full">
-          <Button className="w-full h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-base hover:opacity-90 transition-all shadow-xl shadow-blue-100">
-            Back to Login
-          </Button>
-        </Link>
+        {/* Login Button - Positioned at bottom on mobile like screenshot */}
+        <div className="w-full  md:mt-16 pb-10 md:pb-0 px-4 md:px-0">
+          <Link href="/login" className="w-full">
+            <Button className="w-full h-14 md:h-16 rounded-full bg-[#DEE7FF] text-[#3B54F0] font-bold text-lg hover:bg-[#D0DCFF] active:scale-[0.98] transition-all border-none">
+              Login
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

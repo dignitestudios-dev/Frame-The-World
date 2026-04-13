@@ -6,7 +6,7 @@ import Header from "@/components/global/header";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import SaveModal from "@/components/global/SaveModal"; 
-import { useGuestModal } from "@/providers/GuestModalProvider";
+import { useAccessControl } from "@/providers/AccessControlProvider";
 import { GridCardSkeleton } from "@/components/global/Skeletons";
 
 export default function TravelStoryPage() {
@@ -19,7 +19,7 @@ export default function TravelStoryPage() {
 
   const isFrames = activeTab === "frames";
   const router = useRouter();
-  const { executeWithCheck } = useGuestModal();
+  const { executeWithCheck } = useAccessControl();
 
 
 const handleMouseDown = (e: React.MouseEvent) => {
@@ -101,7 +101,7 @@ const handleMouseDown = (e: React.MouseEvent) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              executeWithCheck(() => router.push("/framedetails"));
+              executeWithCheck(() => router.push("/framedetails"), { isPendingAllowed: false });
             }}
             className="
               absolute bottom-3 right-3
@@ -161,7 +161,7 @@ const handleMouseDown = (e: React.MouseEvent) => {
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              onClick={() => executeWithCheck(() => router.push("/framedetails"))}
+              onClick={() => executeWithCheck(() => router.push("/framedetails"), { isPendingAllowed: false })}
               className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px]"
             >
               {/* Outer Image */}
@@ -212,7 +212,7 @@ const handleMouseDown = (e: React.MouseEvent) => {
       {!isFrames && (
         <div className="max-w-[1400px] mx-auto">
           <div 
-            onClick={() => executeWithCheck(() => router.push("/postdetails"))}
+            onClick={() => executeWithCheck(() => router.push("/postdetails"), { isPendingAllowed: false })}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] gap-6 cursor-pointer"
           >
             {/* Note: In the future, wrap this with actual loading state from useQuery */}

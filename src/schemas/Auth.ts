@@ -1,15 +1,18 @@
 import { z } from "zod";
 
+// Shared Password Schema - used across all password inputs for consistency
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
+
 // Signup Schema - matches POST /auth/signup { email, method, password }
 export const signupSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+  password: passwordSchema,
 });
 
 // Login Schema - matches POST /auth/signin { email, method, password }
@@ -17,9 +20,7 @@ export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters long")
-    .regex(/[^A-Za-z0-9]/, "Include at least one special character")
-    .regex(/^\S*$/, "Password must not contain any spaces"),
+    .min(1, "Password is required"), // Login only requires the password to be present, strict rules are for creation
 });
 
 // Forgot Password Schema - matches POST /auth/forgot { email }
@@ -40,13 +41,7 @@ export const otpSchema = z.object({
 // Create Password Schema - matches POST /auth/update-password { resetToken, password }
 export const createPasswordSchema = z
   .object({
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number")
-      .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+    password: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -79,8 +74,8 @@ export const profileSchema = z.object({
 
 // Verify Credentials Schema - matches POST /users/verify-identity { iata }
 export const verifyCredentialsSchema = z.object({
-  iata: z.string().optional(),
-  clia: z.string().optional(),
+  iata: z.string().max(8, "IATA number must be at most 8 digits").regex(/^\d*$/, "IATA number must contain only digits").optional(),
+  clia: z.string().max(8, "CLIA number must be at most 8 digits").regex(/^\d*$/, "CLIA number must contain only digits").optional(),
 }).refine((data) => data.iata || data.clia, {
   message: "Please enter either an IATA or CLIA number",
   path: ["iata"],

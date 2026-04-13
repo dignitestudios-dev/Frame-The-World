@@ -83,8 +83,8 @@ export default function ForgetPasswordPage() {
 
           {/* Subtitle */}
           <p className="mb-8 text-sm text-gray-600 text-center">
-            Enter your email and we&apos;ll send you a code to get back into
-            your account.
+            Enter your email and we&apos;ll send you a OTP To Forgot your
+            Pawword
           </p>
 
           {/* Form */}
@@ -125,7 +125,7 @@ export default function ForgetPasswordPage() {
                   Sending...
                 </span>
               ) : (
-                "Send Recovery Code"
+                "Send OTP"
               )}
             </Button>
           </form>

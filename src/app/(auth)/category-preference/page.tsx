@@ -44,7 +44,7 @@ export default function CategoryPreferencePage() {
       if (data?.data) {
         updateUser(data?.data);
       }
-      router.push("/subscription");
+      router.push("/verify-credentials");
 
       clearAuthFlow();
 

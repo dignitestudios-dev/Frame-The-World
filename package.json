@@ -10,6 +10,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",
+    "@react-google-maps/api": "^2.20.8",
     "@tanstack/react-query": "^5.95.2",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
@@ -22,6 +23,7 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.72.0",
     "tailwind-merge": "^3.4.0",
+    "use-places-autocomplete": "^4.0.1",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },

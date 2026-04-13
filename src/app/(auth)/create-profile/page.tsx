@@ -4,16 +4,28 @@ import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, LogOut, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { profileSchema, ProfileFormData } from "@/schemas/Auth";
 import { useAuthStore } from "@/store/authStore";
+import { profileSchema, ProfileFormData } from "@/schemas/Auth";
+import { useLoadScript, Autocomplete } from "@react-google-maps/api";
+import usePlacesAutocomplete, {
+  getGeocode,
+  getLatLng,
+} from "use-places-autocomplete";
+
+const libraries: ("places")[] = ["places"];
 
 export default function CreateProfilePage() {
   const router = useRouter();
-  const { user, tempProfileData, setTempProfileData } = useAuthStore();
+  const { user, tempProfileData, setTempProfileData, logout } = useAuthStore();
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: "AIzaSyC6LrtTPhE8q_ACFVW_mGzwXM_RhRqq0d0", // Using Firebase Key as it's often linked
+    libraries,
+  });
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -28,6 +40,7 @@ export default function CreateProfilePage() {
     handleSubmit,
     formState: { errors, isValid },
     watch,
+    setValue,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     mode: "onChange",
@@ -35,6 +48,25 @@ export default function CreateProfilePage() {
       fullName: user?.name || "",
     },
   });
+
+  const {
+    ready,
+    value: locationValue,
+    suggestions: { status, data: locationData },
+    setValue: setLocationValue,
+    clearSuggestions,
+  } = usePlacesAutocomplete({
+    requestOptions: {
+      /* Define search scope here */
+    },
+    debounce: 300,
+  });
+
+  const handleSelectLocation = async (address: string) => {
+    setLocationValue(address, false);
+    clearSuggestions();
+    setValue("country", address, { shouldValidate: true });
+  };
 
   const onSubmit = (data: ProfileFormData) => {
     // Save to store and proceed to Step 2
@@ -84,14 +116,17 @@ export default function CreateProfilePage() {
       />
 
       <div className="relative w-full max-w-[32em] rounded-[2.5rem] bg-white p-12 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
-        {/* Skip button */}
+        {/* Logout button */}
         <div className="absolute top-8 right-8">
           <button
             type="button"
-            onClick={() => router.push("/subscription")}
-            className="text-xs font-black text-gray-900 hover:text-blue-600 transition-colors"
+            onClick={() => {
+              logout();
+              router.push("/login");
+            }}
+            className="text-xs font-black text-gray-900 hover:text-red-600 transition-colors"
           >
-            Skip
+            <LogOut />
           </button>
         </div>
 
@@ -121,23 +156,35 @@ export default function CreateProfilePage() {
                   <div className="absolute inset-2 rounded-full " />
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover rounded-full" />
-                  ) : (
+                   ) : (
                     <div className="text-blue-500">
                        <Plus className="h-8 w-8 stroke-[1.5]" />
                     </div>
                   )}
                 </button>
              </div>
-             <p className="text-xs font-black text-gray-900">{fullNameValue}</p>
+             <p className="text-xs font-black text-gray-900">Upload Image</p>
           </div>
 
           {/* Form Fields */}
           <div className="space-y-4">
-            <div>
+             <div>
               <Input
-                placeholder="Name"
+                placeholder="Enter your name"
+                maxLength={100}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
-                {...register("fullName")}
+                {...register("fullName", {
+                  onChange: (e) => {
+                    let val = e.target.value;
+                    // Remove any characters that are not letters or spaces
+                    val = val.replace(/[^a-zA-Z\s]/g, "");
+                    // Prevent leading space
+                    if (val.startsWith(" ")) {
+                      val = val.trimStart();
+                    }
+                    e.target.value = val;
+                  },
+                })}
               />
               {errors.fullName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.fullName.message}</p>}
             </div>
@@ -145,6 +192,7 @@ export default function CreateProfilePage() {
             <div className="relative">
               <textarea
                 {...register("bio")}
+                maxLength={250}
                 placeholder="Tell us about your journey!"
                 className="w-full min-h-[120px] rounded-2xl bg-[#f4f4f4] border-none p-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 resize-none"
               />
@@ -163,19 +211,46 @@ export default function CreateProfilePage() {
              </div>
 
              <div className="space-y-3">
-                <Input
-                  placeholder="Enter Company Name"
-                  className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
-                  {...register("companyName")}
-                />
-                {errors.companyName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.companyName.message}</p>}
+                 <Input
+                   placeholder="Enter your company name"
+                   maxLength={100}
+                   className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
+                   {...register("companyName", {
+                     onChange: (e) => {
+                       const val = e.target.value;
+                       if (val.startsWith(" ")) {
+                         e.target.value = val.trimStart();
+                       }
+                     },
+                   })}
+                 />
+                 {errors.companyName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.companyName.message}</p>}
 
-                <div className="relative">
+                 <div className="relative">
                   <Input
                     placeholder="Select Company Location"
+                    // disabled={!ready}
                     className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
-                    {...register("country")} // Using Country as the location placeholder
+                    {...register("country")}
+                    autoComplete="off"
+                    onChange={(e) => {
+                      register("country").onChange(e);
+                      setLocationValue(e.target.value);
+                    }}
                   />
+                  {status === "OK" && (
+                    <div className="absolute z-10 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
+                      {locationData.map(({ place_id, description }) => (
+                        <div
+                          key={place_id}
+                          onClick={() => handleSelectLocation(description)}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium"
+                        >
+                          {description}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-500">
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -189,7 +264,7 @@ export default function CreateProfilePage() {
           </div>
 
           {/* Submit Button */}
-          <Button
+           <Button
             type="submit"
             disabled={!isValid}
             className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${
@@ -198,11 +273,10 @@ export default function CreateProfilePage() {
                 : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
             }`}
           >
-            Verify
+            Next
           </Button>
         </form>
       </div>
     </div>
   );
 }
-

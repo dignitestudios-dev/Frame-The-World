@@ -157,7 +157,7 @@ export default function LoginPage() {
             <Input
               id="email"
               type="email"
-              placeholder="Email"
+              placeholder="Enter Your Email"
               className="w-full"
               {...register("email")}
             />
@@ -173,7 +173,7 @@ export default function LoginPage() {
             <Input
               id="password"
               type="password"
-              placeholder="Password"
+              placeholder="Enter Your Password"
               className="w-full"
               {...register("password")}
             />
@@ -308,7 +308,7 @@ export default function LoginPage() {
           </div>
 
           {/* Sign Up Link */}
-          <div className="mt-6 text-center text-sm text-gray-600">
+          {/* <div className="mt-6 text-center text-sm text-gray-600">
             Don&apos;t have an account?{" "}
             <Link
               href="/signup"
@@ -316,7 +316,7 @@ export default function LoginPage() {
             >
               Create now
             </Link>
-          </div>
+          </div> */}
         </form>
       </div>
     </div>

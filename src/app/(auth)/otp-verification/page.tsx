@@ -110,7 +110,7 @@ export default function OtpVerificationPage() {
         });
       }
       setTimeout(() => {
-        router.push("/verify-credentials");
+        router.push("/create-profile");
       }, 1000);
     },
     onError: (error) => {
@@ -210,9 +210,9 @@ export default function OtpVerificationPage() {
         </div>
 
         <div className="text-center mb-10">
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Verification</h1>
+          <h1 className="text-2xl font-black text-gray-900 mb-2">Verify Your Email</h1>
           <p className="text-xs font-medium text-gray-400 px-8">
-            Enter the OTP sent to <span className="font-bold text-gray-900">{authEmail}</span>
+            Enter the OTP sent to your email <span className="font-bold text-gray-900">{authEmail}</span>
           </p>
         </div>
 

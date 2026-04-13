@@ -15,7 +15,11 @@ export const signupSchema = z.object({
 // Login Schema - matches POST /auth/signin { email, method, password }
 export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .regex(/[^A-Za-z0-9]/, "Include at least one special character")
+    .regex(/^\S*$/, "Password must not contain any spaces"),
 });
 
 // Forgot Password Schema - matches POST /auth/forgot { email }
@@ -52,9 +56,20 @@ export const createPasswordSchema = z
 
 // Profile Schema (Step 1)
 export const profileSchema = z.object({
-  fullName: z.string().min(1, "Full Name is required"),
+  fullName: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be at most 100 characters")
+    .regex(/^[a-zA-Z\s]*$/, "Name can only contain letters and spaces")
+    .regex(/^[^\s].*$/, "Name cannot start with a whitespace")
+    .transform((val) => val.trim()),
   bio: z.string().max(250, "Bio must be at most 250 characters").optional(),
-  companyName: z.string().min(1, "Company name is required"),
+  companyName: z
+    .string()
+    .min(1, "Company name is required")
+    .max(100, "Company name must be at most 100 characters")
+    .regex(/^[^\s].*$/, "Company name cannot start with a whitespace")
+    .transform((val) => val.trim()),
   street: z.string().optional(),
   city: z.string().optional(),
   country: z.string().min(1, "Location is required"),

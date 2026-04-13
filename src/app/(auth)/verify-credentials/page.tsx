@@ -40,7 +40,7 @@ export default function VerifyCredentialsPage() {
       setToastType("success");
       setToastOpen(true);
       setTimeout(() => {
-        router.push("/create-profile");
+        router.push("/subscription");
       }, 1000);
     },
     onError: (error) => {

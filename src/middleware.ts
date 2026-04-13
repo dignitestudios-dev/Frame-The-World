@@ -7,52 +7,35 @@ const ONBOARDING_ROUTES = ["/verify-credentials", "/create-profile", "/category-
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
-  const isGuest = request.cookies.get("isGuest")?.value;
+  const isGuest = request.cookies.get("isGuest")?.value === "true";
   const isProfileCompleted = request.cookies.get("isProfileCompleted")?.value === "true";
   const { pathname } = request.nextUrl;
-console.log(token,"token--")
-  // 2. Logic for Guest Users
-  if (isGuest) {
-    console.log(token,"token--1")
-    // If guest tries to access login/signup/onboarding, redirect to home
-    if (PUBLIC_ROUTES.includes(pathname) || ONBOARDING_ROUTES.includes(pathname)) {
-      return NextResponse.redirect(new URL("/home", request.url));
-    }
+
+  // 1. Allow public routes to always be accessible
+  if (PUBLIC_ROUTES.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // 3. Logic for Logged In Users
-  if (token!="undefined") {
-     console.log(token,"token")
-    // If profile is NOT completed
-    if (!isProfileCompleted) {
-      // Allow them to stay on onboarding routes
-      if (ONBOARDING_ROUTES.includes(pathname)) {
-        return NextResponse.next();
-      }
-   
-      if (pathname === "/login" || pathname === "/signup" || !ONBOARDING_ROUTES.includes(pathname)) {
-        // Only redirect if trying to access restricted areas
-        const isAccessingRestricted = ["/home", "/Profile", "/settings", "/login", "/signup"].some(p => pathname.startsWith(p));
-        if (isAccessingRestricted) {
-          return NextResponse.redirect(new URL("/verify-credentials", request.url));
-        }
-      }
-    } 
-    // If profile IS completed
-    else {
-      // Redirect away from login/signup/onboarding to home
-      if (PUBLIC_ROUTES.includes(pathname) || ONBOARDING_ROUTES.includes(pathname)) {
-        return NextResponse.redirect(new URL("/home", request.url));
-      }
-    }
+  // 2. Guest Logic - Allow guests to visit everything except possibly restricted profile/onboarding areas
+  if (isGuest) {
+     // If guest tries to access login/signup/onboarding, it's allowed but usually they'd stay on home
+     return NextResponse.next();
   }
 
-  // 4. Logic for Unauthenticated Users
-  if (!token && !isGuest) {
-    const isPublic = PUBLIC_ROUTES.includes(pathname);
-    if (!isPublic) {
-      return NextResponse.redirect(new URL("/login", request.url));
+  // 3. Authentication Check
+  if (!token || token === "undefined") {
+    // Redirect to login if not a guest and not on a public route
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // 4. Onboarding Check (for logged-in users)
+  if (!isProfileCompleted) {
+    // If not on an onboarding route, redirect to the start of onboarding
+    if (!ONBOARDING_ROUTES.includes(pathname)) {
+      const isAccessingRestricted = ["/home", "/Profile", "/settings"].some(p => pathname.startsWith(p));
+      if (isAccessingRestricted) {
+        return NextResponse.redirect(new URL("/create-profile", request.url));
+      }
     }
   }
 

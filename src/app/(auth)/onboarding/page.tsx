@@ -22,7 +22,7 @@ const walkthroughContent = [
     imageHeight: 800,
     title: "100% Human-Free, AI-Free, Manipulation-Free",
     description: "Our AI ensures every picture is or  iginal, no humans, no AI-generated images, You can even use the AI tool to remove humans from your own clicks before posting.",
-  },    
+  },
   {
     image: "/images/onboard3.png",
     imageClassName: "object-contain grayscale ",

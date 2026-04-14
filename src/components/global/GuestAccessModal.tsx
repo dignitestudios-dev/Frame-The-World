@@ -24,17 +24,17 @@ const GuestAccessModal = ({ isOpen, onClose }: GuestAccessModalProps) => {
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" 
-        onClick={onClose} 
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={onClose}
       />
-      
+
       {/* Modal Container */}
       <div className="relative w-full max-w-[400px] bg-white rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-        
+
         {/* Header/Banner */}
         <div className="h-32 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center relative">
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/50 rounded-full transition-colors"
           >
@@ -63,9 +63,8 @@ const GuestAccessModal = ({ isOpen, onClose }: GuestAccessModalProps) => {
               className="w-full h-12 gradient-bg text-white font-semibold rounded-xl hover:shadow-lg transition-all"
             >
               <LogIn className="w-5 h-5 mr-2" />
-              Sign In
+              Sign In / Sign Up
             </Button>
-
             <Button
               onClick={() => {
                 onClose();
@@ -77,13 +76,31 @@ const GuestAccessModal = ({ isOpen, onClose }: GuestAccessModalProps) => {
               <UserPlus className="w-5 h-5 mr-2" />
               Sign Up
             </Button>
-
             <button
               onClick={onClose}
               className="mt-2 text-sm text-gray-400 font-medium hover:text-gray-600 transition-colors"
             >
               Maybe later
             </button>
+
+            <div className="mt-6 text-[11px] text-gray-400">
+              By continuing, you agree to our{" "}
+              <a 
+                href="https://www.frametheworld.org/terms-condition" 
+                target="_blank" 
+                className="text-blue-500 hover:underline font-medium"
+              >
+                Terms
+              </a>{" "}
+              &{" "}
+              <a 
+                href="https://www.frametheworld.org/privacy-policy" 
+                target="_blank" 
+                className="text-blue-500 hover:underline font-medium"
+              >
+                Privacy Policy
+              </a>
+            </div>
           </div>
         </div>
       </div>

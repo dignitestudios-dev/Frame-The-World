@@ -221,14 +221,16 @@ export default function LoginPage() {
           <div className="text-sm font-medium text-[#000000] mb-6 mt-6 text-center">
             I accept the{" "}
             <Link
-              href="#"
+              href="https://www.frametheworld.org/terms-condition"
+              target="_blank"
               className="gradient-text  bg-clip-text text-transparent font-bold hover:underline"
             >
               Terms & conditions
             </Link>{" "}
             and{" "}
             <Link
-              href="#"
+              href="https://www.frametheworld.org/privacy-policy"
+              target="_blank"
               className="gradient-text bg-clip-text text-transparent hover:underline"
             >
               Privacy policy

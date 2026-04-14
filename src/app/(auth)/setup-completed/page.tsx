@@ -22,14 +22,14 @@ export default function SetupCompletedPage() {
 
         {/* Title */}
         <h1 className="mb-3 text-2xl font-extrabold text-gray-900">
-          Verified, Subscribed <br></br>&amp; Ready to Frame the<br></br> World!
+          Verified, Subscribed &amp;
+          <br></br> Ready to Frame the
+          World!<br></br>
         </h1>
 
         {/* Subtitle */}
         <p className="mb-8 text-sm text-gray-600 ml-[2em] mr-[2em]">
-          Welcome aboard, traveler! Your subscription is active and your account
-          is verified. Start exploring, posting, and framing your travel stories
-          now.
+          Welcome aboard, traveler! Your subscription is active and your account is verified. Start exploring, posting, and framing your travel stories now.
         </p>
 
         <Button
@@ -37,7 +37,7 @@ export default function SetupCompletedPage() {
           onClick={() => router.push("/onboarding")}
           className="mt-2 w-full rounded-full bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-500 hover:to-blue-800 h-12 font-medium shadow-lg shadow-blue-300"
         >
-          Continue
+          Start Framing
         </Button>
       </div>
     </div>

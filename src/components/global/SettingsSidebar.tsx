@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 const menuItems = [
   "Account Information",
   "Change Password",
-  "Subscription",
+  // "Subscription",
   "Notifications",
   "App Walkthrough",
   // "Badges",
@@ -19,12 +19,22 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   const { user } = useAuthStore();
 
   const handleTabClick = (item: string) => {
+    if (item === "Terms & Condition") {
+      window.open("https://www.frametheworld.org/terms-condition", "_blank");
+      return;
+    }
+    if (item === "Privacy Policy") {
+      window.open("https://www.frametheworld.org/privacy-policy", "_blank");
+      return;
+    }
+
     // Only Account Information and legal docs are allowed for pending users in Settings
     const isAllowedForPending = [
       "Account Information",
       "Terms & Condition",
       "Privacy Policy",
-      "Change Password"
+      "Change Password",
+      "App Walkthrough"
     ].includes(item);
 
     executeWithCheck(() => {

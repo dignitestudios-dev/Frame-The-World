@@ -12,11 +12,11 @@ import { useMutation } from "@tanstack/react-query";
 import { logoutApi } from "@/services/authApi";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 
-export default function Header() {  
+export default function Header() {
   const router = useRouter();
   const { logout, user } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal" | null>(null);
@@ -40,7 +40,7 @@ export default function Header() {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (
-        menuRef.current && 
+        menuRef.current &&
         !menuRef.current.contains(target) &&
         megaMenuRef.current &&
         !megaMenuRef.current.contains(target)
@@ -76,28 +76,28 @@ export default function Header() {
 
   const sidebarItems = [
     { icon: Home, label: "Home", hasArrow: false, route: "/home", title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: Globe, label: "Public frames", hasArrow: true , func:()=> setIsFrameType("public"), title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: Lock, label: "Private frames", hasArrow: true , func:()=> setIsFrameType("private"), title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: Pin, label: "Personal Storage", hasArrow: true , func:()=> setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
+    // { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Globe, label: "Public frames", hasArrow: true, func: () => setIsFrameType("public"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Lock, label: "Private frames", hasArrow: true, func: () => setIsFrameType("private"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Pin, label: "Personal Storage", hasArrow: true, func: () => setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Sparkles, label: "AI Content generator", hasArrow: false, route: "/AiGenerator", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Settings, label: "Settings", hasArrow: false, title: "Create Post", subtitle: "Shared with everyone.", route: "/settings" },
-    { 
-      icon: LogOut, 
-      label: "Logout", 
-      hasArrow: false, 
-      isDestructive: true, 
-      title: "Create Post", 
+    {
+      icon: LogOut,
+      label: "Logout",
+      hasArrow: false,
+      isDestructive: true,
+      title: "Create Post",
       subtitle: "Shared with everyone.",
-      func: handleLogout 
+      func: handleLogout
     },
   ];
 
 
   const contentCards = [
-    { image: "/images/icons/one.png", title: "Create Post", subtitle: "Shared with everyone.", color: "bg-blue-100" ,route: "/Createdpost" },
-    { image: "/images/icons/two.png", title: "Create Frames", subtitle: "Shared with everyone.", color: "bg-purple-100" ,route: "/CreateFrames" },
-    { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100" ,route: "/CreatePersonalStorage" },
+    { image: "/images/icons/one.png", title: "Create Post", subtitle: "Shared with everyone.", color: "bg-blue-100", route: "/Createdpost" },
+    { image: "/images/icons/two.png", title: "Create Frames", subtitle: "Shared with everyone.", color: "bg-purple-100", route: "/CreateFrames" },
+    { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100", route: "/CreatePersonalStorage" },
   ];
   const handleCardClick = (route: string) => {
     // Content cards like "Create Post" are restricted for pending users
@@ -106,7 +106,7 @@ export default function Header() {
       setIsMenuOpen(false);
     }, { isPendingAllowed: false });
   };
- const frames = [
+  const frames = [
     {
       id: 1,
       image: "/images/1.jpg", // Replace with your image URL
@@ -142,17 +142,17 @@ export default function Header() {
       image: "/images/1.jpg", // Replace with your image URL
       name: "Frame name here",
     },
-    
+
   ];
   const pathname = usePathname();
 
   const activeItem = sidebarItems.find(
-  (item) => item.route?.toLowerCase() === pathname.toLowerCase()
-);
+    (item) => item.route?.toLowerCase() === pathname.toLowerCase()
+  );
 
-const headerTitle = activeItem?.label || "Dashboard";
-const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
-console.log(user,"user---response")
+  const headerTitle = activeItem?.label || "Dashboard";
+  const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
+  console.log(user, "user---response")
   return (
     <>
       {/* Backdrop Overlay */}
@@ -191,11 +191,11 @@ console.log(user,"user---response")
           </div>
 
           {/* Right side - User info and actions */}
-          <div className="flex items-center gap-2 md:gap-6">
+          <div className="flex items-center gap-8 md:gap-12">
             {/* User profile with level badge */}
             <div className="flex items-center gap-2">
-              <div 
-                className="flex cursor-pointer items-center gap-2" 
+              <div
+                className="flex cursor-pointer items-center gap-2"
                 onClick={() => executeWithCheck(() => router.push("/Profile"), { isPendingAllowed: true })}
               >
                 <div className="relative">
@@ -211,7 +211,7 @@ console.log(user,"user---response")
                   {user?.name || "User"}
                 </span>
               </div>
-              
+
               {/* Level Badge - Hide on tiny screens */}
               <div className="relative">
                 <Image
@@ -223,40 +223,43 @@ console.log(user,"user---response")
                 />
               </div>
             </div>
+            <div className="flex items-center gap-6" >
 
-            {/* Search button */}
-            <button 
-              onClick={() => executeWithCheck(() => router.push("/search"), { isPendingAllowed: false })}
-              className="active:scale-90 transition-transform"
-            >
-              <Image
-                src="/images/search.png"
-                alt="Search"
-                height={40}
-                width={40}
-                className="md:w-[50px] md:h-[50px]"
-              />
-            </button>
 
-            {/* Bell button */}
-            <button
-              onClick={() => executeWithCheck(() => setIsNotificationOpen(!isNotificationOpen), { isPendingAllowed: false })}
-              className="cursor-pointer active:scale-90 transition-transform"
-            >
-              <Image
-                src="/images/notifaction.png"
-                alt="Notification"
-                height={40}
-                width={40}
-                className="md:w-[50px] md:h-[50px]"
-              />
-            </button>
+              {/* Search button */}
+              <button
+                onClick={() => executeWithCheck(() => router.push("/search"), { isPendingAllowed: false })}
+                className="active:scale-90 transition-transform"
+              >
+                <Image
+                  src="/images/search.png"
+                  alt="Search"
+                  height={40}
+                  width={40}
+                  className="md:w-[50px] md:h-[50px]"
+                />
+              </button>
+
+              {/* Bell button */}
+              <button
+                onClick={() => executeWithCheck(() => setIsNotificationOpen(!isNotificationOpen), { isPendingAllowed: false })}
+                className="cursor-pointer active:scale-90 transition-transform"
+              >
+                <Image
+                  src="/images/notifaction.png"
+                  alt="Notification"
+                  height={40}
+                  width={40}
+                  className="md:w-[50px] md:h-[50px]"
+                />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {isMenuOpen && (
-        <div 
+        <div
           ref={megaMenuRef}
           className="fixed md:sticky top-16 md:top-20 left-0 right-0 z-[60] bg-white rounded-b-3xl shadow-2xl border-b border-gray-200 animate-[slideDown_0.3s_ease-out] overflow-y-auto max-h-[90vh] md:max-h-none"
           onClick={(e) => e.stopPropagation()}
@@ -288,14 +291,13 @@ console.log(user,"user---response")
                       if (item.func) item.func();
                     }, { isPendingAllowed: item.label === "Settings" || item.label === "Home" });
                   };
-                  
+
                   return (
                     <button
                       key={index}
                       onClick={handleClick}
-                      className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-xl hover:bg-gray-100 transition-all ${
-                        item.isDestructive ? "bg-red-50/50 hover:bg-red-100" : ""
-                      }`}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-xl hover:bg-gray-100 transition-all ${item.isDestructive ? "bg-red-50/50 hover:bg-red-100" : ""
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <Icon

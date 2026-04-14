@@ -15,18 +15,21 @@ interface AnalyzingModalProps {
   onClose?: () => void;
   onAiEdit?: () => void;
   onChangeImage?: () => void;
-setIsImage: React.Dispatch<React.SetStateAction<boolean>>;
-
+  setIsImage: React.Dispatch<React.SetStateAction<boolean>>;
   handleRemoveImage?: () => void;
+  status: "idle" | "pending" | "success" | "error";
+  onSuccess?: () => void;
 }
 
 const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
   setIsImage,
-    handleRemoveImage,
+  handleRemoveImage,
   isOpen,
   onClose,
   onAiEdit,
   onChangeImage,
+  status,
+  onSuccess,
 }) => {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState<ModalStep>("analyzing");
@@ -41,31 +44,23 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
     if (!isOpen) return;
 
     setVisible(true);
-    setStep("analyzing");
 
-    // Simulate Analyzing
-    const analyzingTimer = setTimeout(() => {
-      // Example: randomly make one check fail
+    if (status === "pending") {
+      setStep("analyzing");
+      setChecks((prev) => prev.map((c) => ({ ...c, status: "loading" })));
+    } else if (status === "success") {
+      setChecks((prev) => prev.map((c) => ({ ...c, status: "success" })));
+      setStep("result");
+    } else if (status === "error") {
+      // Default error mapping if backend doesn't provide specific check results
       setChecks([
         { id: 1, label: "Human Detection Check", status: "success" },
-        { id: 2, label: "Editing Manipulation Check", status: "success" }, // <-- simulate error
+        { id: 2, label: "Editing Manipulation Check", status: "error" },
         { id: 3, label: "AI Generated Content Check", status: "success" },
       ]);
-      setStep("result");
-    }, 2000);
-
-    // Move to final-error if any check failed
-    const finalTimer = setTimeout(() => {
-      if (checks.some((c) => c.status === "error")) {
-        setStep("final-error");
-      }
-    }, 4000);
-
-    return () => {
-      clearTimeout(analyzingTimer);
-      clearTimeout(finalTimer);
-    };
-  }, [isOpen]);
+      setStep("final-error");
+    }
+  }, [isOpen, status]);
 
   if (!isOpen) return null;
 
@@ -114,12 +109,13 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const allSuccess = checks.every((c) => c.status === "success");
 
   useEffect(() => {
-    if (allSuccess) {
-      setTimeout(() => {
-        setIsImage(false); // Set myState to false after 1 second
+    if (allSuccess && status === "success") {
+      const timer = setTimeout(() => {
+        onSuccess?.();
       }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [allSuccess]);
+  }, [allSuccess, status, onSuccess]);
 
   return (
     <div className="fixed inset-10 flex items-end justify-center">

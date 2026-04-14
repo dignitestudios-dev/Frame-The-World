@@ -8,29 +8,20 @@ export default function Imagepage({
   setIsImage,
   handleRemoveImage,
   handleImageUpload,
+  status,
+  onSuccess,
 }: {
   preview: string | null;
   setIsImage: React.Dispatch<React.SetStateAction<boolean>>;
   handleRemoveImage: () => void;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  status: "idle" | "pending" | "success" | "error";
+  onSuccess?: () => void;
 }) {
-  // component code
-
-  const [showModal, setShowModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Modal auto open after image change
-  useEffect(() => {
-    if (!preview) return;
-
-    setShowModal(false);
-
-    const timer = setTimeout(() => {
-      setShowModal(true);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [  preview]);
+  // Modal is now driven by status prop
+  const showModal = status !== "idle";
 
   // Image change function
   
@@ -58,13 +49,15 @@ export default function Imagepage({
 
       {/* Modal */}
       {showModal && (
-          <AnalyzingModal
-        setIsImage={setIsImage}
-        handleRemoveImage={handleRemoveImage}
-        isOpen={showModal}
-        onChangeImage={() => fileInputRef.current?.click()}
+        <AnalyzingModal
+          setIsImage={setIsImage}
+          handleRemoveImage={handleRemoveImage}
+          isOpen={showModal}
+          onChangeImage={() => fileInputRef.current?.click()}
+          status={status}
+          onSuccess={onSuccess}
         />
-    )}
+      )}
     </div>
   );
 }

@@ -1,26 +1,30 @@
-
-
 "use client";
 
 import Image from "next/image";
 import { useState } from "react";
-
-import { Bookmark, Grid, Image as ImageIcon, Lock, LockIcon, X, Loader2 } from "lucide-react";
+import { LockIcon, X, Loader2, ImageOff } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import { useQuery } from "@tanstack/react-query";
-import { getBadgesApi, getUserProfileApi } from "@/services/authApi";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getBadgesApi } from "@/services/authApi";
+import { deletePostApi, getOwnPostsApi } from "@/services/postApi";
 import { ProfileSidebarSkeleton, GridCardSkeleton } from "@/components/global/Skeletons";
+import OwnPostCard from "@/components/profile/OwnPostCard";
+import EditPostModal from "@/components/profile/EditPostModal";
+import DeleteConfirmModal from "@/components/profile/DeleteConfirmModal";
 
 export default function TravelStoryPage() {
-  const [activeTab, setActiveTab] = useState<"posts" | "frames" | "space">(
-    "posts"
-  );
+  const [activeTab, setActiveTab] = useState<"posts" | "frames" | "space">("posts");
   const [frameVisibility, setFrameVisibility] = useState("public");
   const router = useRouter();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
+  const [editingPost, setEditingPost] = useState<any>(null);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   const LOCK_ICON = "/images/badge-lock-icon.png";
 
@@ -29,18 +33,38 @@ export default function TravelStoryPage() {
     queryFn: getBadgesApi,
   });
 
+  // Fetch own posts
+  const {
+    data: ownPostsData,
+    isLoading: isPostsLoading,
+    isError: isPostsError,
+    refetch: refetchPosts,
+  } = useQuery({
+    queryKey: ["ownPosts"],
+    queryFn: () => getOwnPostsApi({ page: 1, limit: 30 }),
+    enabled: activeTab === "posts",
+  });
 
-  console.log("badgesData", badgesData?.data);
+  const ownPosts: any[] = ownPostsData?.data?.data || ownPostsData?.data?.results || ownPostsData?.data || [];
+
+  // Delete mutation
+  const { mutate: deletePost, isPending: isDeleting } = useMutation({
+    mutationFn: (postId: string) => deletePostApi(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ownPosts"] });
+      setDeletingPostId(null);
+      setDeleteSuccess(true);
+      setTimeout(() => setDeleteSuccess(false), 3000);
+    },
+  });
+
+  const handleConfirmDelete = () => {
+    if (deletingPostId) deletePost(deletingPostId);
+  };
 
   const isFrames = activeTab === "frames";
   const isPosts = activeTab === "posts";
   const isSpace = activeTab === "space";
-  const badges = [
-    "/images/badge1.png",
-    "/images/badge2.png",
-    "/images/badge3.png",
-    "/images/badge4.png",
-  ];
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
       <Header />
@@ -221,31 +245,80 @@ export default function TravelStoryPage() {
               </button>
             </div>
 
+            {/* ============ SUCCESS TOASTS ============ */}
+            {editSuccess && (
+              <div className="fixed top-5 right-5 z-[200] flex items-center gap-2 px-5 py-3 bg-green-500 text-white rounded-2xl shadow-lg animate-in slide-in-from-top-3 duration-300">
+                <span className="font-semibold text-sm">✓ Post updated successfully!</span>
+              </div>
+            )}
+            {deleteSuccess && (
+              <div className="fixed top-5 right-5 z-[200] flex items-center gap-2 px-5 py-3 bg-red-500 text-white rounded-2xl shadow-lg animate-in slide-in-from-top-3 duration-300">
+                <span className="font-semibold text-sm">✓ Post deleted successfully!</span>
+              </div>
+            )}
+
             {/* ================= POSTS GRID ================= */}
             {isPosts && (
-              <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[120px] gap-6">
-                {Array.from({ length: 20 }).map((_, i) => {
-                  const isTall = i % 3 === 0 || i % 2 === 0;
-
-                  return (
-                    <div
-                      key={i}
-                      className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl
-                      ${isTall ? "row-span-3" : "row-span-2"}`}
-                    >
-                      <Image
-                        src={`/images/${(i % 4) + 1}.jpg`}
-                        alt="Travel"
-                        fill
-                        className="object-cover cursor-pointer"
-                        onClick={() => router.push("/postdetails")}
+              <div>
+                {/* Loading Skeleton */}
+                {isPostsLoading && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[120px] gap-6">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-[28px] bg-gray-100 animate-pulse ${i % 3 === 0 || i % 2 === 0 ? "row-span-3" : "row-span-2"}`}
                       />
-                      {/* <button className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow">
-                      <Bookmark className="h-4 w-4 text-gray-700" />
-                    </button> */}
+                    ))}
+                  </div>
+                )}
+
+                {/* Error State */}
+                {isPostsError && !isPostsLoading && (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                    <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+                      <ImageOff className="w-8 h-8 text-red-400" />
                     </div>
-                  );
-                })}
+                    <div>
+                      <p className="font-bold text-gray-800 mb-1">Failed to load posts</p>
+                      <p className="text-sm text-gray-400">Something went wrong. Please try again.</p>
+                    </div>
+                    <button
+                      onClick={() => refetchPosts()}
+                      className="px-6 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!isPostsLoading && !isPostsError && ownPosts.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                    <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
+                      <ImageOff className="w-10 h-10 text-blue-300" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800 mb-1">No posts yet</p>
+                      <p className="text-sm text-gray-400">Create your first post to see it here.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Real Posts Grid */}
+                {!isPostsLoading && !isPostsError && ownPosts.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[120px] gap-6">
+                    {ownPosts.map((post: any, i: number) => (
+                      <OwnPostCard
+                        key={post.id || post._id || i}
+                        post={post}
+                        isTall={i % 3 === 0 || i % 2 === 0}
+                        onClick={() => router.push(`/postdetails`)}
+                        onEdit={(p) => setEditingPost(p)}
+                        onDelete={(postId) => setDeletingPostId(postId)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {/* ================= FRAMES GRID ================= */}
@@ -429,6 +502,25 @@ export default function TravelStoryPage() {
           </div>
         </div>
       )}
+
+      {/* ===== EDIT POST MODAL ===== */}
+      <EditPostModal
+        post={editingPost}
+        isOpen={!!editingPost}
+        onClose={() => setEditingPost(null)}
+        onSuccess={() => {
+          setEditSuccess(true);
+          setTimeout(() => setEditSuccess(false), 3000);
+        }}
+      />
+
+      {/* ===== DELETE CONFIRM MODAL ===== */}
+      <DeleteConfirmModal
+        isOpen={!!deletingPostId}
+        isPending={isDeleting}
+        onClose={() => setDeletingPostId(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

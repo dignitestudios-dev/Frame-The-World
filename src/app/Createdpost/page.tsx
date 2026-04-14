@@ -3,58 +3,94 @@
 import Imagepage from "@/components/createpost/Imagepage";
 import Header from "@/components/global/header";
 import React, { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getCategoriesApi } from "@/services/authApi";
+import { createPostApi } from "@/services/postApi";
+import { CategoryChipSkeleton } from "@/components/global/Skeletons";
 
 interface UploadFormProps {
-  onGenerate?: (data: FormData) => void;
+  onGenerate?: (data: any) => void;
 }
 
 interface FormData {
   image: File | null;
-  destination: string;
-  location: string;
-  state: string;
-  country: string;
+  caption: string;
   agreedToTerms: boolean;
+  categories: string[];
 }
 
 const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
   const [formData, setFormData] = useState<FormData>({
     image: null,
-    destination: "",
-    location: "",
-    state: "",
-    country: "",
+    caption: "",
     agreedToTerms: false,
+    categories: [],
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-const [isImage, setIsImage] = useState<boolean>(false);
+  const [isImage, setIsImage] = useState<boolean>(false);
+
+  // Fetch categories
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => getCategoriesApi({ limit: 100 }),
+  });
+
+  const categories = categoriesData?.data?.results || categoriesData?.data || [];
+
+  const toggleCategory = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(id)
+        ? prev.categories.filter((catId) => catId !== id)
+        : [...prev.categories, id],
+    }));
+  };
+
+  // Create post mutation
+  const { mutate, status, error, reset } = useMutation({
+    mutationFn: createPostApi,
+    onSuccess: (data) => {
+      console.log("Post created successfully:", data);
+      // Success handling is done inside the AnalyzingModal via the onSuccess prop
+    },
+    onError: (err) => {
+      console.error("Error creating post:", err);
+    },
+  });
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-
       setFormData({ ...formData, image: file });
-
-      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
-      setIsImage(true);
     }
   };
 
   const handleRemoveImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: null,
-    }));
-
+    setFormData((prev) => ({ ...prev, image: null }));
     setImagePreview(null);
+    reset();
   };
 
   const handleGenerate = () => {
-    if (onGenerate) {
-      onGenerate(formData);
+    if (!formData.image) return;
+
+    const data = new FormData();
+
+    if (formData.image) {
+      data.append("media", formData.image);
     }
+    data.append("caption", formData.caption);
+    formData.categories.forEach((catId, index) => {
+      data.append(`categories[${index}]`, catId);
+    });
+    const values = Object.fromEntries(data.entries());
+    console.log(values,"form-->data--->");
+    setIsImage(true);
+    mutate(data);
   };
+
   useEffect(() => {
     return () => {
       if (imagePreview) {
@@ -71,13 +107,28 @@ const [isImage, setIsImage] = useState<boolean>(false);
           preview={imagePreview}
           setIsImage={setIsImage}
           handleImageUpload={handleImageUpload}
-         
+          status={status}
+          onSuccess={() => {
+            // After successful AI verification
+            reset();
+            setIsImage(false);
+            setFormData({
+              image: null,
+              caption: "",
+              agreedToTerms: false,
+              categories: [],
+            });
+            setImagePreview(null);
+          }}
         />
       ) : (
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-6 m-4">
           {/* Header */}
           <div className="flex items-start  mb-6">
-            <button className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <button
+              onClick={() => window.history.back()}
+              className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -151,92 +202,48 @@ const [isImage, setIsImage] = useState<boolean>(false);
           </div>
 
           {/* Destination Input */}
-          <div className="mb-4">
+          <div className="mb-6">
             <input
               type="text"
-              placeholder="Enter destination"
-              value={formData.destination}
+              placeholder="Enter Caption"
+              value={formData.caption}
               onChange={(e) =>
-                setFormData({ ...formData, destination: e.target.value })
+                setFormData({ ...formData, caption: e.target.value })
               }
               className="w-full px-4 py-3 bg-blue-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            <div className="mt-2 px-4 text-xs text-blue-500">#tag, #etc</div>
           </div>
 
-          {/* Select Location */}
-          <div className="mb-4">
-            <button className="w-full px-4 py-3 bg-gray-50 rounded-lg flex items-center justify-between hover:bg-gray-100 transition-colors">
-              <div className="flex items-center">
-                <svg
-                  className="w-5 h-5 text-blue-500 mr-3"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="text-gray-700">Select Location</span>
-              </div>
-              <svg
-                className="w-5 h-5 text-blue-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Select State */}
-          <div className="mb-4">
-            <select
-              value={formData.state}
-              onChange={(e) =>
-                setFormData({ ...formData, state: e.target.value })
-              }
-              className="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236366f1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 1rem center",
-                backgroundSize: "1.25rem",
-              }}
-            >
-              <option value="">Select State</option>
-              <option value="state1">State 1</option>
-              <option value="state2">State 2</option>
-            </select>
-          </div>
-
-          {/* Select Country */}
+          {/* fetch Categories Here */}
           <div className="mb-6">
-            <select
-              value={formData.country}
-              onChange={(e) =>
-                setFormData({ ...formData, country: e.target.value })
-              }
-              className="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236366f1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 1rem center",
-                backgroundSize: "1.25rem",
-              }}
-            >
-              <option value="">Select Country</option>
-              <option value="country1">Country 1</option>
-              <option value="country2">Country 2</option>
-            </select>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">
+              Select Categories
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {categoriesLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <CategoryChipSkeleton key={i} />
+                ))
+              ) : (
+                categories.map((cat: any) => {
+                  const catId = cat.id || cat._id;
+                  const isSelected = formData.categories.includes(catId);
+                  return (
+                    <button
+                      key={catId}
+                      type="button"
+                      onClick={() => toggleCategory(catId)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${isSelected
+                        ? "gradient-bg text-white border-none shadow-md"
+                        : "bg-gray-50 text-gray-700 border-gray-100 hover:bg-gray-200"
+                        }`}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           {/* Checkbox */}
@@ -259,10 +266,15 @@ const [isImage, setIsImage] = useState<boolean>(false);
           {/* Generate Button */}
           <button
             onClick={handleGenerate}
-            disabled={!formData.image || !formData.agreedToTerms}
+            disabled={
+              !formData.image ||
+              !formData.agreedToTerms ||
+              formData.categories.length === 0 ||
+              status === "pending"
+            }
             className="w-full py-4 bg-gradient-to-r from-blue-400 to-purple-400 text-white font-medium rounded-full hover:from-blue-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Generate
+            {status === "pending" ? "Analyzing..." : "Generate"}
           </button>
         </div>
       )}

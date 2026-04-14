@@ -76,7 +76,7 @@ export default function Header() {
 
   const sidebarItems = [
     { icon: Home, label: "Home", hasArrow: false, route: "/home", title: "Create Post", subtitle: "Shared with everyone.", },
-    // { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Globe, label: "Public frames", hasArrow: true, func: () => setIsFrameType("public"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Lock, label: "Private frames", hasArrow: true, func: () => setIsFrameType("private"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Pin, label: "Personal Storage", hasArrow: true, func: () => setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },

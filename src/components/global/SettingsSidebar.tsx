@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 const menuItems = [
   "Account Information",
   "Change Password",
-  // "Subscription",
+  "Subscription",
   "Notifications",
   "App Walkthrough",
   // "Badges",

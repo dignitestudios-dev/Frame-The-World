@@ -119,3 +119,94 @@ export const getCategoriesApi = async (params?: { page?: number; limit?: number 
   const res = await API.get("/categories", { params });
   return res.data;
 };
+
+export type FeedPost = {
+  _id: string;
+  caption: string | null;
+  media?: {
+    location?: string | null;
+  } | null;
+};
+
+export type FeedPostsResponse = {
+  success: boolean;
+  message: string;
+  data: FeedPost[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
+
+// GET /posts - Feed listing with pagination
+export const getPostsApi = async (params: { page: number; limit: number }) => {
+  const res = await API.get<FeedPostsResponse>("/posts", { params });
+  return res.data;
+};
+
+export type FeaturedPost = {
+  _id: string;
+  status?: string;
+  media?: {
+    _id?: string;
+    fileName?: string;
+    key?: string;
+    location?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type FeaturedPostsResponse = {
+  success: boolean;
+  message: string;
+  data: FeaturedPost[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
+
+// GET /posts/featured - Featured feed listing with pagination
+export const getFeaturedPostsApi = async (params: { page: number; limit: number }) => {
+  const res = await API.get<FeaturedPostsResponse>("/posts/featured", { params });
+  return res.data;
+};
+
+export type FrameFeedItem = {
+  _id: string;
+  title: string;
+  totalPosts: number;
+  cover?: {
+    _id?: string;
+    fileName?: string;
+    key?: string;
+    location?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
+};
+
+export type FramesFeedResponse = {
+  success: boolean;
+  message: string;
+  data: FrameFeedItem[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
+
+// GET /frames - Frames feed listing with pagination
+export const getFramesApi = async (params: { page: number; limit: number }) => {
+  const res = await API.get<FramesFeedResponse>("/frames", { params });
+  return res.data;
+};

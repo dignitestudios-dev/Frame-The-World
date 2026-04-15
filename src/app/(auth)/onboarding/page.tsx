@@ -104,15 +104,7 @@ export default function OnboardingPage() {
                   />
                 ))}
               </div>
-              {currentStep < totalSteps - 1 && (
-                <button
-                  type="button"
-                  onClick={handleSkip}
-                  className="absolute right-0 top-0 text-white text-sm font-medium hover:text-white/80 transition-colors"
-                >
-                  Skip
-                </button>
-              )}
+          
             </div>
 
             {/* Title */}

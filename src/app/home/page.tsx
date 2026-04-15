@@ -1,13 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, Bookmark, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Header from "@/components/global/header";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import SaveModal from "@/components/global/SaveModal"; 
 import { useAccessControl } from "@/providers/AccessControlProvider";
 import { GridCardSkeleton } from "@/components/global/Skeletons";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getApiErrorMessage } from "@/lib/apiError";
+import { getFeaturedPostsApi, getFramesApi, getPostsApi } from "@/services/authApi";
+
+const FEED_PAGE_LIMIT = 10;
+const FALLBACK_IMAGE_URL =
+  "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
+const FRAME_COVER_FALLBACK_URL = "https://static.vecteezy.com/system/resources/previews/009/007/126/non_2x/document-file-not-found-search-no-result-concept-illustration-flat-design-eps10-modern-graphic-element-for-landing-page-empty-state-ui-infographic-icon-vector.jpg";
+
+function isImageUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  return /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
+}
 
 export default function TravelStoryPage() {
   const [activeTab, setActiveTab] = useState<"forYou" | "featured" | "frames">("forYou");
@@ -20,6 +33,144 @@ export default function TravelStoryPage() {
   const isFrames = activeTab === "frames";
   const router = useRouter();
   const { executeWithCheck } = useAccessControl();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  const {
+    data: forYouPages,
+    isLoading: isForYouLoading,
+    isError: isForYouError,
+    error: forYouError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["for-you-feed"],
+    queryFn: ({ pageParam }) => getPostsApi({ page: pageParam, limit: FEED_PAGE_LIMIT }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { currentPage, totalPages } = lastPage.pagination;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    enabled: activeTab === "forYou",
+  });
+
+  const {
+    data: featuredPages,
+    isLoading: isFeaturedLoading,
+    isError: isFeaturedError,
+    error: featuredError,
+    fetchNextPage: fetchFeaturedNextPage,
+    hasNextPage: hasFeaturedNextPage,
+    isFetchingNextPage: isFetchingFeaturedNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["featured-feed"],
+    queryFn: ({ pageParam }) =>
+      getFeaturedPostsApi({ page: pageParam, limit: FEED_PAGE_LIMIT }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { currentPage, totalPages } = lastPage.pagination;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    enabled: activeTab === "featured",
+  });
+
+  const {
+    data: framesPages,
+    isLoading: isFramesLoading,
+    isError: isFramesError,
+    error: framesError,
+    fetchNextPage: fetchFramesNextPage,
+    hasNextPage: hasFramesNextPage,
+    isFetchingNextPage: isFetchingFramesNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["frames-feed"],
+    queryFn: ({ pageParam }) => getFramesApi({ page: pageParam, limit: FEED_PAGE_LIMIT }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { currentPage, totalPages } = lastPage.pagination;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    enabled: activeTab === "frames",
+  });
+
+  const forYouPosts = useMemo(() => {
+    if (!forYouPages?.pages) return [];
+    return forYouPages.pages
+      .flatMap((page) => page.data)
+      .filter((post) => isImageUrl(post.media?.location));
+  }, [forYouPages]);
+
+  const featuredPosts = useMemo(() => {
+    if (!featuredPages?.pages) return [];
+    return featuredPages.pages
+      .flatMap((page) => page.data)
+      .filter((post) => isImageUrl(post.media?.location));
+  }, [featuredPages]);
+
+  const frameItems = useMemo(() => {
+    if (!framesPages?.pages) return [];
+    return framesPages.pages.flatMap((page) => page.data);
+  }, [framesPages]);
+
+  const isForYouTab = activeTab === "forYou";
+  const isFeaturedTab = activeTab === "featured";
+  const isFramesTab = activeTab === "frames";
+  const isFeedTab = isForYouTab || isFeaturedTab || isFramesTab;
+
+  const activePosts = isForYouTab ? forYouPosts : isFeaturedTab ? featuredPosts : [];
+  const isTabLoading = isForYouTab
+    ? isForYouLoading
+    : isFeaturedTab
+      ? isFeaturedLoading
+      : isFramesLoading;
+  const isTabError = isForYouTab ? isForYouError : isFeaturedTab ? isFeaturedError : isFramesError;
+  const tabError = isForYouTab ? forYouError : isFeaturedTab ? featuredError : framesError;
+
+  useEffect(() => {
+    if (!isFeedTab) return;
+    if (!loadMoreRef.current) return;
+
+    const hasMore = isForYouTab ? hasNextPage : isFeaturedTab ? hasFeaturedNextPage : hasFramesNextPage;
+    const isFetching = isForYouTab
+      ? isFetchingNextPage
+      : isFeaturedTab
+        ? isFetchingFeaturedNextPage
+        : isFetchingFramesNextPage;
+    const fetchMore = isForYouTab
+      ? fetchNextPage
+      : isFeaturedTab
+        ? fetchFeaturedNextPage
+        : fetchFramesNextPage;
+
+    if (!hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting && !isFetching) {
+          fetchMore();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [
+    fetchFeaturedNextPage,
+    fetchFramesNextPage,
+    fetchNextPage,
+    hasFeaturedNextPage,
+    hasFramesNextPage,
+    hasNextPage,
+    isFeaturedTab,
+    isFeedTab,
+    isFetchingFramesNextPage,
+    isFetchingFeaturedNextPage,
+    isFetchingNextPage,
+    isFramesTab,
+    isForYouTab,
+  ]);
 
 
 const handleMouseDown = (e: React.MouseEvent) => {
@@ -157,53 +308,103 @@ const handleMouseDown = (e: React.MouseEvent) => {
 
       {/* ====== FRAMES GRID (only when Frames clicked) ====== */}
       {isFrames && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 pl-10">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              onClick={() => executeWithCheck(() => router.push("/framedetails"), { isPendingAllowed: false })}
-              className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px]"
-            >
-              {/* Outer Image */}
-              <Image
-                src={`/images/${(i % 4) + 1}.jpg`}
-                alt="Frame"
-                fill
-                className="object-cover"
-              />
-
-              {/* Inner Frame Border (centered with inset) */}
-              <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
-                <Image
-                  src={`/images/${((i + 1) % 4) + 1}.jpg`}
-                  alt="Frame Inner"
-                  fill
-                  className="object-cover opacity-90"
-                />
-              </div>
-
-              {/* Inner shadow glow */}
-              <div className="absolute inset-0 rounded-[49.26px] shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)]" />
-
-              {/* ====== SMALL IMAGE BEHIND TEXT (CENTERED) ====== */}
-              <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
-                  <Image
-                    src={`/images/${((i + 2) % 4) + 1}.jpg`}
-                    alt="Mini Frame"
-                    fill
-                    className="object-cover opacity-80"
-                  />
+        <div className="max-w-[1400px] mx-auto">
+          {isTabLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {Array.from({ length: 10 }).map((_, index) => (
+                <div key={index}>
+                  <GridCardSkeleton />
                 </div>
+              ))}
+            </div>
+          ) : isTabError ? (
+            <div className="py-10 text-center text-red-600 font-medium">
+              {getApiErrorMessage(tabError)}
+            </div>
+          ) : frameItems.length === 0 ? (
+            <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
+              <div className="relative h-48 w-48 md:h-56 md:w-56">
+                <Image src="/images/no data found.jpg" alt="No data found" fill className="object-contain" />
+              </div>
+              <p className="mt-4 text-gray-600 font-medium">No data found</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                {frameItems.map((frame, i) => {
+                  const coverUrl =
+                    isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL;
+                  return (
+                    <div
+                      key={frame._id}
+                      onClick={() =>
+                        executeWithCheck(() => router.push("/framedetails"), { isPendingAllowed: false })
+                      }
+                      className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px]"
+                    >
+                      <img
+                        src={coverUrl}
+                        alt={frame.title || "Frame"}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        loading="lazy"
+                        onError={(event) => {
+                          const target = event.currentTarget;
+                          if (target.src !== FRAME_COVER_FALLBACK_URL) {
+                            target.src = FRAME_COVER_FALLBACK_URL;
+                          }
+                        }}
+                      />
+
+                      <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
+                        <img
+                          src={coverUrl}
+                          alt={`${frame.title || "Frame"} inner`}
+                          className="absolute inset-0 h-full w-full object-cover opacity-90"
+                          loading="lazy"
+                          onError={(event) => {
+                            const target = event.currentTarget;
+                            if (target.src !== FRAME_COVER_FALLBACK_URL) {
+                              target.src = FRAME_COVER_FALLBACK_URL;
+                            }
+                          }}
+                        />
+                      </div>
+
+                      <div className="absolute inset-0 rounded-[49.26px] shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)]" />
+
+                      <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                        <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
+                          <img
+                            src={coverUrl}
+                            alt={`${frame.title || "Frame"} preview`}
+                            className="absolute inset-0 h-full w-full object-cover opacity-80"
+                            loading="lazy"
+                            onError={(event) => {
+                              const target = event.currentTarget;
+                              if (target.src !== FRAME_COVER_FALLBACK_URL) {
+                                target.src = FRAME_COVER_FALLBACK_URL;
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="absolute inset-0 flex pt-34 flex-col items-center text-white bg-[#00000056]">
+                        <div className="text-3xl font-bold">{frame.totalPosts}+</div>
+                        <div className="text-sm mt-1 px-3 text-center">{frame.title || "Untitled Frame"}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Text */}
-              <div className="absolute inset-0 flex pt-34  flex-col  items-center text-white">
-                <div className="text-3xl font-bold">15+</div>
-                <div className="text-sm mt-1">Frame Name</div>
-              </div>
-            </div>
-          ))}
+              <div ref={loadMoreRef} className="h-12" />
+
+              {isFetchingFramesNextPage && (
+                <div className="py-6 text-center text-sm font-medium text-gray-600">Loading more frames...</div>
+              )}
+            </>
+          )}
         </div>
       )}
 
@@ -211,40 +412,74 @@ const handleMouseDown = (e: React.MouseEvent) => {
       {/* Masonry Grid (default for other tabs) */}
       {!isFrames && (
         <div className="max-w-[1400px] mx-auto">
-          <div 
-            onClick={() => executeWithCheck(() => router.push("/postdetails"), { isPendingAllowed: false })}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] gap-6 cursor-pointer"
-          >
-            {/* Note: In the future, wrap this with actual loading state from useQuery */}
-            {Array.from({ length: 20 }).map((_, i) => {
-              const isTall = i % 5 === 0 || i % 7 === 0;
-
-              return (
+          {isTabLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] gap-6">
+              {Array.from({ length: 12 }).map((_, index) => (
                 <div
-                  key={i}
-                  className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition
-                    ${isTall ? "row-span-2 " : "row-span-3"}`}
+                  key={index}
+                  className={`${index % 5 === 0 || index % 7 === 0 ? "row-span-2" : "row-span-3"}`}
                 >
-                  <Image
-                    src={`/images/${(i % 4) + 1}.jpg`}
-                    alt="Travel"
-                    fill
-                    className="object-cover"
-                  />
-
-                  {/* <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent card navigation
-                      executeWithCheck(() => setIsSaveOpen(true)); // Open SaveModal
-                    }}
-                    className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow"
-                  >
-                    <Bookmark className="h-4 w-4 text-gray-700" />
-                  </button> */}
+                  <GridCardSkeleton />
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : isTabError ? (
+            <div className="py-10 text-center text-red-600 font-medium">
+              {getApiErrorMessage(tabError)}
+            </div>
+          ) : isFeedTab && activePosts.length === 0 ? (
+            <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
+              <div className="relative h-48 w-48 md:h-56 md:w-56">
+                <Image src="/images/no data found.jpg" alt="No data found" fill className="object-contain" />
+              </div>
+              <p className="mt-4 text-gray-600 font-medium">No data found</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] gap-6 cursor-pointer">
+                {(isFeedTab ? activePosts : Array.from({ length: 20 }).map((_, i) => i)).map(
+                  (item, i) => {
+                    const isTall = i % 5 === 0 || i % 7 === 0;
+                    const imageUrl =
+                      isFeedTab
+                        ? (item as { media?: { location?: string | null } }).media?.location ?? "/images/1.jpg"
+                        : `/images/${(i % 4) + 1}.jpg`;
+
+                    return (
+                      <div
+                        key={isFeedTab ? (item as { _id: string })._id : i}
+                        onClick={() =>
+                          executeWithCheck(() => router.push("/postdetails"), { isPendingAllowed: false })
+                        }
+                        className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${
+                          isTall ? "row-span-2" : "row-span-3"
+                        }`}
+                      >
+                        <img
+                          src={imageUrl}
+                          alt="Travel"
+                          className="absolute inset-0 h-full w-full object-cover"
+                          loading="lazy"
+                          onError={(event) => {
+                            const target = event.currentTarget;
+                            if (target.src !== FALLBACK_IMAGE_URL) {
+                              target.src = FALLBACK_IMAGE_URL;
+                            }
+                          }}
+                        />
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+
+              {isFeedTab && <div ref={loadMoreRef} className="h-12" />}
+
+              {isFeedTab && (isForYouTab ? isFetchingNextPage : isFetchingFeaturedNextPage) && (
+                <div className="py-6 text-center text-sm font-medium text-gray-600">Loading more posts...</div>
+              )}
+            </>
+          )}
         </div>
       )}
 

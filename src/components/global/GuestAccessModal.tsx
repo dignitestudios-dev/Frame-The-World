@@ -65,7 +65,7 @@ const GuestAccessModal = ({ isOpen, onClose }: GuestAccessModalProps) => {
               <LogIn className="w-5 h-5 mr-2" />
               Sign In / Sign Up
             </Button>
-            <Button
+            {/* <Button
               onClick={() => {
                 onClose();
                 router.push("/signup");
@@ -75,7 +75,7 @@ const GuestAccessModal = ({ isOpen, onClose }: GuestAccessModalProps) => {
             >
               <UserPlus className="w-5 h-5 mr-2" />
               Sign Up
-            </Button>
+            </Button> */}
             <button
               onClick={onClose}
               className="mt-2 text-sm text-gray-400 font-medium hover:text-gray-600 transition-colors"

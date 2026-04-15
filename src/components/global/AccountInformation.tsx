@@ -24,12 +24,10 @@ export default function AccountInformation() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("error");
   const [showErrorModal, setShowErrorModal] = useState(false);
-
-  // Re-added edit mode state
   const [isEditing, setIsEditing] = useState(false);
 
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_GOOGLE_MAPS_API_KEY || "", 
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries,
   });
 
@@ -41,9 +39,7 @@ export default function AccountInformation() {
     clearSuggestions,
     init,
   } = usePlacesAutocomplete({
-    requestOptions: {
-      /* Define search scope here */
-    },
+    requestOptions: {},
     debounce: 300,
     initOnMount: false,
   });
@@ -54,10 +50,9 @@ export default function AccountInformation() {
     }
   }, [isLoaded, init]);
 
-  const handleSelectLocation = async (address: string) => {
+  const handleSelectLocation = (address: string) => {
     setLocationValue(address, false);
     clearSuggestions();
-    // Update the react-hook-form "country" field as this represents the full address for simplicity
     setValue("country", address, { shouldValidate: true });
   };
 
@@ -103,7 +98,7 @@ export default function AccountInformation() {
       setToastMessage("Account information updated successfully");
       setToastType("success");
       setToastOpen(true);
-      setIsEditing(false); // Disable editing mode on success
+      setIsEditing(false);
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -124,29 +119,24 @@ export default function AccountInformation() {
     },
   });
 
-  // Edit Mode toggle and reset
   const toggleEditMode = () => {
-    if (isEditing) {
-      // User pressed cancel, revert all changes to database values
-      if (profileData?.data) {
-        const u = profileData.data;
-        reset({
-          name: u.name || "",
-          bio: u.bio || "",
-          iataNumber: u.iata || "",
-          cliaNumber: u.clia || "",
-          companyName: u.company?.name || "",
-          street: u.company?.address?.street || "",
-          city: u.company?.address?.city || "",
-          country: u.company?.address?.country || "",
-        });
-      }
+    if (isEditing && profileData?.data) {
+      const u = profileData.data;
+      reset({
+        name: u.name || "",
+        bio: u.bio || "",
+        iataNumber: u.iata || "",
+        cliaNumber: u.clia || "",
+        companyName: u.company?.name || "",
+        street: u.company?.address?.street || "",
+        city: u.company?.address?.city || "",
+        country: u.company?.address?.country || "",
+      });
     }
-    setIsEditing(!isEditing);
+    setIsEditing((prev) => !prev);
   };
 
   const onSubmit = (data: AccountInformationFormData) => {
-    // If user provides both IATA and CLIA, show error modal and prevent submission
     if (data.iataNumber && data.cliaNumber) {
       setShowErrorModal(true);
       return;
@@ -200,8 +190,8 @@ export default function AccountInformation() {
         onClose={() => setToastOpen(false)}
       />
 
-      {/* Header section with Edit toggle */}
-      <div className="flex justify-between items-center mb-6  mx-auto border-b pb-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6 mx-auto border-b pb-4">
         <h1 className="text-xl font-black text-gray-900">Account Information</h1>
         <button
           type="button"
@@ -212,9 +202,9 @@ export default function AccountInformation() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className=" mx-auto flex flex-col space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="mx-auto flex flex-col space-y-6">
 
-        {/* Name (Added back name field that is useful for editing) */}
+        {/* Name */}
         <div className="w-full">
           <Input
             placeholder="Full Name"
@@ -224,10 +214,12 @@ export default function AccountInformation() {
               onChange: (e) => {
                 const cleaned = e.target.value.replace(/[^a-zA-Z\s]/g, "").replace(/^\s+/, "");
                 setValue("name", cleaned, { shouldValidate: true });
-              }
+              },
             })}
           />
-          {errors.name && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.name.message}</p>}
+          {errors.name && (
+            <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.name.message}</p>
+          )}
         </div>
 
         {/* Email - Always Disabled */}
@@ -251,13 +243,17 @@ export default function AccountInformation() {
           <div className="absolute -bottom-5 right-2 text-[10px] font-bold text-gray-400">
             {bioLength}/250
           </div>
-          {errors.bio && <p className="text-red-500 text-[10px] ml-4 mt-2 font-bold">{errors.bio.message}</p>}
+          {errors.bio && (
+            <p className="text-red-500 text-[10px] ml-4 mt-2 font-bold">{errors.bio.message}</p>
+          )}
         </div>
 
         {/* Company Details */}
         <div className="pt-2">
           <h2 className="text-[17px] font-black text-gray-900 leading-tight">Company details</h2>
-          <p className="text-[12px] font-medium text-gray-500 mb-3">Enter your company name and location</p>
+          <p className="text-[12px] font-medium text-gray-500 mb-3">
+            Enter your company name and location
+          </p>
 
           <div className="space-y-3">
             <div>
@@ -269,13 +265,16 @@ export default function AccountInformation() {
                   onChange: (e) => {
                     const cleaned = e.target.value.replace(/^\s+/, "");
                     setValue("companyName", cleaned, { shouldValidate: true });
-                  }
+                  },
                 })}
               />
-              {errors.companyName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.companyName.message}</p>}
+              {errors.companyName && (
+                <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">
+                  {errors.companyName.message}
+                </p>
+              )}
             </div>
 
-            {/* Address fields separated for the actual required values (Street, City, Country) */}
             <div className="space-y-3">
               <div className="relative">
                 <Input
@@ -291,7 +290,7 @@ export default function AccountInformation() {
                     }
                   }}
                 />
-                
+
                 {/* Autocomplete Dropdown */}
                 {status === "OK" && isEditing && (
                   <div className="absolute z-50 w-full bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] mt-2 overflow-hidden border border-gray-100">
@@ -311,8 +310,11 @@ export default function AccountInformation() {
                   <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                 </div>
               </div>
+
               {(errors.street || errors.city || errors.country) && (
-                <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">Please provide a valid location</p>
+                <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">
+                  Please provide a valid location
+                </p>
               )}
             </div>
           </div>
@@ -321,7 +323,9 @@ export default function AccountInformation() {
         {/* Travel Credentials */}
         <div className="pt-2">
           <h2 className="text-[17px] font-black text-gray-900 leading-tight">Travel Credentials</h2>
-          <p className="text-[12px] font-medium text-gray-500 mb-3">Update Your Travel Credentials</p>
+          <p className="text-[12px] font-medium text-gray-500 mb-3">
+            Update Your Travel Credentials
+          </p>
 
           <div className="space-y-3">
             <div>
@@ -335,10 +339,14 @@ export default function AccountInformation() {
                   onChange: (e) => {
                     const cleaned = e.target.value.replace(/\D/g, "").slice(0, 8);
                     setValue("iataNumber", cleaned, { shouldValidate: true });
-                  }
+                  },
                 })}
               />
-              {errors.iataNumber && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.iataNumber.message}</p>}
+              {errors.iataNumber && (
+                <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">
+                  {errors.iataNumber.message}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-center text-[12px] text-gray-400 font-medium py-1">
@@ -358,10 +366,14 @@ export default function AccountInformation() {
                   onChange: (e) => {
                     const cleaned = e.target.value.replace(/\D/g, "").slice(0, 8);
                     setValue("cliaNumber", cleaned, { shouldValidate: true });
-                  }
+                  },
                 })}
               />
-              {errors.cliaNumber && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.cliaNumber.message}</p>}
+              {errors.cliaNumber && (
+                <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">
+                  {errors.cliaNumber.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -372,12 +384,14 @@ export default function AccountInformation() {
               </div>
             </div>
             <p className="text-[11px] text-gray-500 leading-relaxed font-medium">
-              CLIA verification is processed manually and will be sent to the admin for approval. Please ensure the information provided is accurate, as incorrect details may lead to rejection.
+              CLIA verification is processed manually and will be sent to the admin for approval.
+              Please ensure the information provided is accurate, as incorrect details may lead to
+              rejection.
             </p>
           </div>
         </div>
 
-        {/* Submit Button (Only visible on Edit) */}
+        {/* Submit Button */}
         {isEditing && (
           <div className="pt-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
             <Button
@@ -388,13 +402,15 @@ export default function AccountInformation() {
                 : "bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white hover:opacity-90 shadow-lg shadow-[#3B54F0]/20"
                 }`}
             >
-              {(updateMutation.isPending || verifyIdentityMutation.isPending) ? "Saving..." : "Save Changes"}
+              {updateMutation.isPending || verifyIdentityMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </Button>
           </div>
         )}
       </form>
 
-      {/* Error Modal for both IATA and CLIA filled */}
+      {/* Error Modal */}
       {showErrorModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-[300px] overflow-hidden rounded-[24px] bg-white shadow-xl animate-in zoom-in-95 duration-200">

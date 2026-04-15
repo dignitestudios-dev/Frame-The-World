@@ -57,7 +57,7 @@ export default function LoginPage() {
           useAuthStore.getState().setOtpMode("signup");
           router.push("/otp-verification");
         }
-      }, 1000);
+      }, 200);
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -84,7 +84,7 @@ export default function LoginPage() {
           // Social auth users skip email OTP verification
           router.push("/create-profile");
         }
-      }, 1000);
+      }, 200);
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -93,27 +93,45 @@ export default function LoginPage() {
     },
   });
 
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
   const handleGoogleLogin = async () => {
+    if (isPopupOpen) return;
+    setIsPopupOpen(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
       socialLoginMutate({ method: "google", idToken });
     } catch (error: any) {
-      setToastMessage(error.message || "Google login failed");
+      if (error.code === 'auth/popup-closed-by-user') {
+        setToastMessage("Login cancelled by user");
+      } else {
+        setToastMessage(error.message || "Google login failed");
+      }
       setToastType("error");
       setToastOpen(true);
+    } finally {
+      setIsPopupOpen(false);
     }
   };
 
   const handleAppleLogin = async () => {
+    if (isPopupOpen) return;
+    setIsPopupOpen(true);
     try {
       const result = await signInWithPopup(auth, appleProvider);
       const idToken = await result.user.getIdToken();
       socialLoginMutate({ method: "apple", idToken });
     } catch (error: any) {
-      setToastMessage(error.message || "Apple login failed");
+      if (error.code === 'auth/popup-closed-by-user') {
+        setToastMessage("Login cancelled by user");
+      } else {
+        setToastMessage(error.message || "Apple login failed");
+      }
       setToastType("error");
       setToastOpen(true);
+    } finally {
+      setIsPopupOpen(false);
     }
   };
 
@@ -259,8 +277,8 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleGoogleLogin}
-              disabled={isSocialPending}
-              className={`flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm transition-colors ${isSocialPending ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
+              disabled={isSocialPending || isPopupOpen}
+              className={`flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm transition-colors ${isSocialPending || isPopupOpen ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
               aria-label="Login with Google"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24">
@@ -285,8 +303,8 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleAppleLogin}
-              disabled={isSocialPending}
-              className={`flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm transition-colors ${isSocialPending ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
+              disabled={isSocialPending || isPopupOpen}
+              className={`flex h-12 w-12 items-center justify-center rounded-full border border-gray-300 bg-slate-200 shadow-sm transition-colors ${isSocialPending || isPopupOpen ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
               aria-label="Login with Apple"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">

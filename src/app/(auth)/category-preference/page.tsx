@@ -20,6 +20,10 @@ export default function CategoryPreferencePage() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("error");
 
+  const [visibleCount, setVisibleCount] = useState(20);
+
+
+
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
@@ -34,13 +38,24 @@ export default function CategoryPreferencePage() {
     );
   };
 
+
+  const visibleCategories = categories.slice(0, visibleCount);
+  const hasMoreCategories = visibleCount < categories.length;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 20);
+  };
+
+
+
+
   const { mutate, isPending } = useMutation({
     mutationFn: completeProfileApi,
     onSuccess: (data) => {
       setToastMessage(data?.message || "Profile completed successfully!");
       setToastType("success");
       setToastOpen(true);
-      console.log(data,"data---data")
+      console.log(data, "data---data")
       if (data?.data) {
         updateUser(data?.data);
       }
@@ -145,22 +160,22 @@ export default function CategoryPreferencePage() {
         </div>
 
         {/* Categories Chip Cloud */}
-        <div className="flex flex-wrap justify-center gap-2 mb-10 min-h-[8em]">
+        <div className="flex flex-wrap justify-center gap-2 mb-4 min-h-[8em]">
           {categoriesLoading ? (
             Array.from({ length: 12 }).map((_, i) => (
               <CategoryChipSkeleton key={i} />
             ))
           ) : (
-            categories.map((cat: any) => {
+            visibleCategories.map((cat: any) => {
               const isSelected = selectedCategories.includes(cat.id || cat._id);
               return (
                 <button
                   key={cat.id || cat._id}
                   type="button"
                   onClick={() => toggleCategory(cat.id || cat._id)}
-                  className={`px-5 py-2.5 rounded-full text-[10px] font-black transition-all border-none ${isSelected
-                      ? "gradient-bg text-white shadow-lg shadow-blue-200"
-                      : "bg-[#f4f4f4] text-gray-700 hover:bg-gray-200"
+                  className={`px-5 py-2.5 rounded-full text-[12px] font-semibold transition-all border-none ${isSelected
+                    ? "bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white shadow-lg shadow-[#3B54F0]/30"
+                    : "bg-[#F4F5F7] text-[#1D1E20] hover:bg-[#EAEBEF]"
                     }`}
                 >
                   {cat.name}
@@ -169,6 +184,18 @@ export default function CategoryPreferencePage() {
             })
           )}
         </div>
+        {/* Load More Button */}
+        {hasMoreCategories && (
+          <div className="flex justify-end mb-6 max-w-lg mx-auto w-full px-4">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              className="text-[13px] font-bold text-[#5D92F3] hover:underline"
+            >
+              Load More
+            </button>
+          </div>
+        )}
 
         {/* Info Text */}
         <div className="mb-10 flex gap-1.5 justify-center max-w-md mx-auto">
@@ -188,8 +215,8 @@ export default function CategoryPreferencePage() {
             onClick={handleSubmit}
             disabled={isPending || selectedCategories.length < 3}
             className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${isPending || selectedCategories.length < 3
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+              : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
               }`}
           >
             {isPending ? "Verifying..." : "Next"}

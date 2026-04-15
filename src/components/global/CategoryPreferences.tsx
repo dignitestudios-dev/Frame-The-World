@@ -11,17 +11,19 @@ import { CategoryChipSkeleton } from "@/components/global/Skeletons";
 
 export default function CategoryPreferences() {
   const { user, updateUser } = useAuthStore();
-  
+
   // Set initial selected categories from user if they exist
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("error");
 
+  const [visibleCount, setVisibleCount] = useState(20);
+
   // Load existing user preferences
   useEffect(() => {
     if (user?.categoryPreference) {
-      const existingIds = user.categoryPreference.map((cat: any) => 
+      const existingIds = user.categoryPreference.map((cat: any) =>
         typeof cat === 'string' ? cat : (cat.id || cat._id)
       ).filter(Boolean);
       setSelectedCategories(existingIds);
@@ -31,10 +33,16 @@ export default function CategoryPreferences() {
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
-    queryFn: () => getCategoriesApi({ limit: 100 }),
+    queryFn: () => getCategoriesApi({ limit: 100 }), // Keep fetching up to 100 but paginate locally, or change limit to a larger num if needed
   });
 
   const categories = categoriesData?.data?.results || categoriesData?.data || [];
+  const visibleCategories = categories.slice(0, visibleCount);
+  const hasMoreCategories = visibleCount < categories.length;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 20);
+  };
 
   const toggleCategory = (id: string) => {
     setSelectedCategories((prev) =>
@@ -104,7 +112,7 @@ export default function CategoryPreferences() {
             <CategoryChipSkeleton key={i} />
           ))
         ) : (
-          categories.map((cat: any) => {
+          visibleCategories.map((cat: any) => {
             const isSelected = selectedCategories.includes(cat.id || cat._id);
             return (
               <button
@@ -112,8 +120,8 @@ export default function CategoryPreferences() {
                 type="button"
                 onClick={() => toggleCategory(cat.id || cat._id)}
                 className={`px-5 py-2.5 rounded-full text-[12px] font-semibold transition-all border-none ${isSelected
-                    ? "bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white shadow-lg shadow-[#3B54F0]/30"
-                    : "bg-[#F4F5F7] text-[#1D1E20] hover:bg-[#EAEBEF]"
+                  ? "bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white shadow-lg shadow-[#3B54F0]/30"
+                  : "bg-[#F4F5F7] text-[#1D1E20] hover:bg-[#EAEBEF]"
                   }`}
               >
                 {cat.name}
@@ -123,12 +131,18 @@ export default function CategoryPreferences() {
         )}
       </div>
 
-      {/* Load More Button (visual mock) */}
-      <div className="flex justify-end mb-6 max-w-lg mx-auto w-full px-4">
-        <button className="text-[13px] font-bold text-[#5D92F3] hover:underline">
-          Load More
-        </button>
-      </div>
+      {/* Load More Button */}
+      {hasMoreCategories && (
+        <div className="flex justify-end mb-6 max-w-lg mx-auto w-full px-4">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            className="text-[13px] font-bold text-[#5D92F3] hover:underline"
+          >
+            Load More
+          </button>
+        </div>
+      )}
 
       <div className="border-t border-gray-100 mb-6 max-w-lg mx-auto w-full"></div>
 
@@ -150,8 +164,8 @@ export default function CategoryPreferences() {
           onClick={handleSubmit}
           disabled={isPending || selectedCategories.length < 3}
           className={`w-full h-14 rounded-full font-bold text-base transition-all tracking-tight ${isPending || selectedCategories.length < 3
-              ? "bg-[#F4F5F7] text-gray-400 cursor-not-allowed shadow-none hover:bg-[#F4F5F7]"
-              : "bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white hover:opacity-90 shadow-lg shadow-[#3B54F0]/20"
+            ? "bg-[#F4F5F7] text-gray-400 cursor-not-allowed shadow-none hover:bg-[#F4F5F7]"
+            : "bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white hover:opacity-90 shadow-lg shadow-[#3B54F0]/20"
             }`}
         >
           {isPending ? "Saving..." : "Save"}

@@ -84,7 +84,7 @@ export default function ForgetPasswordPage() {
           {/* Subtitle */}
           <p className="mb-8 text-sm text-gray-600 text-center">
             Enter your email and we&apos;ll send you a OTP To Forgot your
-            Pawword
+            Password
           </p>
 
           {/* Form */}

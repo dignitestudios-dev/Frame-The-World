@@ -18,9 +18,7 @@ export const signupSchema = z.object({
 // Login Schema - matches POST /auth/signin { email, method, password }
 export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z
-    .string()
-    .min(1, "Password is required"), // Login only requires the password to be present, strict rules are for creation
+  password: passwordSchema, // Login only requires the password to be present, strict rules are for creation
 });
 
 // Forgot Password Schema - matches POST /auth/forgot { email }

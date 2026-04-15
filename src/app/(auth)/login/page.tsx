@@ -177,7 +177,7 @@ export default function LoginPage() {
               className="w-full"
               {...register("password")}
             />
-            {errors.password && (
+              {errors.password && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.password.message}
               </p>

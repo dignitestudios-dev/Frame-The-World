@@ -125,13 +125,13 @@ export default function CategoryPreferencePage() {
           >
             <ArrowLeft className="h-6 w-6 stroke-[3]" />
           </button>
-          <button
+          {/* <button
             type="button"
             onClick={() => router.push("/subscription")}
             className="text-xs font-black text-gray-900 hover:text-blue-600 transition-colors"
           >
             Skip
-          </button>
+          </button> */}
         </div>
 
         {/* Title Section */}

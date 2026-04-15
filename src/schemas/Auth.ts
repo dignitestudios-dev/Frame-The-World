@@ -79,6 +79,29 @@ export const verifyCredentialsSchema = z.object({
   path: ["iata"],
 });
 
+// Account Information Schema - for editing account details
+export const accountInformationSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be at most 100 characters")
+    .regex(/^[a-zA-Z\s]*$/, "Name can only contain letters and spaces")
+    .regex(/^[^\s].*$/, "Name cannot start with a whitespace")
+    .transform((val) => val.trim()),
+  bio: z.string().max(250, "Bio must be at most 250 characters").optional().or(z.literal("")),
+  companyName: z
+    .string()
+    .min(1, "Company name is required")
+    .max(100, "Company name must be at most 100 characters")
+    .regex(/^[^\s].*$/, "Company name cannot start with a whitespace")
+    .transform((val) => val.trim()),
+  street: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  country: z.string().min(1, "Location is required"),
+  iataNumber: z.string().max(8, "IATA number must be at most 8 digits").regex(/^\d*$/, "IATA number must contain only digits").optional().or(z.literal("")),
+  cliaNumber: z.string().max(8, "CLIA number must be at most 8 digits").regex(/^\d*$/, "CLIA number must contain only digits").optional().or(z.literal("")),
+});
+
 // Types inferred from schemas
 export type SignupFormData = z.infer<typeof signupSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -87,3 +110,4 @@ export type OtpFormData = z.infer<typeof otpSchema>;
 export type CreatePasswordFormData = z.infer<typeof createPasswordSchema>;
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type VerifyCredentialsFormData = z.infer<typeof verifyCredentialsSchema>;
+export type AccountInformationFormData = z.infer<typeof accountInformationSchema>;

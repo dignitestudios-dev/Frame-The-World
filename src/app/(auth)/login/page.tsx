@@ -48,7 +48,11 @@ export default function LoginPage() {
       setTimeout(() => {
         if (user?.isProfileCompleted) {
           router.push("/home");
+        } else if (user?.isEmailVerified) {
+          // Email already verified — skip OTP and continue onboarding
+          router.push("/create-profile");
         } else {
+          // Email not yet verified — send to OTP screen
           useAuthStore.getState().setAuthEmail(user?.email);
           useAuthStore.getState().setOtpMode("signup");
           router.push("/otp-verification");
@@ -78,7 +82,7 @@ export default function LoginPage() {
           router.push("/home");
         } else {
           // Social auth users skip email OTP verification
-          router.push("/verify-credentials");
+          router.push("/create-profile");
         }
       }, 1000);
     },

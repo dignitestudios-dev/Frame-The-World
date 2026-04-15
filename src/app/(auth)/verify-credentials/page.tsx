@@ -23,6 +23,8 @@ export default function VerifyCredentialsPage() {
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const { authEmail } = useAuthStore();
 
+  const [showErrorModal, setShowErrorModal] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -51,6 +53,11 @@ export default function VerifyCredentialsPage() {
   });
 
   const onSubmit = (data: VerifyCredentialsFormData) => {
+    if (data.iata && data.clia) {
+      setShowErrorModal(true);
+      return;
+    }
+
     if (data.iata) {
       mutate({ iata: data.iata });
     } else if (data.clia) {
@@ -171,6 +178,30 @@ export default function VerifyCredentialsPage() {
           </div>
         </form>
       </div>
+
+      {showErrorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-[300px] overflow-hidden rounded-3xl bg-white shadow-xl">
+            <div className="flex h-32 items-center justify-center bg-[#E5ECEF]">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 shadow-lg shadow-blue-600/30">
+                <span className="text-4xl font-serif italic text-white leading-none pb-1">i</span>
+              </div>
+            </div>
+            <div className="p-6 text-center">
+              <h2 className="mb-2 text-xl font-bold text-gray-900">Error</h2>
+              <p className="mb-6 text-sm text-gray-500">
+                Please enter only one: either IATA or CLIA.
+              </p>
+              <Button
+                onClick={() => setShowErrorModal(false)}
+                className="w-full h-12 rounded-full bg-blue-600 font-bold text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20"
+              >
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

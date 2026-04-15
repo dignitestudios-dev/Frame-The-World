@@ -12,6 +12,7 @@ import PrivacyPolicy from "@/components/global/PrivacyPolicy";
 import OnboardingPage from "../(auth)/onboarding/page";
 import AppWalkthrough from "@/components/global/AppWalkthrough";
 import Badges from "@/components/global/Badges";
+import CategoryPreferences from "@/components/global/CategoryPreferences";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("Account Information");
@@ -23,11 +24,13 @@ export default function SettingsPage() {
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
           <SettingsSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          <main className="flex-1 w-full">
+          <main className="flex-1 w-full max-w-[800px] mx-auto">
             {activeTab === "Change Password" ? (
               <ChangePassword />
             ) : activeTab === "Account Information" ? (
               <AccountInformation />
+            ) : activeTab === "Category Preferences" ? (
+              <CategoryPreferences />
             ) : activeTab === "Subscription" ? (
               <Subscription />
             ) : activeTab === "Notifications" ? (

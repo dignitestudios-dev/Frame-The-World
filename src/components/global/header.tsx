@@ -200,7 +200,7 @@ export default function Header() {
               >
                 <div className="relative">
                   <Image
-                    src={user?.profilePicture?.location || user?.profilePicture || "/images/admin.png"}
+                    src={user?.profilePicture?.location || user?.profilePicture || "/images/person.png"}
                     alt="User"
                     width={36}
                     height={36}
@@ -352,7 +352,7 @@ export default function Header() {
                   {/* Profile Picture (visible on Desktop/Tablet) */}
                   <div className="hidden md:flex shrink-0 items-center justify-center">
                     <Image
-                      src={user?.profilePicture?.location || user?.profilePicture || "/images/admin.png"}
+                      src={user?.profilePicture?.location || user?.profilePicture || "/images/person.png"}
                       alt="User"
                       width={50}
                       height={50}

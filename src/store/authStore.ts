@@ -13,6 +13,8 @@ interface User {
   isProfileCompleted?: boolean;
   isSubscribed?: boolean;
   isEmailVerified?: boolean;
+  categoryPreference?: any[];
+  badges?: any[];
   identityStatus?: "pending" | "approved" | "rejected" | "not-provided" | string;
 }
 

@@ -192,7 +192,7 @@ export default function CategoryPreferencePage() {
                 : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
               }`}
           >
-            {isPending ? "Verifying..." : "Verify"}
+            {isPending ? "Verifying..." : "Next"}
           </Button>
         </div>
       </div>

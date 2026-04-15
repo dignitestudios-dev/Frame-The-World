@@ -113,7 +113,7 @@ export default function TravelStoryPage() {
                   <div className="relative w-[92%] h-[92%] rounded-[50px] bg-[#f1f3f6] p-1 flex items-center justify-center">
                     <div className="relative w-full h-full rounded-[45px] overflow-hidden">
                       <Image
-                        src={user?.profilePicture?.location || user?.profilePicture || "/images/admin.png"}
+                        src={user?.profilePicture?.location || user?.profilePicture || "/images/person.png"}
                         alt={user?.name || "User"}
                         fill
                         className="object-cover"

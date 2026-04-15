@@ -23,7 +23,7 @@ export default function CreateProfilePage() {
   const { user, tempProfileData, setTempProfileData, logout } = useAuthStore();
 
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyC6LrtTPhE8q_ACFVW_mGzwXM_RhRqq0d0", // Using Firebase Key as it's often linked
+    googleMapsApiKey: process.env.NEXT_GOOGLE_MAPS_API_KEY || "",
     libraries,
   });
 
@@ -55,12 +55,20 @@ export default function CreateProfilePage() {
     suggestions: { status, data: locationData },
     setValue: setLocationValue,
     clearSuggestions,
+    init,
   } = usePlacesAutocomplete({
     requestOptions: {
       /* Define search scope here */
     },
     debounce: 300,
+    initOnMount: false,
   });
+
+  useEffect(() => {
+    if (isLoaded) {
+      init();
+    }
+  }, [isLoaded, init]);
 
   const handleSelectLocation = async (address: string) => {
     setLocationValue(address, false);
@@ -103,7 +111,7 @@ export default function CreateProfilePage() {
       <div className="absolute inset-0 -z-10 grid grid-cols-3 gap-2 opacity-10 blur-[1px] scale-110">
         {bgImages.map((src, i) => (
           <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl grayscale">
-             <img src={src} alt="Travel bg" className="h-full w-full object-cover" />
+            <img src={src} alt="Travel bg" className="h-full w-full object-cover" />
           </div>
         ))}
       </div>
@@ -139,36 +147,36 @@ export default function CreateProfilePage() {
         <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
           {/* Avatar Area */}
           <div className="flex flex-col items-center gap-3">
-             <div className="relative">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                />
-                {/* Circular pattern dotted border as in image */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-blue-500/50 bg-blue-50/30 transition-all hover:scale-105 active:scale-95 group overflow-hidden"
-                >
-                  <div className="absolute inset-2 rounded-full " />
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover rounded-full" />
-                   ) : (
-                    <div className="text-blue-500">
-                       <Plus className="h-8 w-8 stroke-[1.5]" />
-                    </div>
-                  )}
-                </button>
-             </div>
-             <p className="text-xs font-black text-gray-900">Upload Image</p>
+            <div className="relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+              {/* Circular pattern dotted border as in image */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-blue-500/50 bg-blue-50/30 transition-all hover:scale-105 active:scale-95 group overflow-hidden"
+              >
+                <div className="absolute inset-2 rounded-full " />
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover rounded-full" />
+                ) : (
+                  <div className="text-blue-500">
+                    <Plus className="h-8 w-8 stroke-[1.5]" />
+                  </div>
+                )}
+              </button>
+            </div>
+            <p className="text-xs font-black text-gray-900">Upload Image</p>
           </div>
 
           {/* Form Fields */}
           <div className="space-y-4">
-             <div>
+            <div>
               <Input
                 placeholder="Enter your name"
                 maxLength={100}
@@ -205,73 +213,72 @@ export default function CreateProfilePage() {
 
           {/* Professional Details Section */}
           <div className="space-y-4">
-             <div>
-                <h2 className="text-sm font-black text-gray-900">Company details</h2>
-                <p className="text-[10px] font-medium text-gray-400">Enter your company name and location</p>
-             </div>
+            <div>
+              <h2 className="text-sm font-black text-gray-900">Company details</h2>
+              <p className="text-[10px] font-medium text-gray-400">Enter your company name and location</p>
+            </div>
 
-             <div className="space-y-3">
-                 <Input
-                   placeholder="Enter your company name"
-                   maxLength={100}
-                   className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
-                   {...register("companyName", {
-                     onChange: (e) => {
-                       const val = e.target.value;
-                       if (val.startsWith(" ")) {
-                         e.target.value = val.trimStart();
-                       }
-                     },
-                   })}
-                 />
-                 {errors.companyName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.companyName.message}</p>}
+            <div className="space-y-3">
+              <Input
+                placeholder="Enter your company name"
+                maxLength={100}
+                className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
+                {...register("companyName", {
+                  onChange: (e) => {
+                    const val = e.target.value;
+                    if (val.startsWith(" ")) {
+                      e.target.value = val.trimStart();
+                    }
+                  },
+                })}
+              />
+              {errors.companyName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.companyName.message}</p>}
 
-                 <div className="relative">
-                  <Input
-                    placeholder="Select Company Location"
-                    // disabled={!ready}
-                    className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
-                    {...register("country")}
-                    autoComplete="off"
-                    onChange={(e) => {
-                      register("country").onChange(e);
-                      setLocationValue(e.target.value);
-                    }}
-                  />
-                  {status === "OK" && (
-                    <div className="absolute z-10 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
-                      {locationData.map(({ place_id, description }) => (
-                        <div
-                          key={place_id}
-                          onClick={() => handleSelectLocation(description)}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium"
-                        >
-                          {description}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-500">
-                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                     </svg>
+              <div className="relative">
+                <Input
+                  placeholder="Select Company Location"
+                  disabled={!ready}
+                  className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
+                  {...register("country")}
+                  autoComplete="off"
+                  onChange={(e) => {
+                    register("country").onChange(e);
+                    setLocationValue(e.target.value);
+                  }}
+                />
+                {status === "OK" && (
+                  <div className="absolute z-10 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
+                    {locationData.map(({ place_id, description }) => (
+                      <div
+                        key={place_id}
+                        onClick={() => handleSelectLocation(description)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium"
+                      >
+                        {description}
+                      </div>
+                    ))}
                   </div>
-                </div>
-                {(errors.city || errors.country || errors.street) && (
-                  <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">Please complete professional location details</p>
                 )}
-             </div>
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+              </div>
+              {(errors.city || errors.country || errors.street) && (
+                <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">Please complete professional location details</p>
+              )}
+            </div>
           </div>
 
           {/* Submit Button */}
-           <Button
+          <Button
             type="submit"
             disabled={!isValid}
-            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${
-              !isValid 
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" 
-                : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
-            }`}
+            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${!isValid
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+              : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
+              }`}
           >
             Next
           </Button>

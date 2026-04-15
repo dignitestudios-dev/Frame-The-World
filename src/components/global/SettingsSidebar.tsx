@@ -4,13 +4,12 @@ import { useAuthStore } from "@/store/authStore";
 
 const menuItems = [
   "Account Information",
-  "Change Password",
-  "Subscription",
+  "Category Preferences",
   "Notifications",
-  "App Walkthrough",
-  // "Badges",
+  "Change Password",
   "Delete Account",
-  "Terms & Condition",
+  "App Walkthrough",
+  "Terms and Conditions",
   "Privacy Policy",
 ];
 
@@ -19,7 +18,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   const { user } = useAuthStore();
 
   const handleTabClick = (item: string) => {
-    if (item === "Terms & Condition") {
+    if (item === "Terms and Conditions") {
       window.open("https://www.frametheworld.org/terms-condition", "_blank");
       return;
     }
@@ -30,8 +29,9 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
 
     // Only Account Information and legal docs are allowed for pending users in Settings
     const isAllowedForPending = [
+      "Category Preferences",
       "Account Information",
-      "Terms & Condition",
+      "Terms and Conditions",
       "Privacy Policy",
       "Change Password",
       "App Walkthrough"
@@ -43,7 +43,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   };
 
   return (
-    <div className="w-full md:w-90 h-auto md:h-[785px] flex md:flex-col gap-3 bg-gray-200/50 rounded-2xl md:rounded-3xl p-4 md:p-6 overflow-x-auto md:overflow-visible scrollbar-hidden">
+    <div className="w-full md:w-[350px] shrink-0 h-auto flex flex-col gap-4">
       {menuItems.map((item) => (
         <div
           key={item}

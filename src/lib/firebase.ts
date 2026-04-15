@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC6LrtTPhE8q_ACFVW_mGzwXM_RhRqq0d0",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "frame-the-world.firebaseapp.com",
   projectId: "frame-the-world",
   storageBucket: "frame-the-world.firebasestorage.app",

@@ -86,7 +86,6 @@ export default function ForgetPasswordPage() {
             Enter your email and we&apos;ll send you a OTP To Forgot your
             Password
           </p>
-
           {/* Form */}
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             {/* Email */}

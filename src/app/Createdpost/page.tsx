@@ -1,5 +1,4 @@
 "use client";
-
 import Imagepage from "@/components/createpost/Imagepage";
 import Header from "@/components/global/header";
 import React, { useEffect, useState } from "react";
@@ -7,6 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCategoriesApi } from "@/services/authApi";
 import { createPostApi } from "@/services/postApi";
 import { CategoryChipSkeleton } from "@/components/global/Skeletons";
+import { useRouter } from "next/navigation";
 
 interface UploadFormProps {
   onGenerate?: (data: any) => void;
@@ -28,7 +28,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImage, setIsImage] = useState<boolean>(false);
-
+  const router = useRouter();
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
@@ -51,6 +51,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
     mutationFn: createPostApi,
     onSuccess: (data) => {
       console.log("Post created successfully:", data);
+      router.push("/Profile")
       // Success handling is done inside the AnalyzingModal via the onSuccess prop
     },
     onError: (err) => {
@@ -86,8 +87,8 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
       data.append(`categories[${index}]`, catId);
     });
     const values = Object.fromEntries(data.entries());
-    console.log(values,"form-->data--->");
-    setIsImage(true);
+    console.log(values, "form-->data--->");
+    // setIsImage(true);
     mutate(data);
   };
 
@@ -119,6 +120,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
               categories: [],
             });
             setImagePreview(null);
+
           }}
         />
       ) : (

@@ -2,13 +2,20 @@
 
 import React, { useEffect, forwardRef } from "react";
 import { useLoadScript } from "@react-google-maps/api";
-import usePlacesAutocomplete from "use-places-autocomplete";
+import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
 import { Input } from "@/components/ui/input";
-
 const libraries: ("places")[] = ["places"];
 
+export interface LocationData {
+  address: string;
+  latitude: number;
+  longitude: number;
+  state: string;
+  country: string;
+}
+
 export interface LocationAutocompleteProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value"> {
-  onLocationSelect?: (address: string) => void;
+  onLocationSelect?: (data: LocationData) => void;
   value?: string;
   icon?: React.ReactNode;
 }
@@ -49,19 +56,52 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
       }
     }, [value, setAutocompleteValue]);
 
-    const handleSelect = (description: string) => {
+    const handleSelect = async (description: string) => {
       setAutocompleteValue(description, false);
       clearSuggestions();
-      if (onLocationSelect) {
-        onLocationSelect(description);
-      }
-      
-      // Also manually trigger onChange to let react-hook-form know via synthetic event
-      if (onChange) {
-        const event = {
-          target: { value: description, name: props.name }
-        } as React.ChangeEvent<HTMLInputElement>;
-        onChange(event);
+
+      try {
+        const results = await getGeocode({ address: description });
+        const { lat, lng } = await getLatLng(results[0]);
+
+        // Extract state & country
+        const addressComponents = results[0].address_components;
+
+        let state = "";
+        let country = "";
+
+        addressComponents.forEach((component) => {
+          if (component.types.includes("administrative_area_level_1")) {
+            state = component.long_name;
+          }
+          if (component.types.includes("country")) {
+            country = component.long_name;
+          }
+        });
+
+        const locationData = {
+          address: description,
+          latitude: lat,
+          longitude: lng,
+          state,
+          country,
+        };
+
+        console.log(locationData);
+
+        if (onLocationSelect) {
+          onLocationSelect(locationData); // 👈 send full object instead of string
+        }
+
+        // trigger RHF change
+        if (onChange) {
+          const event = {
+            target: { value: description, name: props.name },
+          } as React.ChangeEvent<HTMLInputElement>;
+          onChange(event);
+        }
+      } catch (error) {
+        console.error("Error fetching location details:", error);
       }
     };
 
@@ -98,7 +138,7 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
         )}
         {icon && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5D92F3]">
-             {icon}
+            {icon}
           </div>
         )}
       </div>

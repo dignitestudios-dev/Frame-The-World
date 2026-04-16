@@ -10,6 +10,12 @@ export const createPostApi = async (formData: FormData) => {
   return res.data;
 };
 
+// GET /posts/:postId
+export const getPostApi = async (postId: string) => {
+  const res = await API.get(`/posts/${postId}`);
+  return res.data;
+};
+
 // GET /posts/own
 export const getOwnPostsApi = async (params?: { page?: number; limit?: number }) => {
   const res = await API.get("/posts/own", { params });

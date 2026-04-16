@@ -19,6 +19,11 @@ interface AnalyzingModalProps {
   handleRemoveImage?: () => void;
   status: "idle" | "pending" | "success" | "error";
   onSuccess?: () => void;
+  reason?: string;
+  // API detection results
+  aiDetection?: { isAI: boolean | null; processedAt?: string | null };
+  humanDetection?: { hasHuman: boolean | null; processedAt?: string | null };
+  editingDetection?: { isEdited: boolean | null; processedAt?: string | null };
 }
 
 const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
@@ -30,39 +35,72 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
   onChangeImage,
   status,
   onSuccess,
+  reason,
+  aiDetection,
+  humanDetection,
+  editingDetection,
 }) => {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState<ModalStep>("analyzing");
-const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
+
   const [checks, setChecks] = useState<CheckItem[]>([
     { id: 1, label: "Human Detection Check", status: "loading" },
     { id: 2, label: "Editing Manipulation Check", status: "loading" },
     { id: 3, label: "AI Generated Content Check", status: "loading" },
   ]);
 
+  // Build checks from API detection fields
+  const buildChecks = (): CheckItem[] => {
+    const humanStatus: CheckItem["status"] =
+      humanDetection?.hasHuman === null || humanDetection?.hasHuman === undefined
+        ? "loading"
+        : humanDetection.hasHuman
+          ? "error"
+          : "success";
+
+    const editingStatus: CheckItem["status"] =
+      editingDetection?.isEdited === null || editingDetection?.isEdited === undefined
+        ? "success" // null means not processed = treated as passed
+        : editingDetection.isEdited
+          ? "error"
+          : "success";
+
+    const aiStatus: CheckItem["status"] =
+      aiDetection?.isAI === null || aiDetection?.isAI === undefined
+        ? "loading"
+        : aiDetection.isAI
+          ? "error"
+          : "success";
+
+    return [
+      { id: 1, label: "Human Detection Check", status: humanStatus },
+      { id: 2, label: "Editing Manipulation Check", status: editingStatus },
+      { id: 3, label: "AI Generated Content Check", status: aiStatus },
+    ];
+  };
+
   useEffect(() => {
     if (!isOpen) return;
-
     setVisible(true);
 
     if (status === "pending") {
       setStep("analyzing");
-      setChecks((prev) => prev.map((c) => ({ ...c, status: "loading" })));
+      setChecks([
+        { id: 1, label: "Human Detection Check", status: "loading" },
+        { id: 2, label: "Editing Manipulation Check", status: "loading" },
+        { id: 3, label: "AI Generated Content Check", status: "loading" },
+      ]);
     } else if (status === "success") {
-      setChecks((prev) => prev.map((c) => ({ ...c, status: "success" })));
+      const builtChecks = buildChecks();
+      setChecks(builtChecks);
       setStep("result");
     } else if (status === "error") {
-      // Default error mapping if backend doesn't provide specific check results
-      setChecks([
-        { id: 1, label: "Human Detection Check", status: "success" },
-        { id: 2, label: "Editing Manipulation Check", status: "error" },
-        { id: 3, label: "AI Generated Content Check", status: "success" },
-      ]);
+      const builtChecks = buildChecks();
+      setChecks(builtChecks);
       setStep("final-error");
     }
-  }, [isOpen, status]);
-
-  if (!isOpen) return null;
+  }, [isOpen, status, aiDetection, humanDetection, editingDetection]);
 
   const StatusIcon = ({ status }: { status: CheckItem["status"] }) => {
     if (status === "success") {
@@ -108,6 +146,21 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const hasError = checks.some((c) => c.status === "error");
   const allSuccess = checks.every((c) => c.status === "success");
 
+  // Build a human-readable rejection reason from detection fields
+  const buildRejectionReason = (): string => {
+    if (reason) return reason;
+    const reasons: string[] = [];
+    if (aiDetection?.isAI === true)
+      reasons.push("The image appears to be AI-generated.");
+    if (humanDetection?.hasHuman === false)
+      reasons.push("No human was detected in the image.");
+    if (editingDetection?.isEdited === true)
+      reasons.push("The image shows signs of editing or manipulation.");
+    return reasons.length > 0
+      ? reasons.join(" ")
+      : "Your post was rejected by our AI verification system.";
+  };
+
   useEffect(() => {
     if (allSuccess && status === "success") {
       const timer = setTimeout(() => {
@@ -117,13 +170,14 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
     }
   }, [allSuccess, status, onSuccess]);
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-10 flex items-end justify-center">
+    <div className="fixed inset-10 z-50  flex items-end justify-center">
       {/* Modal container */}
       <div
-        className={`relative w-full max-w-sm h-auto bg-white rounded-t-3xl shadow-sm transition-transform duration-500 ${
-          visible ? "translate-y-0" : "translate-y-full"
-        }`}
+        className={`relative w-full max-w-sm h-auto bg-white rounded-t-3xl shadow-sm transition-transform duration-500 ${visible ? "translate-y-0" : "translate-y-full"
+          }`}
       >
         {/* Header */}
         <div className="w-full bg-gradient-to-b from-blue-100 to-blue-50 px-2 py-4 flex items-center">
@@ -148,8 +202,8 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
               </svg>
             </button>
           )}
-          <div className="flex items-center justify-center w-full ">
-            <button onClick={() => setIsDiscardModalOpen(true)}>
+          <div className="flex items-center justify-center w-full">
+            {/* <button onClick={() => setIsDiscardModalOpen(true)}>
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -163,7 +217,7 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-            </button>
+            </button> */}
             <h2 className="text-center flex items-center justify-center w-full text-xl font-semibold text-gray-900">
               {step === "analyzing" && "Analyzing..."}
               {step === "result" && "Verification Results"}
@@ -174,6 +228,7 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
         {/* Content */}
         <div className="p-5 my-2">
+          {/* Analyzing state — always show all checks with their current status */}
           {step === "analyzing" && (
             <div className="space-y-4">
               {checks.map((check) => (
@@ -188,53 +243,50 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
             </div>
           )}
 
-          {step === "result" && (
+          {/* Success result */}
+          {step === "result" && allSuccess && (
             <div className="text-center space-y-4">
-              {allSuccess ? (
-                <div className="flex flex-col items-center gap-2">
-                  <StatusIcon status="success" />
-                  <p className="text-[21.76px] font-[700] text-[#000E08]">
-                    Image Verified
-                  </p>
-                  <p>All checks passed, you’re good to go!</p>
-                </div>
-              ) : (
-                <div></div>
-                // checks.map((check) => (
-                //   <div
-                //     key={check.id}
-                //     className="flex items-center gap-4 border-b border-gray-200 rounded-lg p-4"
-                //   >
-                //     <StatusIcon status={check.status} />
-                //     <span>{check.label}</span>
-                //   </div>
-                // ))
-              )}
+              <div className="flex flex-col items-center gap-2">
+                <StatusIcon status="success" />
+                <p className="text-[21.76px] font-[700] text-[#000E08]">
+                  Image Verified
+                </p>
+                <p>All checks passed, you're good to go!</p>
+              </div>
             </div>
           )}
 
-          {hasError && (
+          {/* Error state — show all checks + reason + action buttons */}
+          {(step === "final-error" || (step === "result" && hasError)) && (
             <div className="text-center space-y-6">
-              {checks
-                .filter((check) => check.status === "error")
-                .map((check) => (
+              {/* All checks with their statuses */}
+              <div className="space-y-2">
+                {checks.map((check) => (
                   <div
                     key={check.id}
-                    className="flex items-center gap-4 border-b border-gray-200 pb-4"
+                    className="flex items-center gap-4 border-b border-gray-200 rounded-lg p-3"
                   >
                     <StatusIcon status={check.status} />
-                    <span>{check.label}</span>
+                    <span className="text-sm">{check.label}</span>
                   </div>
                 ))}
+              </div>
 
+              {/* Rejection Reason */}
+              <div className="text-sm font-medium text-red-700 bg-red-50 p-4 rounded-xl border border-red-100 text-left">
+                <span className="block font-bold mb-1">Rejection Reason:</span>
+                {buildRejectionReason()}
+              </div>
+
+              {/* Action Buttons */}
               <div className="flex flex-col gap-3 mt-4">
-                <button
+                {/* <button
                   onClick={onAiEdit}
                   className="w-full py-3 rounded-full font-medium text-base transition-all
                    bg-gradient-to-b from-[#CBFE8B] to-[#81DE76] text-black shadow-md"
                 >
                   AI Edit
-                </button>
+                </button> */}
 
                 <button
                   onClick={onChangeImage}
@@ -248,12 +300,12 @@ const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
           )}
         </div>
       </div>
-      <DiscardUploadModal  
+
+      <DiscardUploadModal
         isOpen={isDiscardModalOpen}
-        
         onDiscard={() => {
           setIsImage(false);
-           handleRemoveImage?.(); 
+          handleRemoveImage?.();
         }}
         onCancel={() => setIsDiscardModalOpen(false)}
       />

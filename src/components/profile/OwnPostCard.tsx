@@ -11,6 +11,8 @@ interface Post {
   media?: { location: string } | string;
   caption?: string;
   categories?: any[];
+  status?: string;
+  location?: string;
 }
 
 interface OwnPostCardProps {
@@ -37,7 +39,8 @@ const OwnPostCard: React.FC<OwnPostCardProps> = ({
       ? post.media
       : post.media?.location || "/images/placeholder.jpg";
 
-  const showButton = isHovered || isMenuOpen;
+  const isCompleted = post.status?.toLowerCase() === "completed";
+  const showButton = (isHovered || isMenuOpen) && isCompleted;
 
   return (
     <>
@@ -55,7 +58,14 @@ const OwnPostCard: React.FC<OwnPostCardProps> = ({
           onClick={onClick}
         />
 
-        {/* Options Button — visible on hover OR when menu is open */}
+        {/* Status Badge */}
+        {post.status && (
+          <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider rounded-full z-10 shadow-sm border border-white/20">
+            {post.status}
+          </div>
+        )}
+
+        {/* Options Button — visible on hover OR when menu is open, ONLY if completed */}
         <div
           className={`absolute top-3 right-3 transition-opacity duration-200 ${
             showButton ? "opacity-100" : "opacity-0 pointer-events-none"

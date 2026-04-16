@@ -8,15 +8,27 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBadgesApi } from "@/services/authApi";
-import { deletePostApi, getOwnPostsApi } from "@/services/postApi";
+import {
+  deletePostApi,
+  getOwnPostsApi,
+  getPostApi,
+  updatePostApi,
+} from "@/services/postApi";
+import AnalyzingModal from "@/components/createpost/AnalyzingModalProps";
+import { useRef } from "react";
 import { getOwnFramesApi } from "@/services/frameApi";
-import { ProfileSidebarSkeleton, GridCardSkeleton } from "@/components/global/Skeletons";
+import {
+  ProfileSidebarSkeleton,
+  GridCardSkeleton,
+} from "@/components/global/Skeletons";
 import OwnPostCard from "@/components/profile/OwnPostCard";
 import EditPostModal from "@/components/profile/EditPostModal";
 import DeleteConfirmModal from "@/components/profile/DeleteConfirmModal";
 
 export default function TravelStoryPage() {
-  const [activeTab, setActiveTab] = useState<"posts" | "frames" | "space">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "frames" | "space">(
+    "posts",
+  );
   const [frameVisibility, setFrameVisibility] = useState("public");
   const router = useRouter();
   const { user } = useAuthStore();
@@ -26,6 +38,104 @@ export default function TravelStoryPage() {
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [editSuccess, setEditSuccess] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
+
+  const [analyzingModalOpen, setAnalyzingModalOpen] = useState(false);
+  const [analyzingModalStatus, setAnalyzingModalStatus] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
+  const [rejectedPostId, setRejectedPostId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState<string>("");
+
+  // Store detection results from API
+  const [aiDetection, setAiDetection] = useState<
+    { isAI: boolean | null; processedAt?: string | null } | undefined
+  >(undefined);
+  const [humanDetection, setHumanDetection] = useState<
+    { hasHuman: boolean | null; processedAt?: string | null } | undefined
+  >(undefined);
+  const [editingDetection, setEditingDetection] = useState<
+    { isEdited: boolean | null; processedAt?: string | null } | undefined
+  >(undefined);
+
+  const hiddenFileInputRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: updateRejectedImage, isPending: isUpdatingImage } =
+    useMutation({
+      mutationFn: ({
+        postId,
+        formData,
+      }: {
+        postId: string;
+        formData: FormData;
+      }) => updatePostApi(postId, formData),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["ownPosts"] });
+        setAnalyzingModalOpen(false);
+        setRejectedPostId(null);
+        setEditSuccess(true);
+        setTimeout(() => setEditSuccess(false), 3000);
+      },
+      onError: (err) => {
+        console.error("Failed to update image", err);
+      },
+    });
+
+  const handlePostClick = async (post: any) => {
+    if (post.status?.toLowerCase() === "rejected") {
+      const postId = post.id || post._id;
+      setAnalyzingModalStatus("pending");
+      setAnalyzingModalOpen(true);
+      const resp = await getPostApi(postId);
+      setRejectedPostId(postId);
+      // Reset detection state
+      setAiDetection(undefined);
+      setHumanDetection(undefined);
+      setEditingDetection(undefined);
+      setRejectionReason("");
+     
+      try {
+        const data = resp.data?.data || resp.data;
+        // Extract detection results from API response
+        setAiDetection(data?.aiDetection || undefined);
+        setHumanDetection(data?.humanDetection || undefined);
+        setEditingDetection(data?.editingDetection || undefined);
+        setRejectionReason(data?.reason || data?.rejectionReason || "");
+
+        // Determine if any check failed
+        const aiIssue = data?.aiDetection?.isAI === true;
+        const humanIssue = data?.humanDetection?.hasHuman === false;
+        const editingIssue = data?.editingDetection?.isEdited === true;
+
+        if (aiIssue || humanIssue || editingIssue) {
+          setAnalyzingModalStatus("error");
+        } else {
+          setAnalyzingModalStatus("success");
+        }
+      } catch (err) {
+        setRejectionReason(
+          "Your post was rejected by our AI verification system.",
+        );
+        setAnalyzingModalStatus("error");
+      }
+    } else if (post.status?.toLowerCase() === "approved") {
+      const postId = post.id || post._id;
+      const resp = await getPostApi(postId);
+      if (!resp.data?.country) {
+        setEditingPost(resp.data?.data || resp.data);
+      }
+    } else {
+      // router.push(`/postdetails`);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && rejectedPostId) {
+      const formData = new FormData();
+      formData.append("media", file);
+      updateRejectedImage({ postId: rejectedPostId, formData });
+    }
+  };
 
   const LOCK_ICON = "/images/badge-lock-icon.png";
 
@@ -46,7 +156,11 @@ export default function TravelStoryPage() {
     enabled: activeTab === "posts",
   });
 
-  const ownPosts: any[] = ownPostsData?.data?.data || ownPostsData?.data?.results || ownPostsData?.data || [];
+  const ownPosts: any[] =
+    ownPostsData?.data?.data ||
+    ownPostsData?.data?.results ||
+    ownPostsData?.data ||
+    [];
 
   // Fetch own frames
   const {
@@ -56,11 +170,16 @@ export default function TravelStoryPage() {
     refetch: refetchFrames,
   } = useQuery({
     queryKey: ["ownFrames", frameVisibility],
-    queryFn: () => getOwnFramesApi({ page: 1, limit: 30, visibility: frameVisibility }),
+    queryFn: () =>
+      getOwnFramesApi({ page: 1, limit: 30, visibility: frameVisibility }),
     enabled: activeTab === "frames",
   });
 
-  const ownFrames: any[] = ownFramesData?.data?.data || ownFramesData?.data?.results || ownFramesData?.data || [];
+  const ownFrames: any[] =
+    ownFramesData?.data?.data ||
+    ownFramesData?.data?.results ||
+    ownFramesData?.data ||
+    [];
 
   // Delete mutation
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
@@ -80,22 +199,23 @@ export default function TravelStoryPage() {
   const isFrames = activeTab === "frames";
   const isPosts = activeTab === "posts";
   const isSpace = activeTab === "space";
+
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
       <Header />
       <div className="min-h-screen bg-white px-8 py-10 font-sans text-[#1a1a1a]">
-
-
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-12">
-
           {/* ================= LEFT PROFILE CARD ================= */}
           {isBadgesLoading ? (
             <ProfileSidebarSkeleton />
           ) : (
             <aside className="relative lg:sticky lg:top-20 bg-[#f1f3f6] rounded-[30px] p-8 overflow-hidden shadow-sm h-fit">
-              {/* Profile card content... */}
               <div className="absolute top-0 left-0 w-full h-56 pointer-events-none">
-                <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
+                <svg
+                  className="w-full h-full"
+                  viewBox="0 0 400 200"
+                  preserveAspectRatio="none"
+                >
                   <defs>
                     <radialGradient id="peakGlow" cx="50%" cy="50%" r="50%">
                       <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
@@ -114,11 +234,21 @@ export default function TravelStoryPage() {
                     className="opacity-40"
                   />
                   {[
-                    { x: 30, y: 130 }, { x: 80, y: 50 }, { x: 140, y: 160 },
-                    { x: 190, y: 110 }, { x: 250, y: 110 }, { x: 310, y: 80 },
-                    { x: 350, y: 140 }
+                    { x: 30, y: 130 },
+                    { x: 80, y: 50 },
+                    { x: 140, y: 160 },
+                    { x: 190, y: 110 },
+                    { x: 250, y: 110 },
+                    { x: 310, y: 80 },
+                    { x: 350, y: 140 },
                   ].map((dot, i) => (
-                    <circle key={i} cx={dot.x} cy={dot.y} r="4.5" fill="#3b82f6" />
+                    <circle
+                      key={i}
+                      cx={dot.x}
+                      cy={dot.y}
+                      r="4.5"
+                      fill="#3b82f6"
+                    />
                   ))}
                 </svg>
               </div>
@@ -128,7 +258,11 @@ export default function TravelStoryPage() {
                   <div className="relative w-[92%] h-[92%] rounded-[50px] bg-[#f1f3f6] p-1 flex items-center justify-center">
                     <div className="relative w-full h-full rounded-[45px] overflow-hidden">
                       <Image
-                        src={user?.profilePicture?.location || user?.profilePicture || "/images/person.png"}
+                        src={
+                          user?.profilePicture?.location ||
+                          user?.profilePicture ||
+                          "/images/person.png"
+                        }
                         alt={user?.name || "User"}
                         fill
                         className="object-cover"
@@ -136,14 +270,24 @@ export default function TravelStoryPage() {
                     </div>
                   </div>
                 </div>
-                <h2 className="mt-6 text-2xl font-bold text-[#1a1a1a] capitalize">{user?.name || "Anonymous User"}</h2>
+                <h2 className="mt-6 text-2xl font-bold text-[#1a1a1a] capitalize">
+                  {user?.name || "Anonymous User"}
+                </h2>
                 <p className="text-[13px] text-gray-500 mt-2 px-6 leading-relaxed text-center font-medium">
                   {user?.bio || "No bio available."}
                 </p>
                 <div className="mt-4 text-center">
-                  <p className="text-sm font-bold text-gray-800 capitalize">{user?.company?.name || "Independent"}</p>
+                  <p className="text-sm font-bold text-gray-800 capitalize">
+                    {user?.company?.name || "Independent"}
+                  </p>
                   <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                    {[user?.company?.address?.city, user?.company?.address?.state, user?.company?.address?.country].filter(Boolean).join(", ") || "Location Unspecified"}
+                    {[
+                      user?.company?.address?.city,
+                      user?.company?.address?.state,
+                      user?.company?.address?.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "Location Unspecified"}
                   </p>
                 </div>
                 <div className="grid grid-cols-4 gap-2 w-full mt-8">
@@ -154,13 +298,19 @@ export default function TravelStoryPage() {
                     { label: "Frames", value: 64 },
                   ].map((s) => (
                     <div key={s.label} className="flex flex-col items-center">
-                      <p className="text-[#4f46e5] text-xl font-black">{s.value}</p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{s.label}</p>
+                      <p className="text-[#4f46e5] text-xl font-black">
+                        {s.value}
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                        {s.label}
+                      </p>
                     </div>
                   ))}
                 </div>
                 <div className="w-full mt-10">
-                  <h3 className="text-xl font-bold mb-6 text-gray-900 text-left w-full">Achievements</h3>
+                  <h3 className="text-xl font-bold mb-6 text-gray-900 text-left w-full">
+                    Achievements
+                  </h3>
                   <div className="grid grid-cols-4 gap-y-6 gap-x-2 min-h-[100px] items-center justify-center">
                     {isBadgesLoading ? (
                       <div className="col-span-4 flex justify-center py-4">
@@ -198,16 +348,18 @@ export default function TravelStoryPage() {
               </div>
             </aside>
           )}
+
           {/* ================= RIGHT CONTENT ================= */}
           <section className="">
             <div className="bg-[#e2e8f7] rounded-full flex mb-10 shadow-sm">
               <button
                 onClick={() => setActiveTab("posts")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
-      ${isPosts
-                    ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
-                    : "text-gray-400 hover:text-blue-500"
-                  }`}
+      ${
+        isPosts
+          ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
+          : "text-gray-400 hover:text-blue-500"
+      }`}
               >
                 <div className="relative w-4 h-4">
                   <Image
@@ -223,10 +375,11 @@ export default function TravelStoryPage() {
               <button
                 onClick={() => setActiveTab("frames")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
-      ${isFrames
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-                    : "text-gray-400 hover:text-blue-500"
-                  }`}
+      ${
+        isFrames
+          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+          : "text-gray-400 hover:text-blue-500"
+      }`}
               >
                 <div className="relative w-4 h-4">
                   <Image
@@ -242,18 +395,18 @@ export default function TravelStoryPage() {
               <button
                 onClick={() => setActiveTab("space")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
-      ${activeTab === "space"
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-                    : "text-gray-400 hover:text-blue-500"
-                  }`}
+      ${
+        activeTab === "space"
+          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+          : "text-gray-400 hover:text-blue-500"
+      }`}
               >
                 <div className="relative w-4 h-4">
                   <Image
                     src="/images/lock.png"
                     alt="My Space"
                     fill
-                    className={`object-contain ${activeTab === "space" ? "opacity-100" : "opacity-60"
-                      }`}
+                    className={`object-contain ${activeTab === "space" ? "opacity-100" : "opacity-60"}`}
                   />
                 </div>
                 My Space
@@ -263,19 +416,22 @@ export default function TravelStoryPage() {
             {/* ============ SUCCESS TOASTS ============ */}
             {editSuccess && (
               <div className="fixed top-5 right-5 z-[200] flex items-center gap-2 px-5 py-3 bg-green-500 text-white rounded-2xl shadow-lg animate-in slide-in-from-top-3 duration-300">
-                <span className="font-semibold text-sm">✓ Post updated successfully!</span>
+                <span className="font-semibold text-sm">
+                  ✓ Post updated successfully!
+                </span>
               </div>
             )}
             {deleteSuccess && (
               <div className="fixed top-5 right-5 z-[200] flex items-center gap-2 px-5 py-3 bg-red-500 text-white rounded-2xl shadow-lg animate-in slide-in-from-top-3 duration-300">
-                <span className="font-semibold text-sm">✓ Post deleted successfully!</span>
+                <span className="font-semibold text-sm">
+                  ✓ Post deleted successfully!
+                </span>
               </div>
             )}
 
             {/* ================= POSTS GRID ================= */}
             {isPosts && (
               <div>
-                {/* Loading Skeleton */}
                 {isPostsLoading && (
                   <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[120px] gap-6">
                     {Array.from({ length: 9 }).map((_, i) => (
@@ -287,15 +443,18 @@ export default function TravelStoryPage() {
                   </div>
                 )}
 
-                {/* Error State */}
                 {isPostsError && !isPostsLoading && (
                   <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
                     <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
                       <ImageOff className="w-8 h-8 text-red-400" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800 mb-1">Failed to load posts</p>
-                      <p className="text-sm text-gray-400">Something went wrong. Please try again.</p>
+                      <p className="font-bold text-gray-800 mb-1">
+                        Failed to load posts
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Something went wrong. Please try again.
+                      </p>
                     </div>
                     <button
                       onClick={() => refetchPosts()}
@@ -306,20 +465,22 @@ export default function TravelStoryPage() {
                   </div>
                 )}
 
-                {/* Empty State */}
                 {!isPostsLoading && !isPostsError && ownPosts.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
                     <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
                       <ImageOff className="w-10 h-10 text-blue-300" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800 mb-1">No posts yet</p>
-                      <p className="text-sm text-gray-400">Create your first post to see it here.</p>
+                      <p className="font-bold text-gray-800 mb-1">
+                        No posts yet
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Create your first post to see it here.
+                      </p>
                     </div>
                   </div>
                 )}
 
-                {/* Real Posts Grid */}
                 {!isPostsLoading && !isPostsError && ownPosts.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[120px] gap-6">
                     {ownPosts.map((post: any, i: number) => (
@@ -327,7 +488,7 @@ export default function TravelStoryPage() {
                         key={post.id || post._id || i}
                         post={post}
                         isTall={i % 3 === 0 || i % 2 === 0}
-                        onClick={() => router.push(`/postdetails`)}
+                        onClick={() => handlePostClick(post)}
                         onEdit={(p) => setEditingPost(p)}
                         onDelete={(postId) => setDeletingPostId(postId)}
                       />
@@ -336,36 +497,35 @@ export default function TravelStoryPage() {
                 )}
               </div>
             )}
+
             {/* ================= FRAMES GRID ================= */}
             {isFrames && (
               <div className="pl-2">
-
-                {/* 🔘 PUBLIC / PRIVATE PILLS */}
                 <div className="flex gap-3 justify-center mb-6">
                   <button
                     onClick={() => setFrameVisibility("public")}
-                    className={`px-5 py-2 rounded-full text-sm  transition
-          ${frameVisibility === "public"
-                        ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
-                        : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
-                      }`}
+                    className={`px-5 py-2 rounded-full text-sm transition
+          ${
+            frameVisibility === "public"
+              ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
+              : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
+          }`}
                   >
                     Public
                   </button>
-
                   <button
                     onClick={() => setFrameVisibility("private")}
                     className={`px-5 py-2 rounded-full text-sm transition
-          ${frameVisibility === "private"
-                        ? "bg-gradient-to-r  from-[#6CACDF] to-[#0000FE] text-white shadow-md"
-                        : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
-                      }`}
+          ${
+            frameVisibility === "private"
+              ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
+              : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
+          }`}
                   >
                     Private
                   </button>
                 </div>
 
-                {/* 🖼️ FRAMES GRID */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                   {isFramesLoading ? (
                     Array.from({ length: 8 }).map((_, i) => (
@@ -380,8 +540,12 @@ export default function TravelStoryPage() {
                         <ImageOff className="w-8 h-8 text-red-400" />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-800 mb-1">Failed to load frames</p>
-                        <p className="text-sm text-gray-400">Something went wrong. Please try again.</p>
+                        <p className="font-bold text-gray-800 mb-1">
+                          Failed to load frames
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          Something went wrong. Please try again.
+                        </p>
                       </div>
                       <button
                         onClick={() => refetchFrames()}
@@ -396,59 +560,52 @@ export default function TravelStoryPage() {
                         <ImageOff className="w-10 h-10 text-blue-300" />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-800 mb-1">No frames yet</p>
-                        <p className="text-sm text-gray-400">Create your first frame to see it here.</p>
+                        <p className="font-bold text-gray-800 mb-1">
+                          No frames yet
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          Create your first frame to see it here.
+                        </p>
                       </div>
                     </div>
                   ) : (
                     ownFrames.map((frame: any, i: number) => {
-                      const image1 = frame.cover?.location || frame.cover || `/images/${(i % 4) + 1}.jpg`;                    
-                      const frameName = frame.title||"Frame Name";
+                      const image1 =
+                        frame.cover?.location ||
+                        frame.cover ||
+                        `/images/${(i % 4) + 1}.jpg`;
+                      const frameName = frame.title || "Frame Name";
                       const id = frame.id || frame._id;
 
                       return (
-                        <div key={id || i} className="flex flex-col items-center">
-                          {/* Frame Card */}
-                          <div
-                            className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px]"
-                          >
+                        <div
+                          key={id || i}
+                          className="flex flex-col items-center"
+                        >
+                          <div className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px]">
                             <Image
                               src={image1}
                               alt={frameName}
                               fill
                               className="object-cover cursor-pointer"
-                              onClick={() => router.push(`/framedetails?id=${id}`)}
+                              onClick={() =>
+                                router.push(`/framedetails?id=${id}`)
+                              }
                             />
-
-                            {/* <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
-                              <Image
-                                src={image2}
-                                alt="Inner Frame"
-                                fill
-                                className="object-cover opacity-90"
-                              />
-                            </div> */}
                             <div className="absolute inset-0 shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
-                            {/* <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                              <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
-                                <Image
-                                  src={image3}
-                                  alt="Mini"
-                                  fill
-                                  className="object-cover opacity-80"
-                                />
-                              </div>
-                            </div> */}
                             <div className="absolute inset-0 flex items-center justify-center text-white">
                               <div
-                                onClick={() => router.push(`/framedetails?id=${id}`)}
+                                onClick={() =>
+                                  router.push(`/framedetails?id=${id}`)
+                                }
                                 className="text-3xl font-bold pt-20 cursor-pointer"
                               >
-                                {frame?.totalPosts ? `${frame?.totalPosts}+` : ""}
+                                {frame?.totalPosts
+                                  ? `${frame?.totalPosts}+`
+                                  : ""}
                               </div>
                             </div>
                           </div>
-                          {/* Frame Name BELOW */}
                           <div className="mt-4 text-center">
                             <div className="text-[16px] font-semibold text-gray-800 line-clamp-1 truncate max-w-[180px]">
                               {frameName}
@@ -462,51 +619,38 @@ export default function TravelStoryPage() {
               </div>
             )}
 
-            {/* ================= FRAMES GRID ================= */}
+            {/* ================= MY SPACE GRID ================= */}
             {isSpace && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pl-2">
                 {Array.from({ length: 12 }).map((_, i) => {
                   const frameNumber = (i % 4) + 1;
                   const frameName = `Frame ${i + 1}`;
-
                   return (
                     <div key={i} className="flex flex-col items-center">
-
-                      {/* Image Card */}
                       <div
-                        className="relative overflow-hidden rounded-[24px]
-              shadow-[0_10px_25px_rgba(0,0,0,0.35)]
-              w-[200px] h-[200px]"
+                        className="relative overflow-hidden rounded-[24px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px]"
                         onClick={() => router.push("/framedetails")}
-
                       >
                         <Image
                           src={`/images/${frameNumber}.jpg`}
                           alt={frameName}
                           fill
                           className="object-cover cursor-pointer"
-
                         />
-
-                        {/* LOCK ICON */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/30 shadow-3xl">
                             <LockIcon className="text-white w-10 h-10" />
                           </div>
                         </div>
                       </div>
-
-                      {/* Frame Name */}
                       <p className="mt-3 text-sm font-semibold text-black text-center">
                         Frame Name
                       </p>
-
                     </div>
                   );
                 })}
               </div>
             )}
-
           </section>
         </div>
       </div>
@@ -521,18 +665,17 @@ export default function TravelStoryPage() {
             className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Pull Handle */}
             <div className="absolute top-4 w-12 h-1.5 bg-gray-900 rounded-full opacity-10"></div>
-
             <button
               onClick={() => setSelectedBadge(null)}
               className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
-
             <div className="relative w-40 h-40 md:w-52 md:h-52 mb-8">
-              <div className={`absolute inset-0 bg-gradient-to-b from-gray-100 to-transparent rounded-full blur-2xl scale-90 ${selectedBadge.isLocked ? "opacity-20" : "opacity-40"}`}></div>
+              <div
+                className={`absolute inset-0 bg-gradient-to-b from-gray-100 to-transparent rounded-full blur-2xl scale-90 ${selectedBadge.isLocked ? "opacity-20" : "opacity-40"}`}
+              ></div>
               <Image
                 src={selectedBadge.isLocked ? LOCK_ICON : selectedBadge.icon}
                 alt={selectedBadge.name}
@@ -540,15 +683,13 @@ export default function TravelStoryPage() {
                 className={`relative object-contain ${selectedBadge.isLocked ? "" : "animate-in bounce-in duration-700"}`}
               />
             </div>
-
             <h2 className="text-2xl md:text-3xl font-black text-gray-900 text-center mb-4 tracking-tight">
               {selectedBadge.name}
             </h2>
-
             <p className="text-sm md:text-base font-medium text-gray-500 text-center leading-relaxed">
-              {selectedBadge.description || "The user hasn't unlocked this achievement yet."}
+              {selectedBadge.description ||
+                "The user hasn't unlocked this achievement yet."}
             </p>
-
             <div className="mt-10 w-full flex justify-center">
               <div className="h-1.5 w-32 bg-gray-200 rounded-full overflow-hidden">
                 <div className="h-full bg-gray-200 w-full"></div>
@@ -557,6 +698,29 @@ export default function TravelStoryPage() {
           </div>
         </div>
       )}
+
+      {/* ===== REJECTED POST MODAL ===== */}
+      <AnalyzingModal
+        isOpen={analyzingModalOpen}
+        status={analyzingModalStatus}
+        reason={rejectionReason}
+        aiDetection={aiDetection}
+        humanDetection={humanDetection}
+        editingDetection={editingDetection}
+        onClose={() => {
+          setAnalyzingModalOpen(false);
+          setAnalyzingModalStatus("idle");
+        }}
+        onChangeImage={() => hiddenFileInputRef.current?.click()}
+        setIsImage={() => {}}
+      />
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        ref={hiddenFileInputRef}
+        onChange={handleImageChange}
+      />
 
       {/* ===== EDIT POST MODAL ===== */}
       <EditPostModal

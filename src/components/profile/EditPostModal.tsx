@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updatePostApi } from "@/services/postApi";
 import { getCategoriesApi } from "@/services/authApi";
 import Image from "next/image";
+import LocationAutocomplete from "@/components/global/LocationAutocomplete";
 
 interface Post {
   id?: string;
@@ -13,6 +14,8 @@ interface Post {
   media?: { location: string } | string;
   caption?: string;
   categories?: Array<{ id?: string; _id?: string; name: string }>;
+  location?: string;
+  updatedAt?: string;
 }
 
 interface EditPostModalProps {
@@ -30,8 +33,9 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [locationData, setLocationData] = useState<any>(null);
   const [caption, setCaption] = useState("");
+  const [location, setLocation] = useState<string>("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [newImage, setNewImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -40,7 +44,10 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   useEffect(() => {
     if (post) {
       setCaption(post.caption || "");
-      const catIds = (post.categories || []).map((c) => c.id || c._id || "").filter(Boolean);
+      setLocation(post.location || "");
+      const catIds = (post.categories || [])
+        .map((c) => c.id || c._id || "")
+        .filter(Boolean);
       setSelectedCategories(catIds);
       setNewImage(null);
       setImagePreview(null);
@@ -50,7 +57,9 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   // Lock background scroll
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isOpen]);
 
   // Fetch categories
@@ -59,12 +68,12 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
     queryFn: () => getCategoriesApi({ limit: 100 }),
     enabled: isOpen,
   });
-  const categories = categoriesData?.data?.results || categoriesData?.data || [];
+  const categories =
+    categoriesData?.data?.results || categoriesData?.data || [];
 
   const toggleCategory = (id: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+    // Categories are read-only after posting
+    console.warn("Categories cannot be edited");
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,6 +82,10 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
       setNewImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleRemoveCaption = () => {
+    setCaption("");
   };
 
   const postId = post?.id || post?._id || "";
@@ -92,13 +105,10 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
 
   const handleSubmit = () => {
     const data = new FormData();
-    data.append("caption", caption);
-    selectedCategories.forEach((catId, index) => {
-      data.append(`categories[${index}]`, catId);
-    });
-    if (newImage) {
-      data.append("media", newImage);
-    }
+    data.append("country", locationData?.country || "");
+    data.append("state", locationData?.state || "");
+    data.append("latitude", locationData?.latitude?.toString() || "");
+    data.append("longitude", locationData?.longitude?.toString() || "");
     mutate(data);
   };
 
@@ -125,83 +135,107 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
         </div>
 
         <div className="p-6 flex flex-col gap-5 max-h-[80vh] overflow-y-auto">
-          {/* Image Preview */}
-          <div className="relative">
-            <div
-              className="relative w-full h-48 rounded-2xl overflow-hidden bg-gray-100 cursor-pointer group"
-              onClick={() => fileInputRef.current?.click()}
-            >
+          {/* Image Preview (Read-only) */}
+          <div className="relative pointer-events-none">
+            <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-gray-100 group">
               {currentImage ? (
-                <Image src={currentImage} alt="Post" fill className="object-cover" />
+                <Image
+                  src={currentImage}
+                  alt="Post"
+                  fill
+                  className="object-cover"
+                />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400">
                   <ImageIcon className="w-10 h-10" />
                   <span className="text-sm">No image</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
-                <span className="text-white text-sm font-medium bg-black/50 px-4 py-2 rounded-full">
-                  Change Image
-                </span>
-              </div>
             </div>
+            {/* Keeping ref for compatibility if needed, but not functional */}
             <input
               ref={fileInputRef}
               type="file"
               accept=".png,.jpg,.jpeg"
               className="hidden"
-              onChange={handleImageChange}
             />
           </div>
 
-          {/* Caption */}
+          {/* Location (Editable) */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Caption</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Location
+            </label>
+            <LocationAutocomplete
+              placeholder="Enter location..."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              onLocationSelect={(data) => {
+                setLocation(data.address);
+                setLocationData(data);
+              }}
+            />
+          </div>
+
+          {/* Caption (Read-only) */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Caption
+            </label>
             <textarea
               value={caption}
-              onChange={(e) => setCaption(e.target.value)}
+              disabled
               rows={3}
-              placeholder="Describe your photo..."
-              className="w-full px-4 py-3 bg-blue-50 border-0 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              placeholder="No caption..."
+              className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-500 placeholder-gray-400 focus:outline-none resize-none cursor-not-allowed"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Caption cannot be edited after posting
+            </p>
           </div>
 
-          {/* Categories */}
+          {/* Categories (Read-only) */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Categories</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Categories
+            </label>
             <div className="flex flex-wrap gap-2">
               {categoriesLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-8 w-20 bg-gray-100 animate-pulse rounded-full" />
+                  <div
+                    key={i}
+                    className="h-8 w-20 bg-gray-100 animate-pulse rounded-full"
+                  />
                 ))
-              ) : (
+              ) : selectedCategories.length > 0 ? (
                 categories.map((cat: any) => {
                   const catId = cat.id || cat._id;
                   const isSelected = selectedCategories.includes(catId);
+                  if (!isSelected) return null;
                   return (
-                    <button
+                    <span
                       key={catId}
-                      type="button"
-                      onClick={() => toggleCategory(catId)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                        isSelected
-                          ? "gradient-bg text-white border-none shadow-md"
-                          : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                      }`}
+                      className="px-4 py-1.5 rounded-full text-xs font-bold gradient-bg text-white border-none shadow-md"
                     >
                       {cat.name}
-                    </button>
+                    </span>
                   );
                 })
+              ) : (
+                <p className="text-sm text-gray-500">No categories selected</p>
               )}
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Categories cannot be edited after posting
+            </p>
           </div>
 
           {/* Error */}
           {isError && (
             <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl">
               <span className="font-medium">Error:</span>{" "}
-              {(error as any)?.response?.data?.message || "Failed to update post. Please try again."}
+              {(error as any)?.response?.data?.message ||
+                "Failed to update post. Please try again."}
             </div>
           )}
 

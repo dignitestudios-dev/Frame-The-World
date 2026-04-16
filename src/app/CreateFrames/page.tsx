@@ -1,6 +1,7 @@
 "use client";
 import Header from '@/components/global/header';
 import React, { useState } from 'react';
+import LocationAutocomplete from '@/components/global/LocationAutocomplete';
 
 interface CreateFrame {
   onCreateFrame?: (data: { name: string; category: 'public' | 'private'; location: string }) => void;
@@ -112,31 +113,29 @@ const CreateFrame: React.FC<CreateFrame> = ({ onCreateFrame, onBack }) => {
         </div>
 
         {/* Select Location */}
-        <button className="w-full px-6 py-4 bg-gray-100 rounded-full flex items-center justify-between mb-6 hover:bg-gray-200 transition-colors">
-          <div className="flex items-center gap-3">
+        <div className="mb-6 relative group">
+          <div className="absolute left-6 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
             <svg
-              className="w-6 h-6 text-blue-500"
+              className="w-6 h-6 text-blue-500 group-hover:text-blue-600 transition-colors"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
             </svg>
-            <span className="text-gray-700 font-medium">Select Location</span>
           </div>
-          <svg
-            className="w-5 h-5 text-blue-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+          <LocationAutocomplete
+            placeholder="Select Location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            onLocationSelect={(addr) => setLocation(addr)}
+            className="w-full py-4 pl-14 pr-12 bg-gray-100 rounded-full text-gray-700 font-medium hover:bg-gray-200 focus:bg-gray-200 transition-colors focus:outline-none"
+            icon={
+              <svg className="w-5 h-5 text-blue-500 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            }
+          />
+        </div>
 
         {/* Create Frame Button */}
         <button

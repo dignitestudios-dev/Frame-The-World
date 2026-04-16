@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getUserProfileApi, updateUserApi, verifyIdentityApi } from "@/services/authApi";
@@ -12,10 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { getApiErrorMessage } from "@/lib/apiError";
-import { useLoadScript } from "@react-google-maps/api";
-import usePlacesAutocomplete from "use-places-autocomplete";
-
-const libraries: ("places")[] = ["places"];
+import LocationAutocomplete from "@/components/global/LocationAutocomplete";
+import { ArrowRight } from "lucide-react";
 
 export default function AccountInformation() {
   const queryClient = useQueryClient();
@@ -25,36 +23,6 @@ export default function AccountInformation() {
   const [toastType, setToastType] = useState<"success" | "error">("error");
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries,
-  });
-
-  const {
-    ready,
-    value: locationValue,
-    suggestions: { status, data: locationData },
-    setValue: setLocationValue,
-    clearSuggestions,
-    init,
-  } = usePlacesAutocomplete({
-    requestOptions: {},
-    debounce: 300,
-    initOnMount: false,
-  });
-
-  useEffect(() => {
-    if (isLoaded) {
-      init();
-    }
-  }, [isLoaded, init]);
-
-  const handleSelectLocation = (address: string) => {
-    setLocationValue(address, false);
-    clearSuggestions();
-    setValue("country", address, { shouldValidate: true });
-  };
 
   const {
     register,
@@ -137,6 +105,7 @@ export default function AccountInformation() {
   };
 
   const onSubmit = (data: AccountInformationFormData) => {
+    // Block if both IATA and CLIA are filled
     if (data.iataNumber && data.cliaNumber) {
       setShowErrorModal(true);
       return;
@@ -153,12 +122,14 @@ export default function AccountInformation() {
     const originalIata = profileData?.data?.iata || "";
     const originalClia = profileData?.data?.clia || "";
 
+    // Only call verifyIdentity if the credential actually changed
     if (data.iataNumber && data.iataNumber !== originalIata) {
       verifyIdentityMutation.mutate({ iata: data.iataNumber });
     } else if (data.cliaNumber && data.cliaNumber !== originalClia) {
       verifyIdentityMutation.mutate({ clia: data.cliaNumber });
     }
 
+    // Always update profile regardless of credential change
     updateMutation.mutate(formData);
   };
 
@@ -277,38 +248,15 @@ export default function AccountInformation() {
 
             <div className="space-y-3">
               <div className="relative">
-                <Input
+                <LocationAutocomplete
                   placeholder="Company Address/Location"
-                  disabled={!isEditing || !ready}
-                  className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 pr-12 disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={!isEditing}
                   {...register("country")}
-                  autoComplete="off"
-                  onChange={(e) => {
-                    register("country").onChange(e);
-                    if (isEditing) {
-                      setLocationValue(e.target.value);
-                    }
+                  icon={<ArrowRight className="w-5 h-5 stroke-[2.5]" />}
+                  onLocationSelect={(address) => {
+                    setValue("country", address, { shouldValidate: true });
                   }}
                 />
-
-                {/* Autocomplete Dropdown */}
-                {status === "OK" && isEditing && (
-                  <div className="absolute z-50 w-full bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] mt-2 overflow-hidden border border-gray-100">
-                    {locationData.map(({ place_id, description }) => (
-                      <div
-                        key={place_id}
-                        onClick={() => handleSelectLocation(description)}
-                        className="px-6 py-3 hover:bg-[#f4f4f4] cursor-pointer text-sm font-medium text-gray-700 transition-colors border-b border-gray-50 last:border-0"
-                      >
-                        {description}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5D92F3]">
-                  <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-                </div>
               </div>
 
               {(errors.street || errors.city || errors.country) && (

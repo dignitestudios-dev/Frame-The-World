@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBadgesApi } from "@/services/authApi";
 import { deletePostApi, getOwnPostsApi } from "@/services/postApi";
+import { getOwnFramesApi } from "@/services/frameApi";
 import { ProfileSidebarSkeleton, GridCardSkeleton } from "@/components/global/Skeletons";
 import OwnPostCard from "@/components/profile/OwnPostCard";
 import EditPostModal from "@/components/profile/EditPostModal";
@@ -46,6 +47,20 @@ export default function TravelStoryPage() {
   });
 
   const ownPosts: any[] = ownPostsData?.data?.data || ownPostsData?.data?.results || ownPostsData?.data || [];
+
+  // Fetch own frames
+  const {
+    data: ownFramesData,
+    isLoading: isFramesLoading,
+    isError: isFramesError,
+    refetch: refetchFrames,
+  } = useQuery({
+    queryKey: ["ownFrames", frameVisibility],
+    queryFn: () => getOwnFramesApi({ page: 1, limit: 30, visibility: frameVisibility }),
+    enabled: activeTab === "frames",
+  });
+
+  const ownFrames: any[] = ownFramesData?.data?.data || ownFramesData?.data?.results || ownFramesData?.data || [];
 
   // Delete mutation
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
@@ -352,57 +367,97 @@ export default function TravelStoryPage() {
 
                 {/* 🖼️ FRAMES GRID */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="flex flex-col items-center">
-
-                      {/* Frame Card */}
-                      <div
-                        className="relative overflow-hidden rounded-[49.26px]
-        shadow-[0_10px_25px_rgba(0,0,0,0.35)]
-        w-[200px] h-[200px]"
-                      >
-                        <Image
-                          src={`/images/${(i % 4) + 1}.jpg`}
-                          alt="Frame"
-                          fill
-                          className="object-cover cursor-pointer"
-                          onClick={() => router.push("/framedetails")}
-
-                        />
-
-                        <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
-                          <Image
-                            src={`/images/${((i + 1) % 4) + 1}.jpg`}
-                            alt="Inner Frame"
-                            fill
-                            className="object-cover opacity-90"
-                          />
-                        </div>
-                        <div className="absolute inset-0 shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
-                        <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                          <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
-                            <Image
-                              src={`/images/${((i + 2) % 4) + 1}.jpg`}
-                              alt="Mini"
-                              fill
-                              className="object-cover opacity-80"
-                            />
-                          </div>
-                        </div>
-                        {/* Optional: Keep only the count inside */}
-                        <div className="absolute inset-0 flex items-center justify-center text-white">
-                          <div onClick={() => router.push("/privateframes")}
-                            className="text-3xl font-bold pt-20 cursor-pointer">15+</div>
-                        </div>
+                  {isFramesLoading ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className="w-[200px] h-[200px] bg-gray-100 rounded-[49.26px] animate-pulse" />
+                        <div className="w-24 h-4 bg-gray-100 rounded-full mt-4 animate-pulse" />
                       </div>
-                      {/* Frame Name BELOW */}
-                      <div className="mt-4 text-center">
-                        <div className="text-[16px] font-semibold text-gray-800">
-                          Frame Name
-                        </div>
+                    ))
+                  ) : isFramesError ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4 text-center">
+                      <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+                        <ImageOff className="w-8 h-8 text-red-400" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-800 mb-1">Failed to load frames</p>
+                        <p className="text-sm text-gray-400">Something went wrong. Please try again.</p>
+                      </div>
+                      <button
+                        onClick={() => refetchFrames()}
+                        className="px-6 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : ownFrames.length === 0 ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4 text-center">
+                      <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
+                        <ImageOff className="w-10 h-10 text-blue-300" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-800 mb-1">No frames yet</p>
+                        <p className="text-sm text-gray-400">Create your first frame to see it here.</p>
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    ownFrames.map((frame: any, i: number) => {
+                      const image1 = frame.cover?.location || frame.cover || `/images/${(i % 4) + 1}.jpg`;                    
+                      const frameName = frame.title||"Frame Name";
+                      const id = frame.id || frame._id;
+
+                      return (
+                        <div key={id || i} className="flex flex-col items-center">
+                          {/* Frame Card */}
+                          <div
+                            className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px]"
+                          >
+                            <Image
+                              src={image1}
+                              alt={frameName}
+                              fill
+                              className="object-cover cursor-pointer"
+                              onClick={() => router.push(`/framedetails?id=${id}`)}
+                            />
+
+                            {/* <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
+                              <Image
+                                src={image2}
+                                alt="Inner Frame"
+                                fill
+                                className="object-cover opacity-90"
+                              />
+                            </div> */}
+                            <div className="absolute inset-0 shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
+                            {/* <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                              <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
+                                <Image
+                                  src={image3}
+                                  alt="Mini"
+                                  fill
+                                  className="object-cover opacity-80"
+                                />
+                              </div>
+                            </div> */}
+                            <div className="absolute inset-0 flex items-center justify-center text-white">
+                              <div
+                                onClick={() => router.push(`/framedetails?id=${id}`)}
+                                className="text-3xl font-bold pt-20 cursor-pointer"
+                              >
+                                {frame?.totalPosts ? `${frame?.totalPosts}+` : ""}
+                              </div>
+                            </div>
+                          </div>
+                          {/* Frame Name BELOW */}
+                          <div className="mt-4 text-center">
+                            <div className="text-[16px] font-semibold text-gray-800 line-clamp-1 truncate max-w-[180px]">
+                              {frameName}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}

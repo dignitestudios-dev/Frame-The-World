@@ -183,6 +183,13 @@ export type FrameFeedItem = {
   _id: string;
   title: string;
   totalPosts: number;
+  country?: string;
+  state?: string;
+  city?: string;
+  geoLocation?: {
+    type?: string;
+    coordinates?: number[];
+  };
   cover?: {
     _id?: string;
     fileName?: string;
@@ -208,5 +215,47 @@ export type FramesFeedResponse = {
 // GET /frames - Frames feed listing with pagination
 export const getFramesApi = async (params: { page: number; limit: number }) => {
   const res = await API.get<FramesFeedResponse>("/frames", { params });
+  return res.data;
+};
+
+export type FrameDetailsResponse = {
+  success: boolean;
+  message: string;
+  data: FrameFeedItem;
+};
+
+// GET /frames/:frameId - Single frame details
+export const getFrameByIdApi = async (frameId: string) => {
+  const res = await API.get<FrameDetailsResponse>(`/frames/${frameId}`);
+  return res.data;
+};
+
+export type FramePostItem = {
+  _id: string;
+  caption?: string | null;
+  media?: {
+    _id?: string;
+    location?: string | null;
+  } | null;
+};
+
+export type FramePostsResponse = {
+  success: boolean;
+  message: string;
+  data: FramePostItem[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
+
+// GET /frames/:frameId/posts - Posts list by frame id
+export const getFramePostsApi = async (
+  frameId: string,
+  params: { page?: number; limit?: number } = { page: 1, limit: 20 }
+) => {
+  const res = await API.get<FramePostsResponse>(`/frames/${frameId}/posts`, { params });
   return res.data;
 };

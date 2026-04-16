@@ -10,22 +10,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuthStore } from "@/store/authStore";
 import { profileSchema, ProfileFormData } from "@/schemas/Auth";
-import { useLoadScript, Autocomplete } from "@react-google-maps/api";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
-
-const libraries: ("places")[] = ["places"];
+import LocationAutocomplete from "@/components/global/LocationAutocomplete";
 
 export default function CreateProfilePage() {
   const router = useRouter();
   const { user, tempProfileData, setTempProfileData, logout } = useAuthStore();
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries,
-  });
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -48,33 +37,6 @@ export default function CreateProfilePage() {
       fullName: user?.name || "",
     },
   });
-
-  const {
-    ready,
-    value: locationValue,
-    suggestions: { status, data: locationData },
-    setValue: setLocationValue,
-    clearSuggestions,
-    init,
-  } = usePlacesAutocomplete({
-    requestOptions: {
-      /* Define search scope here */
-    },
-    debounce: 300,
-    initOnMount: false,
-  });
-
-  useEffect(() => {
-    if (isLoaded) {
-      init();
-    }
-  }, [isLoaded, init]);
-
-  const handleSelectLocation = async (address: string) => {
-    setLocationValue(address, false);
-    clearSuggestions();
-    setValue("country", address, { shouldValidate: true });
-  };
 
   const onSubmit = (data: ProfileFormData) => {
     // Save to store and proceed to Step 2
@@ -235,35 +197,18 @@ export default function CreateProfilePage() {
               {errors.companyName && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.companyName.message}</p>}
 
               <div className="relative">
-                <Input
+                <LocationAutocomplete
                   placeholder="Select Company Location"
-                  disabled={!ready}
-                  className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
                   {...register("country")}
-                  autoComplete="off"
-                  onChange={(e) => {
-                    register("country").onChange(e);
-                    setLocationValue(e.target.value);
+                  icon={
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  }
+                  onLocationSelect={(address) => {
+                    setValue("country", address, { shouldValidate: true });
                   }}
                 />
-                {status === "OK" && (
-                  <div className="absolute z-10 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
-                    {locationData.map(({ place_id, description }) => (
-                      <div
-                        key={place_id}
-                        onClick={() => handleSelectLocation(description)}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium"
-                      >
-                        {description}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-500">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </div>
               </div>
               {(errors.city || errors.country || errors.street) && (
                 <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">Please complete professional location details</p>

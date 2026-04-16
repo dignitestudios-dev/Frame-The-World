@@ -338,7 +338,9 @@ const handleMouseDown = (e: React.MouseEvent) => {
                     <div
                       key={frame._id}
                       onClick={() =>
-                        executeWithCheck(() => router.push("/framedetails"), { isPendingAllowed: false })
+                        executeWithCheck(() => router.push(`/framedetails/${frame._id}`), {
+                          isPendingAllowed: false,
+                        })
                       }
                       className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px]"
                     >

@@ -1,21 +1,189 @@
 "use client";
 import Header from '@/components/global/header';
-import React, { useState } from 'react';
-import LocationAutocomplete from '@/components/global/LocationAutocomplete';
+import React, { useEffect, useRef, useState } from 'react';
+import LocationAutocomplete, { PlaceSelectionDetails } from '@/components/global/LocationAutocomplete';
+import { useRouter } from 'next/navigation';
+import { createFrameApi } from '@/services/frameApi';
+import { getApiErrorMessage } from '@/lib/apiError';
+import { getGeocode, getLatLng } from "use-places-autocomplete";
+import { Toast } from '@/components/ui/toast';
 
-interface CreateFrame {
-  onCreateFrame?: (data: { name: string; category: 'public' | 'private'; location: string }) => void;
-  onBack?: () => void;
-}
 
-const CreateFrame: React.FC<CreateFrame> = ({ onCreateFrame, onBack }) => {
-  const [frameName, setFrameName] = useState('');
+
+const getAddressComponent = (
+  components: google.maps.GeocoderAddressComponent[] | undefined,
+  type: string
+) => components?.find((component) => component.types.includes(type))?.long_name || "";
+
+const getFirstAddressComponent = (
+  components: google.maps.GeocoderAddressComponent[] | undefined,
+  types: string[]
+) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
+
+const CreateFrame = () => {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [title, setTitle] = useState('');
   const [category, setCategory] = useState<'public' | 'private'>('public');
   const [location, setLocation] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [country, setCountry] = useState('');
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string; location?: string; cover?: string }>({});
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  const handleCreate = () => {
-    if (onCreateFrame) {
-      onCreateFrame({ name: frameName, category, location });
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(coverFile);
+    setCoverPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [coverFile]);
+
+  const handlePlaceSelect = (place: PlaceSelectionDetails) => {
+    if (place.latitude !== undefined) {
+      setLatitude(String(place.latitude));
+    }
+    if (place.longitude !== undefined) {
+      setLongitude(String(place.longitude));
+    }
+    if (place.city) {
+      setCity(place.city);
+    }
+    if (place.state) {
+      setState(place.state);
+    }
+    if (place.country) {
+      setCountry(place.country);
+    }
+  };
+
+  const handleCreate = async () => {
+    setFieldErrors({});
+    setToastOpen(false);
+
+    if (!coverFile) {
+      setFieldErrors({ cover: 'Please upload a cover image.' });
+      return;
+    }
+    if (!title.trim()) {
+      setFieldErrors({ title: 'Please enter frame title.' });
+      return;
+    }
+    if (!location.trim()) {
+      setFieldErrors({ location: 'Please select location.' });
+      return;
+    }
+
+    // If user typed a location manually (without selecting Google suggestions),
+    // resolve lat/lng + city/state/country using geocoding at submit time.
+    let resolvedLongitude = longitude;
+    let resolvedLatitude = latitude;
+    let resolvedCity = city;
+    let resolvedState = state;
+    let resolvedCountry = country;
+
+    const shouldResolveFromTypedLocation =
+      !resolvedLongitude || !resolvedLatitude || !resolvedCity || !resolvedState || !resolvedCountry;
+
+    if (shouldResolveFromTypedLocation) {
+      try {
+        const geocodeResults = await getGeocode({ address: location.trim() });
+        const firstResult = geocodeResults?.[0];
+        if (!firstResult) {
+          setFieldErrors({ location: "Please enter a valid location." });
+          return;
+        }
+
+        const { lat, lng } = await getLatLng(firstResult);
+        resolvedLongitude = String(lng);
+        resolvedLatitude = String(lat);
+        resolvedCity = getFirstAddressComponent(firstResult.address_components, [
+          "locality",
+          "postal_town",
+          "administrative_area_level_3",
+          "administrative_area_level_2",
+        ]);
+        resolvedState = getFirstAddressComponent(firstResult.address_components, [
+          "administrative_area_level_1",
+          "administrative_area_level_2",
+        ]);
+        resolvedCountry = getAddressComponent(firstResult.address_components, "country");
+
+        // Update UI state too (so subsequent attempts work instantly)
+        setLongitude(resolvedLongitude);
+        setLatitude(resolvedLatitude);
+        setCity(resolvedCity);
+        setState(resolvedState);
+        setCountry(resolvedCountry);
+
+        if (!resolvedLongitude || !resolvedLatitude || !resolvedCity || !resolvedState || !resolvedCountry) {
+          setFieldErrors({ location: "Please enter a valid location (city/state/country required)." });
+          return;
+        }
+      } catch {
+        setFieldErrors({ location: "Please enter a valid location." });
+        return;
+      }
+    }
+
+    if (!resolvedLongitude || !resolvedLatitude) {
+      setFieldErrors({ location: "Please enter a valid location." });
+      return;
+    }
+    if (!resolvedCity || !resolvedState || !resolvedCountry) {
+      setFieldErrors({ location: "City/state/country are required for the entered location." });
+      return;
+    }
+
+    const payload = new FormData();
+    payload.append('cover', coverFile);
+    payload.append('title', title.trim());
+    payload.append('longitude', resolvedLongitude);
+    payload.append('latitude', resolvedLatitude);
+    payload.append('isPrivate', String(category === 'private'));
+    payload.append('city', resolvedCity);
+    payload.append('state', resolvedState);
+    payload.append('country', resolvedCountry);
+
+    try {
+      setIsSubmitting(true);
+      await createFrameApi(payload);
+      setToastMessage("Frame Create Succesfully");
+      setToastType("success");
+      setToastOpen(true);
+      setTitle('');
+      setCategory('public');
+      setLocation('');
+      setLongitude('');
+      setLatitude('');
+      setCity('');
+      setState('');
+      setCountry('');
+      setCoverFile(null);
+      // Toast show hone de, phir redirect
+      setTimeout(() => {
+        router.push("/Profile");
+      }, 250);
+    } catch (error) {
+      const msg = getApiErrorMessage(error);
+      setToastMessage(msg);
+      setToastType("error");
+      setToastOpen(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -24,9 +192,16 @@ const CreateFrame: React.FC<CreateFrame> = ({ onCreateFrame, onBack }) => {
     <div className="min-h-screen bg-gray-50">
 <Header/>
       <div className="max-w-2xl mx-auto p-6">
+        <Toast
+          open={toastOpen}
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setToastOpen(false)}
+        />
         {/* Back Button */}
         <button 
-          onClick={onBack}
+          type="button"
+          onClick={() => router.back()}
           className="mb-6 p-2 hover:bg-gray-200 rounded-full transition-colors"
           aria-label="Go back"
         >
@@ -53,21 +228,60 @@ const CreateFrame: React.FC<CreateFrame> = ({ onCreateFrame, onBack }) => {
           </p>
         </div>
 
+        {/* Cover Upload */}
+        <div className="mb-6">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              setCoverFile(e.target.files?.[0] || null);
+              setFieldErrors((prev) => ({ ...prev, cover: undefined }));
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="relative w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-700 hover:bg-gray-100 transition-colors text-left overflow-hidden"
+            style={
+              coverPreviewUrl
+                ? {
+                    backgroundImage: `url(${coverPreviewUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }
+                : undefined
+            }
+          >
+            {coverPreviewUrl ? <span className="absolute inset-0 bg-black/35" /> : null}
+            <span className="relative">
+              {coverFile ? `Cover: ${coverFile.name}` : 'Upload cover image'}
+            </span>
+          </button>
+          {fieldErrors.cover ? <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.cover}</p> : null}
+        </div>
+
         {/* Frame Name Input */}
         <div className="mb-6">
           <input
             type="text"
-            placeholder="Enter frame name"
-            value={frameName}
-            onChange={(e) => setFrameName(e.target.value)}
+            placeholder="Enter frame title"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setFieldErrors((prev) => ({ ...prev, title: undefined }));
+            }}
             className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
           />
+          {fieldErrors.title ? <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.title}</p> : null}
         </div>
 
         {/* Frame Category Selection */}
         <div className="flex gap-4 mb-6">
           {/* Public Frame */}
           <button
+            type="button"
             onClick={() => setCategory('public')}
             className={`flex-1 py-8 rounded-3xl transition-all ${
               category === 'public'
@@ -91,6 +305,7 @@ const CreateFrame: React.FC<CreateFrame> = ({ onCreateFrame, onBack }) => {
 
           {/* Private Frame */}
           <button
+            type="button"
             onClick={() => setCategory('private')}
             className={`flex-1 py-8 rounded-3xl transition-all ${
               category === 'private'
@@ -126,8 +341,15 @@ const CreateFrame: React.FC<CreateFrame> = ({ onCreateFrame, onBack }) => {
           <LocationAutocomplete
             placeholder="Select Location"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            onLocationSelect={(addr) => setLocation(addr)}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              setFieldErrors((prev) => ({ ...prev, location: undefined }));
+            }}
+            onLocationSelect={(addr) => {
+              setLocation(addr?.address || '');
+              setFieldErrors((prev) => ({ ...prev, location: undefined }));
+            }}
+            onPlaceSelect={handlePlaceSelect}
             className="w-full py-4 pl-14 pr-12 bg-gray-100 rounded-full text-gray-700 font-medium hover:bg-gray-200 focus:bg-gray-200 transition-colors focus:outline-none"
             icon={
               <svg className="w-5 h-5 text-blue-500 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,12 +359,17 @@ const CreateFrame: React.FC<CreateFrame> = ({ onCreateFrame, onBack }) => {
           />
         </div>
 
+        {/* Location details (lat/lng + city/state/country) autocomplete se fill honge */}
+        {fieldErrors.location ? <p className="mb-4 text-[12px] font-bold text-red-500">{fieldErrors.location}</p> : null}
+
         {/* Create Frame Button */}
         <button
+          type="button"
           onClick={handleCreate}
-          className="w-full max-w-sm mx-auto block py-4 bg-blue-400 hover:bg-blue-500 text-white font-medium rounded-full transition-colors"
+          disabled={isSubmitting}
+          className="w-full max-w-sm mx-auto block py-4 bg-blue-400 hover:bg-blue-500 text-white font-medium rounded-full transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          Create Frame
+          {isSubmitting ? 'Creating...' : 'Create Frame'}
         </button>
       </div>
     </div>

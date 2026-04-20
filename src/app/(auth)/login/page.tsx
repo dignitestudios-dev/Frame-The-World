@@ -39,7 +39,7 @@ export default function LoginPage() {
     onSuccess: (data) => {
       const user = data.data?.user || data.user;
       const token = data.data?.token || data.token;
-      
+
       login({ user, token });
       setToastMessage(data?.message || "Login successful");
       setToastType("success");
@@ -71,7 +71,7 @@ export default function LoginPage() {
     onSuccess: (data) => {
       const user = data.data?.user || data.user;
       const token = data.data?.token || data.token;
-      
+
       login({ user, token });
       setToastMessage(data?.message || "Login successful");
       setToastType("success");
@@ -199,7 +199,7 @@ export default function LoginPage() {
               className="w-full"
               {...register("password")}
             />
-              {errors.password && (
+            {errors.password && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.password.message}
               </p>
@@ -219,11 +219,10 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={isPending || !isValid}
-            className={`w-full mt-3 h-12 font-medium mb-4 text-white transition-all ${
-              isPending || !isValid 
-                ? "bg-gray-300 cursor-not-allowed" 
-                : "gradient-bg hover:shadow-lg shadow-blue-200"
-            }`}
+            className={`w-full mt-3 h-12 font-medium mb-4 text-white transition-all ${isPending || !isValid
+              ? "bg-gray-300  rounded-[100px] cursor-not-allowed"
+              : "gradient-bg  hover:shadow-lg shadow-blue-200"
+              }`}
           >
 
             {isPending ? (
@@ -320,10 +319,10 @@ export default function LoginPage() {
               className="text-gray-500 font-medium hover:text-blue-600 transition-colors flex items-center gap-2 group"
             >
               Continue as Guest
-              <svg 
-                className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

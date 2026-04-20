@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { EllipsisVertical } from "lucide-react";
-import React, { useState } from "react";
-import PostOptionsMenu from "./PostOptionsMenu";
+import React from "react";
+import { Loader2 } from "lucide-react";
 
 interface Post {
   id?: string;
@@ -18,86 +17,73 @@ interface Post {
 interface OwnPostCardProps {
   post: Post;
   isTall: boolean;
-  onEdit: (post: Post) => void;
-  onDelete: (postId: string) => void;
   onClick: () => void;
 }
 
-const OwnPostCard: React.FC<OwnPostCardProps> = ({
-  post,
-  isTall,
-  onEdit,
-  onDelete,
-  onClick,
-}) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+const statusStyles: Record<string, { bg: string; dot: string; text: string }> = {
+  approved: {
+    bg: "bg-emerald-500/80 border-emerald-300/40",
+    dot: "bg-emerald-300",
+    text: "text-white",
+  },
+  completed: {
+    bg: "bg-emerald-500/80 border-emerald-300/40",
+    dot: "bg-emerald-300",
+    text: "text-white",
+  },
+  pending: {
+    bg: "bg-amber-500/80 border-amber-300/40",
+    dot: "bg-amber-300",
+    text: "text-white",
+  },
+  rejected: {
+    bg: "bg-red-500/80 border-red-300/40",
+    dot: "bg-red-300",
+    text: "text-white",
+  },
+};
 
-  const postId = post.id || post._id || "";
+const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
   const imageUrl =
     typeof post.media === "string"
       ? post.media
       : post.media?.location || "/images/placeholder.jpg";
 
-  const isCompleted = post.status?.toLowerCase() === "completed";
-  const showButton = (isHovered || isMenuOpen) && isCompleted;
+  const statusKey = post.status?.toLowerCase() ?? "";
+  const style = statusStyles[statusKey] ?? {
+    bg: "bg-black/60 border-white/20",
+    dot: "bg-white/60",
+    text: "text-white",
+  };
 
   return (
-    <>
-      <div
-        className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]
-          ${isTall ? "row-span-3" : "row-span-2"}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Image
-          src={imageUrl}
-          alt={post.caption || "Post"}
-          fill
-          className="object-cover cursor-pointer"
-          onClick={onClick}
-        />
-
-        {/* Status Badge */}
-        {post.status && (
-          <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider rounded-full z-10 shadow-sm border border-white/20">
-            {post.status}
-          </div>
-        )}
-
-        {/* Options Button — visible on hover OR when menu is open, ONLY if completed */}
-        <div
-          className={`absolute top-3 right-3 transition-opacity duration-200 ${
-            showButton ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              setIsMenuOpen(true);
-            }}
-            className="h-9 w-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow hover:bg-white transition-colors"
-          >
-            <EllipsisVertical className="h-5 w-5 text-gray-700" />
-          </button>
-        </div>
-      </div>
-
-      {/* Portal-like: rendered OUTSIDE the card div to avoid event/hover conflicts */}
-      <PostOptionsMenu
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        onEdit={() => {
-          setIsMenuOpen(false);
-          onEdit(post);
-        }}
-        onDelete={() => {
-          setIsMenuOpen(false);
-          onDelete(postId);
-        }}
+    <div
+      className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]
+        ${isTall ? "row-span-3" : "row-span-2"}`}
+    >
+      <Image
+        src={imageUrl}
+        alt={post.caption || "Post"}
+        fill
+        className="object-cover cursor-pointer"
+        onClick={onClick}
       />
-    </>
+
+      {/* Status Badge */}
+      {post.status && (
+        <div
+          className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 backdrop-blur-sm ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded-full z-10 shadow-sm border`}
+        >
+          <span className="relative flex h-2 w-2">
+            {statusKey === "pending" && (
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${style.dot} opacity-75`} />
+            )}
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${style.dot}`} />
+          </span>
+          {post.status}
+        </div>
+      )}
+    </div>
   );
 };
 

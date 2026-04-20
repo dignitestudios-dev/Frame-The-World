@@ -1,4 +1,5 @@
 import { API } from "@/lib/axios";
+import type { AxiosResponse } from "axios";
 
 // POST /posts - FormData { image, caption, categories[0], categories[1], ... }
 export const createPostApi = async (formData: FormData) => {
@@ -35,5 +36,25 @@ export const updatePostApi = async (postId: string, formData: FormData) => {
 // DELETE /posts/:postId
 export const deletePostApi = async (postId: string) => {
   const res = await API.delete(`/posts/${postId}`);
+  return res.data;
+};
+
+// POST /posts/:postId/upvote
+export const upvotePostApi = async (postId: string) => {
+  const res = await API.post(`/posts/${postId}/upvote`);
+  return res.data;
+};
+
+// GET /posts/:postId/download
+export const downloadPostApi = async (postId: string) => {
+  const res = await API.get(`/posts/${postId}/download`);
+  return res.data;
+};
+
+// GET /posts/:postId/insights?timeframe=week
+export const getPostInsightsApi = async (postId: string, timeframe: string = "week") => {
+  const res = await API.get(`/posts/${postId}/insights`, {
+    params: { timeframe },
+  });
   return res.data;
 };

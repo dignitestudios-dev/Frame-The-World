@@ -9,21 +9,12 @@ import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBadgesApi } from "@/services/authApi";
 import {
-  deletePostApi,
   getOwnPostsApi,
-  getPostApi,
-  updatePostApi,
 } from "@/services/postApi";
-import AnalyzingModal from "@/components/createpost/AnalyzingModalProps";
-import { useRef } from "react";
-import { getOwnFramesApi } from "@/services/frameApi";
-import {
-  ProfileSidebarSkeleton,
-  GridCardSkeleton,
-} from "@/components/global/Skeletons";
 import OwnPostCard from "@/components/profile/OwnPostCard";
-import EditPostModal from "@/components/profile/EditPostModal";
-import DeleteConfirmModal from "@/components/profile/DeleteConfirmModal";
+import { usePostStore } from "@/store/PostStore";
+import { ProfileSidebarSkeleton } from "@/components/global/Skeletons";
+import { getOwnFramesApi } from "@/services/frameApi";
 
 export default function TravelStoryPage() {
   const [activeTab, setActiveTab] = useState<"posts" | "frames" | "space">(
@@ -32,109 +23,16 @@ export default function TravelStoryPage() {
   const [frameVisibility, setFrameVisibility] = useState("public");
   const router = useRouter();
   const { user } = useAuthStore();
-  const queryClient = useQueryClient();
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
-  const [editingPost, setEditingPost] = useState<any>(null);
-  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [editSuccess, setEditSuccess] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const { setPostDetails } = usePostStore();
 
-  const [analyzingModalOpen, setAnalyzingModalOpen] = useState(false);
-  const [analyzingModalStatus, setAnalyzingModalStatus] = useState<
-    "idle" | "pending" | "success" | "error"
-  >("idle");
-  const [rejectedPostId, setRejectedPostId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState<string>("");
-
-  // Store detection results from API
-  const [aiDetection, setAiDetection] = useState<
-    { isAI: boolean | null; processedAt?: string | null } | undefined
-  >(undefined);
-  const [humanDetection, setHumanDetection] = useState<
-    { hasHuman: boolean | null; processedAt?: string | null } | undefined
-  >(undefined);
-  const [editingDetection, setEditingDetection] = useState<
-    { isEdited: boolean | null; processedAt?: string | null } | undefined
-  >(undefined);
-
-  const hiddenFileInputRef = useRef<HTMLInputElement>(null);
-
-  const { mutate: updateRejectedImage, isPending: isUpdatingImage } =
-    useMutation({
-      mutationFn: ({
-        postId,
-        formData,
-      }: {
-        postId: string;
-        formData: FormData;
-      }) => updatePostApi(postId, formData),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["ownPosts"] });
-        setAnalyzingModalOpen(false);
-        setRejectedPostId(null);
-        setEditSuccess(true);
-        setTimeout(() => setEditSuccess(false), 3000);
-      },
-      onError: (err) => {
-        console.error("Failed to update image", err);
-      },
-    });
-
-  const handlePostClick = async (post: any) => {
-    if (post.status?.toLowerCase() === "rejected") {
-      const postId = post.id || post._id;
-      setAnalyzingModalStatus("pending");
-      setAnalyzingModalOpen(true);
-      const resp = await getPostApi(postId);
-      setRejectedPostId(postId);
-      // Reset detection state
-      setAiDetection(undefined);
-      setHumanDetection(undefined);
-      setEditingDetection(undefined);
-      setRejectionReason("");
-     
-      try {
-        const data = resp.data?.data || resp.data;
-        // Extract detection results from API response
-        setAiDetection(data?.aiDetection || undefined);
-        setHumanDetection(data?.humanDetection || undefined);
-        setEditingDetection(data?.editingDetection || undefined);
-        setRejectionReason(data?.reason || data?.rejectionReason || "");
-
-        // Determine if any check failed
-        const aiIssue = data?.aiDetection?.isAI === true;
-        const humanIssue = data?.humanDetection?.hasHuman === false;
-        const editingIssue = data?.editingDetection?.isEdited === true;
-
-        if (aiIssue || humanIssue || editingIssue) {
-          setAnalyzingModalStatus("error");
-        } else {
-          setAnalyzingModalStatus("success");
-        }
-      } catch (err) {
-        setRejectionReason(
-          "Your post was rejected by our AI verification system.",
-        );
-        setAnalyzingModalStatus("error");
-      }
-    } else if (post.status?.toLowerCase() === "approved") {
-      const postId = post.id || post._id;
-      const resp = await getPostApi(postId);
-      if (!resp.data?.country) {
-        setEditingPost(resp.data?.data || resp.data);
-      }
-    } else {
-      // router.push(`/postdetails`);
-    }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && rejectedPostId) {
-      const formData = new FormData();
-      formData.append("media", file);
-      updateRejectedImage({ postId: rejectedPostId, formData });
-    }
+  // handlePostClick update karo
+  const handlePostClick = (post: any) => {
+    const postId = post.id || post._id;
+    setPostDetails(post);
+    router.push(`/postdetails?id=${postId}`);
   };
 
   const LOCK_ICON = "/images/badge-lock-icon.png";
@@ -181,20 +79,6 @@ export default function TravelStoryPage() {
     ownFramesData?.data ||
     [];
 
-  // Delete mutation
-  const { mutate: deletePost, isPending: isDeleting } = useMutation({
-    mutationFn: (postId: string) => deletePostApi(postId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ownPosts"] });
-      setDeletingPostId(null);
-      setDeleteSuccess(true);
-      setTimeout(() => setDeleteSuccess(false), 3000);
-    },
-  });
-
-  const handleConfirmDelete = () => {
-    if (deletingPostId) deletePost(deletingPostId);
-  };
 
   const isFrames = activeTab === "frames";
   const isPosts = activeTab === "posts";
@@ -355,11 +239,10 @@ export default function TravelStoryPage() {
               <button
                 onClick={() => setActiveTab("posts")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
-      ${
-        isPosts
-          ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
-          : "text-gray-400 hover:text-blue-500"
-      }`}
+      ${isPosts
+                    ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
+                    : "text-gray-400 hover:text-blue-500"
+                  }`}
               >
                 <div className="relative w-4 h-4">
                   <Image
@@ -375,11 +258,10 @@ export default function TravelStoryPage() {
               <button
                 onClick={() => setActiveTab("frames")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
-      ${
-        isFrames
-          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-          : "text-gray-400 hover:text-blue-500"
-      }`}
+      ${isFrames
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                    : "text-gray-400 hover:text-blue-500"
+                  }`}
               >
                 <div className="relative w-4 h-4">
                   <Image
@@ -395,11 +277,10 @@ export default function TravelStoryPage() {
               <button
                 onClick={() => setActiveTab("space")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
-      ${
-        activeTab === "space"
-          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-          : "text-gray-400 hover:text-blue-500"
-      }`}
+      ${activeTab === "space"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                    : "text-gray-400 hover:text-blue-500"
+                  }`}
               >
                 <div className="relative w-4 h-4">
                   <Image
@@ -489,8 +370,6 @@ export default function TravelStoryPage() {
                         post={post}
                         isTall={i % 3 === 0 || i % 2 === 0}
                         onClick={() => handlePostClick(post)}
-                        onEdit={(p) => setEditingPost(p)}
-                        onDelete={(postId) => setDeletingPostId(postId)}
                       />
                     ))}
                   </div>
@@ -505,22 +384,20 @@ export default function TravelStoryPage() {
                   <button
                     onClick={() => setFrameVisibility("public")}
                     className={`px-5 py-2 rounded-full text-sm transition
-          ${
-            frameVisibility === "public"
-              ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
-              : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
-          }`}
+          ${frameVisibility === "public"
+                        ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
+                        : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
+                      }`}
                   >
                     Public
                   </button>
                   <button
                     onClick={() => setFrameVisibility("private")}
                     className={`px-5 py-2 rounded-full text-sm transition
-          ${
-            frameVisibility === "private"
-              ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
-              : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
-          }`}
+          ${frameVisibility === "private"
+                        ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white shadow-md"
+                        : "bg-blue-100 text-gray-400 border border-gray-200 hover:text-black"
+                      }`}
                   >
                     Private
                   </button>
@@ -699,47 +576,9 @@ export default function TravelStoryPage() {
         </div>
       )}
 
-      {/* ===== REJECTED POST MODAL ===== */}
-      <AnalyzingModal
-        isOpen={analyzingModalOpen}
-        status={analyzingModalStatus}
-        reason={rejectionReason}
-        aiDetection={aiDetection}
-        humanDetection={humanDetection}
-        editingDetection={editingDetection}
-        onClose={() => {
-          setAnalyzingModalOpen(false);
-          setAnalyzingModalStatus("idle");
-        }}
-        onChangeImage={() => hiddenFileInputRef.current?.click()}
-        setIsImage={() => {}}
-      />
-      <input
-        type="file"
-        accept="image/*"
-        className="hidden"
-        ref={hiddenFileInputRef}
-        onChange={handleImageChange}
-      />
 
-      {/* ===== EDIT POST MODAL ===== */}
-      <EditPostModal
-        post={editingPost}
-        isOpen={!!editingPost}
-        onClose={() => setEditingPost(null)}
-        onSuccess={() => {
-          setEditSuccess(true);
-          setTimeout(() => setEditSuccess(false), 3000);
-        }}
-      />
 
-      {/* ===== DELETE CONFIRM MODAL ===== */}
-      <DeleteConfirmModal
-        isOpen={!!deletingPostId}
-        isPending={isDeleting}
-        onClose={() => setDeletingPostId(null)}
-        onConfirm={handleConfirmDelete}
-      />
+
     </div>
   );
 }

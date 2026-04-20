@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { AlertTriangle, Loader2, X } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { createPortal } from "react-dom";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -18,18 +19,22 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
 }) => {
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  return (
+  // Portal use karo taake koi bhi parent z-index/transform affect na kare
+  return createPortal(
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-md p-4"
+      style={{ zIndex: 999999 }}
+      className="fixed inset-0 flex items-center justify-center bg-black/50 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+        className="w-full max-w-sm bg-white rounded-[2rem] shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-8 flex flex-col items-center text-center gap-4">
@@ -37,9 +42,12 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             <AlertTriangle className="w-8 h-8 text-red-500" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Delete Post?</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">
+              Delete Post?
+            </h3>
             <p className="text-sm text-gray-500 leading-relaxed">
-              This action cannot be undone. The post will be permanently removed.
+              This action cannot be undone. The post will be permanently
+              removed.
             </p>
           </div>
           <div className="flex gap-3 w-full pt-2">
@@ -67,7 +75,8 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body // Direct body mein render hoga, koi parent affect nahi kar sakta
   );
 };
 

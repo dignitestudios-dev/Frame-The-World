@@ -40,7 +40,6 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   const [newImage, setNewImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Pre-fill form when post changes
   useEffect(() => {
     if (post) {
       setCaption(post.caption || "");
@@ -105,6 +104,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
 
   const handleSubmit = () => {
     const data = new FormData();
+    data.append("status", "completed");
     data.append("country", locationData?.country || "");
     data.append("state", locationData?.state || "");
     data.append("latitude", locationData?.latitude?.toString() || "");

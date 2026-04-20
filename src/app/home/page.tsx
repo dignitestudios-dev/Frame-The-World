@@ -11,6 +11,7 @@ import { GridCardSkeleton } from "@/components/global/Skeletons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { getFeaturedPostsApi, getFramesApi, getPostsApi } from "@/services/authApi";
+import { usePostStore } from "@/store/PostStore";
 
 const FEED_PAGE_LIMIT = 10;
 const FALLBACK_IMAGE_URL =
@@ -33,6 +34,7 @@ export default function TravelStoryPage() {
   const isFrames = activeTab === "frames";
   const router = useRouter();
   const { executeWithCheck } = useAccessControl();
+  const { setPostDetails } = usePostStore();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -450,9 +452,14 @@ const handleMouseDown = (e: React.MouseEvent) => {
                     return (
                       <div
                         key={isFeedTab ? (item as { _id: string })._id : i}
-                        onClick={() =>
-                          executeWithCheck(() => router.push("/postdetails"), { isPendingAllowed: false })
-                        }
+                        onClick={() => {
+                          const post = item as any;
+                          const postId = post._id || post.id;
+                          executeWithCheck(() => {
+                            setPostDetails(post);
+                            router.push(`/postdetails?id=${postId}`);
+                          }, { isPendingAllowed: false });
+                        }}
                         className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${
                           isTall ? "row-span-2" : "row-span-3"
                         }`}

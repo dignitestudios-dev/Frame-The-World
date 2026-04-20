@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { getFrameByIdApi, getFramePostsApi } from "@/services/authApi";
 import { GridCardSkeleton } from "@/components/global/Skeletons";
-import { updateFrameApi } from "@/services/frameApi";
+import { getOwnFramesApi, updateFrameApi } from "@/services/frameApi";
 import LocationAutocomplete, { PlaceSelectionDetails } from "@/components/global/LocationAutocomplete";
 import { getGeocode, getLatLng } from "use-places-autocomplete";
 import { Toast } from "@/components/ui/toast";
@@ -78,6 +78,12 @@ export default function FrameDetailsPage() {
     enabled: Boolean(frameId),
   });
 
+  const { data: ownFramesData } = useQuery({
+    queryKey: ["ownFramesForAccessCheck"],
+    queryFn: () => getOwnFramesApi({ page: 1, limit: 200 }),
+    enabled: Boolean(user?.id),
+  });
+
   const frame = data?.data;
   const frameDetails = frame as
     | (typeof frame & {
@@ -98,7 +104,20 @@ export default function FrameDetailsPage() {
   }, [frame?.city, frame?.country, frame?.state]);
 
   const canManageFrame = useMemo(() => {
-    if (!frameDetails || !user?.id) return false;
+    if (!frameId || !user?.id) return false;
+
+    const ownFrames: any[] =
+      ownFramesData?.data?.data ||
+      ownFramesData?.data?.results ||
+      ownFramesData?.data ||
+      [];
+    const isInOwnFramesList = ownFrames.some((item) => {
+      const ownFrameId = item?.id || item?._id;
+      return String(ownFrameId) === String(frameId);
+    });
+    if (isInOwnFramesList) return true;
+
+    if (!frameDetails) return false;
     const rawFrame = frameDetails as any;
     const possibleOwnerIds = [
       rawFrame?.userId,
@@ -113,7 +132,7 @@ export default function FrameDetailsPage() {
       .map((id) => String(id));
 
     return possibleOwnerIds.includes(String(user.id));
-  }, [frameDetails, user?.id]);
+  }, [frameDetails, frameId, ownFramesData?.data, user?.id]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

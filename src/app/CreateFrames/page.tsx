@@ -2,7 +2,7 @@
 import Header from '@/components/global/header';
 import React, { useEffect, useRef, useState } from 'react';
 import LocationAutocomplete, { PlaceSelectionDetails } from '@/components/global/LocationAutocomplete';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createFrameApi } from '@/services/frameApi';
 import { getApiErrorMessage } from '@/lib/apiError';
 import { getGeocode, getLatLng } from "use-places-autocomplete";
@@ -21,7 +21,9 @@ const getFirstAddressComponent = (
 ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
 
 const CreateFrame = () => {
-  const router = useRouter();
+   const router = useRouter();
+  const searchParams = useSearchParams();
+  const postId = searchParams.get('postId');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [title, setTitle] = useState('');
@@ -157,6 +159,9 @@ const CreateFrame = () => {
     payload.append('city', resolvedCity);
     payload.append('state', resolvedState);
     payload.append('country', resolvedCountry);
+    if (postId) {
+      payload.append('postId', postId);
+    }
 
     try {
       setIsSubmitting(true);

@@ -25,3 +25,9 @@ export const getOwnFramesApi = async (params?: { page?: number; limit?: number; 
   const res = await API.get("/frames/own", { params });
   return res.data;
 };
+
+// POST /frames/:frameId/posts
+export const addPostToFrameApi = async (frameId: string, postId: string) => {
+  const res = await API.post(`/frames/${frameId}/posts`, { postIds: [postId] });
+  return res.data;
+};

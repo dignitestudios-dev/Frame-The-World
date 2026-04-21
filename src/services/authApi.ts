@@ -259,3 +259,74 @@ export const getFramePostsApi = async (
   const res = await API.get<FramePostsResponse>(`/frames/${frameId}/posts`, { params });
   return res.data;
 };
+
+export type SearchPostItem = {
+  _id: string;
+  media?: {
+    location?: string | null;
+  } | null;
+};
+
+export type SearchPostsResponse = {
+  success: boolean;
+  message: string;
+  data: SearchPostItem[];
+  pagination?: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
+
+type SearchCommonParams = {
+  latitude?: number;
+  longitude?: number;
+  categories?: string[];
+};
+
+// GET /posts/all - Search posts by location/categories
+export const getSearchPostsApi = async (params: SearchCommonParams & { limit?: number }) => {
+  const searchParams = new URLSearchParams();
+  searchParams.set("limit", String(params.limit ?? 40));
+
+  if (typeof params.longitude === "number") {
+    searchParams.set("longitude", String(params.longitude));
+  }
+
+  if (typeof params.latitude === "number") {
+    searchParams.set("latitude", String(params.latitude));
+  }
+
+  params.categories?.forEach((category) => {
+    searchParams.append("categories", category);
+  });
+
+  const res = await API.get<SearchPostsResponse>(`/posts/all?${searchParams.toString()}`);
+  return res.data;
+};
+
+// GET /frames - Search frames by location/categories
+export const getSearchFramesApi = async (params: SearchCommonParams & { limit?: number }) => {
+  const searchParams = new URLSearchParams();
+
+  if (typeof params.limit === "number") {
+    searchParams.set("limit", String(params.limit));
+  }
+
+  if (typeof params.longitude === "number") {
+    searchParams.set("longitude", String(params.longitude));
+  }
+
+  if (typeof params.latitude === "number") {
+    searchParams.set("latitude", String(params.latitude));
+  }
+
+  params.categories?.forEach((category) => {
+    searchParams.append("categories", category);
+  });
+
+  const queryString = searchParams.toString();
+  const res = await API.get<FramesFeedResponse>(queryString ? `/frames/all?${queryString}` : "/frames/");
+  return res.data;
+};

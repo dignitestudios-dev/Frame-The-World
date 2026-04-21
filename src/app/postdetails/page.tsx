@@ -22,6 +22,7 @@ import {
   upvotePostApi,
   getPostApi,
   updatePostApi,
+  getAllPostsApi,
 } from "@/services/postApi";
 import AnalyzingModal from "@/components/createpost/AnalyzingModalProps";
 import EditPostModal from "@/components/profile/EditPostModal";
@@ -77,6 +78,7 @@ export default function PostDetails() {
     Boolean(postDetails?.isUpvoted ?? postDetails?.upvoted),
   );
 
+
   // Modals state
   const [analyzingModalOpen, setAnalyzingModalOpen] = useState(false);
   const [analyzingModalStatus, setAnalyzingModalStatus] = useState<
@@ -98,6 +100,39 @@ export default function PostDetails() {
   });
 
   const postToDisplay = fetchedPostData?.data?.data || fetchedPostData?.data || postDetails;
+
+  const currentPostId = getEntityId(postToDisplay);
+  const currentUserId = getEntityId(user);
+  const postOwnerId = getEntityId(postToDisplay?.createdBy);
+  const canDeletePost =
+    Boolean(currentUserId) &&
+    Boolean(postOwnerId) &&
+    currentUserId === postOwnerId;
+
+  const imageUrl = postToDisplay?.media?.location || FALLBACK_POST_IMAGE;
+  const authorImage =
+    postToDisplay?.createdBy?.profilePicture?.location ||
+    postToDisplay?.createdBy?.profilePicture ||
+    FALLBACK_AVATAR;
+  const locationText =
+    [postToDisplay?.state, postToDisplay?.country].filter(Boolean).join(", ") ||
+    "Location unavailable";
+
+  // Fetch related posts
+  const { data: relatedPostsData, isLoading: isLoadingRelated } = useQuery({
+    queryKey: ["related-posts", postToDisplay?._id, postToDisplay?.categories],
+    queryFn: () =>
+      getAllPostsApi({
+        categories: postToDisplay?.categories?.map((c: any) => c._id || c.id) || [],
+      }),
+    enabled: !!postToDisplay,
+    refetchOnMount: "always", // Ensure fresh data on every mount/reload
+    staleTime: 0,
+  });
+
+  const relatedPosts = (relatedPostsData?.data?.data || relatedPostsData?.data || []).filter(
+    (p: any) => (p._id || p.id) !== currentPostId
+  );
 
   const { mutate: updateRejectedImage, isPending: isUpdatingImage } =
     useMutation({
@@ -181,22 +216,6 @@ export default function PostDetails() {
     queryClient.invalidateQueries({ queryKey: ["featured-feed"] });
   };
 
-  const currentPostId = getEntityId(currentPost);
-  const currentUserId = getEntityId(user);
-  const postOwnerId = getEntityId(currentPost?.createdBy);
-  const canDeletePost =
-    Boolean(currentUserId) &&
-    Boolean(postOwnerId) &&
-    currentUserId === postOwnerId;
-
-  const imageUrl = currentPost?.media?.location || FALLBACK_POST_IMAGE;
-  const authorImage =
-    currentPost?.createdBy?.profilePicture?.location ||
-    currentPost?.createdBy?.profilePicture ||
-    FALLBACK_AVATAR;
-  const locationText =
-    [currentPost?.state, currentPost?.country].filter(Boolean).join(", ") ||
-    "Location unavailable";
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: (postId: string) => deletePostApi(postId),
@@ -454,26 +473,46 @@ export default function PostDetails() {
           </h3>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 auto-rows-[120px] gap-6">
-            {Array.from({ length: 20 }).map((_, i) => {
-              const isTall = i % 3 === 0 || i % 2 === 0;
-
-              return (
+            {isLoadingRelated ? (
+              Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${isTall ? "row-span-3" : "row-span-2"
+                  className={`bg-gray-100 animate-pulse rounded-[28px] ${i % 3 === 0 || i % 2 === 0 ? "row-span-3" : "row-span-2"
                     }`}
-                >
-                  <Image
-                    src={`/images/${(i % 4) + 1}.jpg`}
-                    alt="Travel"
-                    fill
-                    className="object-cover"
-                  />
+                />
+              ))
+            ) : relatedPosts.length > 0 ? (
+              relatedPosts.map((post: any, i: number) => {
+                const isTall = i % 3 === 0 || i % 2 === 0;
+                const relatedPostId = post._id || post.id;
+                const relatedImageUrl = post.media?.location || FALLBACK_POST_IMAGE;
 
-
-                </div>
-              );
-            })}
+                return (
+                  <div
+                    key={relatedPostId || i}
+                    onClick={() => router.push(`/postdetails?id=${relatedPostId}`)}
+                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition cursor-pointer group ${isTall ? "row-span-3" : "row-span-2"
+                      }`}
+                  >
+                    <Image
+                      src={relatedImageUrl}
+                      alt={post.caption || "Related Post"}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                      <p className="text-white text-xs font-medium truncate w-full">
+                        {post.caption}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="col-span-full py-20 text-center text-gray-500">
+                No related posts found.
+              </div>
+            )}
           </div>
         </div>
       </div>

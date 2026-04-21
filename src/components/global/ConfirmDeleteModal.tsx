@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Trash, Loader2, X } from "lucide-react";
+import { Trash2, Loader2, X } from "lucide-react";
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -31,44 +31,61 @@ const ConfirmDeleteModal = ({
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50"
+        onClick={!isLoading ? onClose : undefined}
+      />
 
-      <div className="relative w-full max-w-[380px] bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
-              <Trash className="w-6 h-6" />
+      {/* Modal */}
+      <div className="relative w-full max-w-[400px] bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+        <div className="p-7">
+
+          {/* Header row */}
+          <div className="flex items-start justify-between mb-5">
+            <div className="w-11 h-11 rounded-[14px] bg-red-50 flex items-center justify-center flex-shrink-0">
+              <Trash2 className="w-5 h-5 text-red-500" />
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={isLoading}
+              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors disabled:opacity-40"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
-          <p className="text-gray-500 text-sm leading-relaxed mb-8">
+          {/* Text */}
+          <h2 className="text-[17px] font-medium text-gray-900 mb-2 leading-snug">
+            {title}
+          </h2>
+          <p className="text-sm text-gray-500 leading-relaxed mb-6">
             {description}
           </p>
 
-          <div className="flex flex-col gap-3">
+          {/* Actions */}
+          <div className="flex flex-col gap-2.5">
             <button
               onClick={onConfirm}
               disabled={isLoading}
-              className="w-full py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 rounded-xl text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-              {isLoading ? "Deleting..." : "Confirm Delete"}
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              {isLoading ? "Deleting..." : "Delete permanently"}
             </button>
             <button
               onClick={onClose}
               disabled={isLoading}
-              className="w-full py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-bold transition-all"
+              className="w-full py-3.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors disabled:opacity-60"
             >
               Cancel
             </button>
           </div>
+
         </div>
       </div>
     </div>,

@@ -3,7 +3,8 @@ import { persist } from "zustand/middleware";
 import Cookies from "js-cookie";
 
 interface User {
-  id: string;
+  id?: string;
+  _id?: string;
   name?: string;
   email: string;
   profilePicture?: any;
@@ -16,6 +17,9 @@ interface User {
   categoryPreference?: any[];
   badges?: any[];
   identityStatus?: "pending" | "approved" | "rejected" | "not-provided" | string;
+  upvotes?: number;
+  framed?: number;
+  downloads?: number;
 }
 
 interface AuthState {
@@ -77,14 +81,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       updateUser: (userData) =>
-
         set((state) => {
-          console.log(userData)
           if (userData.isProfileCompleted) {
             Cookies.set("isProfileCompleted", String(userData.isProfileCompleted), { expires: 7 });
           }
           return {
-            user: state.user ? { ...state.user, ...userData } : null,
+            user: state.user ? { ...state.user, ...userData } : (userData as User),
           };
         }),
 

@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LockIcon, X, Loader2, ImageOff } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBadgesApi } from "@/services/authApi";
+import { getBadgesApi, getUserProfileApi } from "@/services/authApi";
 import {
   getOwnPostsApi,
 } from "@/services/postApi";
@@ -22,7 +22,7 @@ export default function TravelStoryPage() {
   );
   const [frameVisibility, setFrameVisibility] = useState("public");
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
   const [editSuccess, setEditSuccess] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
@@ -36,6 +36,20 @@ export default function TravelStoryPage() {
   };
 
   const LOCK_ICON = "/images/badge-lock-icon.png";
+
+  // Fetch latest user profile and sync with store
+  const { data: profileData } = useQuery({
+    queryKey: ["getUserProfile"],
+    queryFn: getUserProfileApi,
+    refetchOnMount: "always",
+  });
+
+  useEffect(() => {
+    const updatedUser = profileData?.data || profileData;
+    if (updatedUser && updatedUser.email) { // Ensure it's a valid user object
+      updateUser(updatedUser);
+    }
+  }, [profileData, updateUser]);
 
   const { data: badgesData, isLoading: isBadgesLoading } = useQuery({
     queryKey: ["getUserBadges"],
@@ -176,14 +190,13 @@ export default function TravelStoryPage() {
                 </div>
                 <div className="grid grid-cols-4 gap-2 w-full mt-8">
                   {[
-                    { label: "Up votes", value: 350 },
-                    { label: "Framed", value: 32 },
-                    { label: "Posts", value: 64 },
-                    { label: "Frames", value: 64 },
+                    { label: "Up votes", value: user?.upvotes },
+                    { label: "Framed", value: user?.framed },
+                    { label: "Downloads", value: user?.downloads }
                   ].map((s) => (
                     <div key={s.label} className="flex flex-col items-center">
                       <p className="text-[#4f46e5] text-xl font-black">
-                        {s.value}
+                        {s.value ?? 0}
                       </p>
                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
                         {s.label}
@@ -459,23 +472,20 @@ export default function TravelStoryPage() {
                           key={id || i}
                           className="flex flex-col items-center"
                         >
-                          <div className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px]">
+                          <div
+                            className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px] cursor-pointer"
+                            onClick={() => id && router.push(`/framedetails/${id}`)}
+                          >
                             <Image
                               src={image1}
                               alt={frameName}
                               fill
-                              className="object-cover cursor-pointer"
-                              onClick={() =>
-                                router.push(`/framedetails?id=${id}`)
-                              }
+                              className="object-cover"
                             />
-                            <div className="absolute inset-0 shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
-                            <div className="absolute inset-0 flex items-center justify-center text-white">
+                            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
+                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-white">
                               <div
-                                onClick={() =>
-                                  router.push(`/framedetails?id=${id}`)
-                                }
-                                className="text-3xl font-bold pt-20 cursor-pointer"
+                                className="text-3xl font-bold pt-20"
                               >
                                 {frame?.totalPosts
                                   ? `${frame?.totalPosts}+`
@@ -575,10 +585,6 @@ export default function TravelStoryPage() {
           </div>
         </div>
       )}
-
-
-
-
     </div>
   );
 }

@@ -245,7 +245,7 @@ export default function LoginPage() {
           </Button>
 
           {/* Terms and Conditions - NO CHECKBOX */}
-          <div className="text-sm font-medium text-[#000000] mb-6 mt-6 text-center flex items-start justify-center gap-2">
+          <div className="text-sm font-medium text-[#000000] mb-6 mt-2 text-center flex items-start justify-center gap-1">
 
             {/* Checkbox */}
             <input

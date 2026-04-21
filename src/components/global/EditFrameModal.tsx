@@ -221,11 +221,17 @@ const EditFrameModal = ({
 
           {/* Title */}
           <div className="mb-6">
-            <label className="block text-sm font-bold text-gray-700 mb-2">Frame Title</label>
+            <div className="flex justify-between items-center mb-2 px-1">
+              <label className="text-sm font-bold text-gray-700">Frame Title</label>
+              <span className={`text-xs ${title.length >= 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                {title.length}/50
+              </span>
+            </div>
             <input
               type="text"
               placeholder="Enter frame title"
               value={title}
+              maxLength={50}
               onChange={(e) => {
                 setTitle(e.target.value);
                 setFieldErrors((prev) => ({ ...prev, title: undefined }));

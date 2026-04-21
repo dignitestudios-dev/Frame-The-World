@@ -205,14 +205,21 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
 
           {/* Destination Input */}
           <div className="mb-6">
-            <input
-              type="text"
+            <div className="flex justify-between items-center mb-2 px-1">
+              <label className="text-sm font-bold text-gray-700">Caption</label>
+              <span className={`text-xs ${formData.caption.length >= 500 ? 'text-red-500' : 'text-gray-400'}`}>
+                {formData.caption.length}/500
+              </span>
+            </div>
+            <textarea
               placeholder="Enter Caption"
               value={formData.caption}
+              maxLength={500}
+              rows={3}
               onChange={(e) =>
                 setFormData({ ...formData, caption: e.target.value })
               }
-              className="w-full px-4 py-3 bg-blue-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 bg-blue-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             />
           </div>
 

@@ -19,7 +19,7 @@ const timeframes = [
 ];
 
 const InsightsModal: React.FC<InsightsModalProps> = ({ postId, isOpen, onClose }) => {
-  const [activeTimeframe, setActiveTimeframe] = useState("week");
+  const [activeTimeframe, setActiveTimeframe] = useState("24h");
 
   const { data: insightsData, isLoading, isError, refetch } = useQuery({
     queryKey: ["postInsights", postId, activeTimeframe],

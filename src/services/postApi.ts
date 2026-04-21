@@ -58,3 +58,19 @@ export const getPostInsightsApi = async (postId: string, timeframe: string = "we
   });
   return res.data;
 };
+// GET /posts/all?longitude=&latitude=&categories=abc&categories=def
+export const getAllPostsApi = async (params: {
+  longitude?: number | string;
+  latitude?: number | string;
+  categories?: string[];
+}) => {
+  const queryParams = new URLSearchParams();
+  if (params.longitude) queryParams.append("longitude", String(params.longitude));
+  if (params.latitude) queryParams.append("latitude", String(params.latitude));
+  if (params.categories && params.categories.length > 0) {
+    params.categories.forEach((cat) => queryParams.append("categories", cat));
+  }
+
+  const res = await API.get(`/posts/all?${queryParams.toString()}`);
+  return res.data;
+};

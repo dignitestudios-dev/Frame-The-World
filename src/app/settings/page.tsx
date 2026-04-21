@@ -39,7 +39,7 @@ export default function SettingsPage() {
               <AppWalkthrough />
             ) : activeTab === "Delete Account" ? (
               <DeleteAccount />
-            ) : activeTab === "Terms & Condition" ? (
+            ) : activeTab === "Terms of Services" ? (
               <TermsandConditions />
             ) : activeTab === "Privacy Policy" ? (
               <PrivacyPolicy />

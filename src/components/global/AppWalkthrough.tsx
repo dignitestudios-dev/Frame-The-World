@@ -19,7 +19,7 @@ const walkthroughContent = [
     image: "/images/onboard2.png",
     imageClassName: "object-cover rounded-2xl",
     imageContainerClassName: "relative w-[85%] aspect-[9/16] rounded-3xl p-1 bg-white/20 backdrop-blur-sm shadow-2xl border border-white/30",
-    title: "100% Human-Free, AI-Free, Manipulation-Free",
+    title: "100% Human-Free, AI-Free",
     description: "Our AI ensures every picture is original, no humans, no AI-generated images. You can even use the AI tool to remove humans from your own clicks before posting.",
   },
   {
@@ -85,8 +85,8 @@ export default function AppWalkthrough() {
               <div
                 key={index}
                 className={`h-1.5 transition-all duration-500 rounded-full ${index === currentStep
-                    ? "w-8 bg-green-400"
-                    : "w-2 bg-white/40"
+                  ? "w-8 bg-green-400"
+                  : "w-2 bg-white/40"
                   }`}
               />
             ))}

@@ -253,8 +253,8 @@ export default function AccountInformation() {
                   disabled={!isEditing}
                   {...register("country")}
                   icon={<ArrowRight className="w-5 h-5 stroke-[2.5]" />}
-                  onLocationSelect={(address) => {
-                    setValue("country", address, { shouldValidate: true });
+                  onLocationSelect={(place) => {
+                    setValue("country", place.address, { shouldValidate: true });
                   }}
                 />
               </div>

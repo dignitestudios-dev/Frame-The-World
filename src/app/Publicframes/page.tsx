@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function ProfilePage() {
   const stats = [
-    { value: "350", label: "Up votes" },
+    { value: "350", label: "Upvotes" },
     { value: "32", label: "Framed" },
     { value: "64", label: "Posts" },
     { value: "64", label: "Frames" },

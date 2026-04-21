@@ -108,7 +108,7 @@ export default function ProfileDetails() {
               <div className="space-y-5">
                 {[
                   { label: "Downloads", value: 420, icon: <Download size={16}/> },
-                  { label: "Up Votes", value: 350, icon: <ThumbsUp size={16}/> },
+                  { label: "Upvotes", value: 350, icon: <ThumbsUp size={16}/> },
                   { label: "Added To Frame", value: 295, icon: <Layers size={16}/> },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between group">

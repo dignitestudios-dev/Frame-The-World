@@ -200,7 +200,7 @@ export default function SignupPage() {
               target="_blank"
               className="gradient-text bg-clip-text text-transparent font-bold hover:underline"
             >
-              Terms & conditions
+             Terms of Services
             </Link>{" "}
             and{" "}
             <Link

@@ -169,7 +169,7 @@ export default function VerifyCredentialsPage() {
           <div className="text-sm text-gray-600 mb-6 mt-6 text-center">
             I accept the{" "}
             <Link href="https://www.frametheworld.org/terms-condition" target="_blank" className="text-blue-600 hover:underline">
-              Terms & conditions
+              Terms of Services
             </Link>{" "}
             and{" "}
             <Link href="https://www.frametheworld.org/privacy-policy" target="_blank" className="text-blue-600 hover:underline">

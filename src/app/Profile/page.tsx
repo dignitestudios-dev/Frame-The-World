@@ -190,7 +190,7 @@ export default function TravelStoryPage() {
                 </div>
                 <div className="grid grid-cols-4 gap-2 w-full mt-8">
                   {[
-                    { label: "Up votes", value: user?.upvotes },
+                    { label: "Upvotes", value: user?.upvotes },
                     { label: "Framed", value: user?.framed },
                     { label: "Downloads", value: user?.downloads }
                   ].map((s) => (

@@ -39,6 +39,12 @@ export default function CreateProfilePage() {
   });
 
   const onSubmit = (data: ProfileFormData) => {
+    if (!avatarFile) {
+      setToastMessage("Please upload a profile picture");
+      setToastType("error");
+      setToastOpen(true);
+      return;
+    }
     // Save to store and proceed to Step 2
     setTempProfileData({ ...data, avatarFile });
     router.push("/category-preference");
@@ -103,7 +109,7 @@ export default function CreateProfilePage() {
         {/* Title & Subtitle */}
         <div className="text-center mb-10">
           <h1 className="text-2xl font-black text-gray-900 mb-1">Create Profile</h1>
-          <p className="text-[10px] font-medium text-gray-400">Upload picture and write about your journey</p>
+          <p className="text-[10px] font-medium text-gray-400">Upload a picture and write about your journey</p>
         </div>
 
         <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
@@ -133,7 +139,7 @@ export default function CreateProfilePage() {
                 )}
               </button>
             </div>
-            <p className="text-xs font-black text-gray-900">Upload Image</p>
+            <p className="text-xs font-black text-gray-900">Upload Image <span className="text-red-500">*</span></p>
           </div>
 
           {/* Form Fields */}
@@ -163,7 +169,7 @@ export default function CreateProfilePage() {
               <textarea
                 {...register("bio")}
                 maxLength={250}
-                placeholder="Tell us about your journey!"
+                placeholder="Tell us about yourself!"
                 className="w-full min-h-[120px] rounded-2xl bg-[#f4f4f4] border-none p-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 resize-none"
               />
               <div className="absolute bottom-4 right-6 text-[10px] font-bold text-gray-400">
@@ -176,7 +182,7 @@ export default function CreateProfilePage() {
           {/* Professional Details Section */}
           <div className="space-y-4">
             <div>
-              <h2 className="text-sm font-black text-gray-900">Company details</h2>
+              <h2 className="text-sm font-black text-gray-900">Company Details</h2>
               <p className="text-[10px] font-medium text-gray-400">Enter your company name and location</p>
             </div>
 
@@ -206,7 +212,7 @@ export default function CreateProfilePage() {
                     </svg>
                   }
                   onLocationSelect={(address) => {
-                    setValue("country", address, { shouldValidate: true });
+                    setValue("country", address.address, { shouldValidate: true });
                   }}
                 />
               </div>
@@ -219,8 +225,8 @@ export default function CreateProfilePage() {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={!isValid}
-            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${!isValid
+            disabled={!isValid || !avatarFile}
+            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${!isValid || !avatarFile
               ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
               : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
               }`}

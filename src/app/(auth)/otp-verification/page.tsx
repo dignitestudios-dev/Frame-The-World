@@ -238,7 +238,7 @@ export default function OtpVerificationPage() {
           <div className="text-center">
             {!canResend ? (
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Didn't get Otp? <span className="text-gray-900">00:{timeLeft.toString().padStart(2, "0")}</span>
+                Didn't get Code? <span className="text-gray-900">00:{timeLeft.toString().padStart(2, "0")}</span>
               </p>
             ) : (
               <button

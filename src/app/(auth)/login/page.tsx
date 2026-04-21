@@ -163,9 +163,11 @@ export default function LoginPage() {
         <h1 className="mb-2 text-3xl font-bold text-gray-900 text-center text-shadow">
           Login
         </h1>
-
+        <p className="text-sm mb-8 text-gray-600 text-center">
+          No account? Enter your details to create one.
+        </p>
         {/* Subtitle */}
-        <p className="mb-8 text-sm text-gray-600 text-center">
+        {/* <p className="mb-8 text-sm text-gray-600 text-center">
           Enter your details to begin your journey. <br></br>{" "}
           <span className="flex  items-baseline justify-center">
             Only
@@ -176,7 +178,7 @@ export default function LoginPage() {
             />
             verified travel professionals can contribute.
           </span>
-        </p>
+        </p> */}
 
         {/* Form */}
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
@@ -263,7 +265,7 @@ export default function LoginPage() {
                 target="_blank"
                 className="gradient-text bg-clip-text text-transparent font-bold hover:underline"
               >
-                Terms & Conditions
+                Terms of Services
               </Link>{" "}
               and{" "}
               <Link

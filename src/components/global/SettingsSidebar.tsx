@@ -9,7 +9,7 @@ const menuItems = [
   "Change Password",
   "Delete Account",
   "App Walkthrough",
-  "Terms and Conditions",
+  "Terms of Services",
   "Privacy Policy",
 ];
 
@@ -18,7 +18,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   const { user } = useAuthStore();
 
   const handleTabClick = (item: string) => {
-    if (item === "Terms and Conditions") {
+    if (item === "Terms of Services") {
       window.open("https://www.frametheworld.org/terms-condition", "_blank");
       return;
     }
@@ -31,7 +31,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
     const isAllowedForPending = [
       "Category Preferences",
       "Account Information",
-      "Terms and Conditions",
+      "Terms of Services",
       "Privacy Policy",
       "Change Password",
       "App Walkthrough"

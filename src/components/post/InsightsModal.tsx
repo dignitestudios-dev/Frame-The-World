@@ -117,7 +117,7 @@ const InsightsModal: React.FC<InsightsModalProps> = ({ postId, isOpen, onClose }
               <div className="h-px bg-gray-50 mx-4" />
               <StatItem
                 icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
-                label="Up Votes"
+                label="Upvotes"
                 value={summary.upvotes || 0}
               />
               <div className="h-px bg-gray-50 mx-4" />

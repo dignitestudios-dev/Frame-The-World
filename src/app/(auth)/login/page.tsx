@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const login = useAuthStore((state) => state.login);
   const setGuest = useAuthStore((state) => state.setGuest);
-
+  const [accepted, setAccepted] = useState(false);
   const {
     register,
     handleSubmit,
@@ -136,6 +136,12 @@ export default function LoginPage() {
   };
 
   const onSubmit = (data: LoginFormData) => {
+    if (!accepted) {
+      setToastMessage("Please accept the terms and conditions");
+      setToastType("error");
+      setToastOpen(true);
+      return;
+    }
     mutate({ email: data.email, password: data.password });
   };
 
@@ -239,23 +245,35 @@ export default function LoginPage() {
           </Button>
 
           {/* Terms and Conditions - NO CHECKBOX */}
-          <div className="text-sm font-medium text-[#000000] mb-6 mt-6 text-center">
-            I accept the{" "}
-            <Link
-              href="https://www.frametheworld.org/terms-condition"
-              target="_blank"
-              className="gradient-text  bg-clip-text text-transparent font-bold hover:underline"
-            >
-              Terms & conditions
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="https://www.frametheworld.org/privacy-policy"
-              target="_blank"
-              className="gradient-text bg-clip-text text-transparent hover:underline"
-            >
-              Privacy policy
-            </Link>
+          <div className="text-sm font-medium text-[#000000] mb-6 mt-6 text-center flex items-start justify-center gap-2">
+
+            {/* Checkbox */}
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              className="mt-1 cursor-pointer"
+            />
+
+            {/* Text */}
+            <span>
+              I accept the{" "}
+              <Link
+                href="https://www.frametheworld.org/terms-condition"
+                target="_blank"
+                className="gradient-text bg-clip-text text-transparent font-bold hover:underline"
+              >
+                Terms & Conditions
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="https://www.frametheworld.org/privacy-policy"
+                target="_blank"
+                className="gradient-text bg-clip-text text-transparent hover:underline"
+              >
+                Privacy Policy
+              </Link>
+            </span>
           </div>
 
           {/* Divider */}

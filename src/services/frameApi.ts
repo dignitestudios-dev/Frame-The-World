@@ -21,3 +21,25 @@ export const addPostToFrameApi = async (frameId: string, postId: string) => {
   const res = await API.post(`/frames/${frameId}/posts`, { postIds: [postId] });
   return res.data;
 };
+
+// PATCH /frames/:frameId - FormData { cover, title, longitude, latitude, isPrivate, city, state, country }
+export const updateFrameApi = async (frameId: string, formData: FormData) => {
+  const res = await API.patch(`/frames/${frameId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
+// DELETE /frames/:frameId
+export const deleteFrameApi = async (frameId: string) => {
+  const res = await API.delete(`/frames/${frameId}`);
+  return res.data;
+};
+
+// DELETE /frames/:frameId/posts/:postId
+export const removePostFromFrameApi = async (frameId: string, postId: string) => {
+  const res = await API.delete(`/frames/${frameId}/posts/${postId}`);
+  return res.data;
+};

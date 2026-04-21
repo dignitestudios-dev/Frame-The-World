@@ -83,7 +83,7 @@ export default function ForgetPasswordPage() {
 
           {/* Subtitle */}
           <p className="mb-8 text-sm text-gray-600 text-center">
-            Enter your email and we&apos;ll send you a OTP To Forgot your
+            Enter your email and we&apos;ll send you an OTP To Forgot your
             Password
           </p>
           {/* Form */}
@@ -93,7 +93,7 @@ export default function ForgetPasswordPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="Email"
+                placeholder="Enter Your Email"
                 className="w-full"
                 {...register("email")}
               />
@@ -108,11 +108,10 @@ export default function ForgetPasswordPage() {
             <Button
               type="submit"
               disabled={isPending || !isValid}
-              className={`w-full mt-3 h-12 font-medium mb-4 shadow-lg transition-all ${
-                isPending || !isValid 
-                  ? "bg-gray-300 cursor-not-allowed shadow-none text-gray-500" 
+              className={`w-full mt-3 h-12 font-medium mb-4 shadow-lg transition-all ${isPending || !isValid
+                  ? "bg-gray-300 cursor-not-allowed shadow-none text-gray-500"
                   : "gradient-bg text-white hover:from-blue-600 hover:to-blue-700 shadow-blue-400"
-              }`}
+                }`}
             >
 
               {isPending ? (

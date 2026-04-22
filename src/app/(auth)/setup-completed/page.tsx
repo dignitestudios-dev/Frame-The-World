@@ -22,8 +22,8 @@ export default function SetupCompletedPage() {
 
         {/* Title */}
         <h1 className="mb-3 text-2xl font-extrabold text-gray-900">
-          Verified, Subscribed &amp;
-          <br></br> Ready to Frame the
+          Verified &amp;
+          Ready to <br /> Frame the
           World!<br></br>
         </h1>
 

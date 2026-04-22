@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { LockIcon, X, Loader2, ImageOff } from "lucide-react";
+import { LockIcon, X, Loader2, ImageOff, Building2, MapPin } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBadgesApi, getUserProfileApi } from "@/services/authApi";
+import { getBadgesApi, getSingleBadgeApi, getUserProfileApi } from "@/services/authApi";
 import {
   getOwnPostsApi,
 } from "@/services/postApi";
@@ -58,6 +58,14 @@ export default function TravelStoryPage() {
     queryFn: getBadgesApi,
   });
 
+  const { data: badgeDetailData, isLoading: isBadgeDetailLoading } = useQuery({
+    queryKey: ["getBadgeDetail", selectedBadge?._id || selectedBadge?.id],
+    queryFn: () => getSingleBadgeApi(selectedBadge?._id || selectedBadge?.id),
+    enabled: !!(selectedBadge?._id || selectedBadge?.id),
+  });
+
+  const badgeDetail = badgeDetailData?.data || badgeDetailData;
+
   // Fetch own posts
   const {
     data: ownPostsData,
@@ -99,7 +107,7 @@ export default function TravelStoryPage() {
   const isFrames = activeTab === "frames";
   const isPosts = activeTab === "posts";
   const isSpace = activeTab === "space";
-
+  console.log(user, "user-detail")
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
       <Header title={"My Travel Profile"} subtitle={"Your public and private travel profile, all here."} />
@@ -157,14 +165,13 @@ export default function TravelStoryPage() {
                   <div className="absolute inset-0 rounded-[55px] bg-gradient-to-b from-blue-400 to-blue-600 shadow-[0_10px_20px_rgba(59,130,246,0.3)]" />
                   <div className="relative w-[92%] h-[92%] rounded-[50px] bg-[#f1f3f6] p-1 flex items-center justify-center">
                     <div className="relative w-full h-full rounded-[45px] overflow-hidden">
-                      <Image
+                      <img
                         src={
                           user?.profilePicture?.location ||
-                          user?.profilePicture ||
+                          user?.profilePicture.location ||
                           "/images/person.png"
                         }
                         alt={user?.name || "User"}
-                        fill
                         className="object-cover"
                       />
                     </div>
@@ -178,10 +185,10 @@ export default function TravelStoryPage() {
                 </p>
                 <div className="mt-4 text-center">
                   <p className="text-sm font-bold text-gray-800 capitalize">
-                    {user?.company?.name || "Independent"}
+                    <Building2 className="inline-block w-4 h-4 mb-1" />  {user?.company?.name || "Independent"}
                   </p>
                   <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                    {[
+                    <MapPin className="inline-block w-4 h-4 mb-1" /> {[
                       user?.company?.address?.city,
                       user?.company?.address?.state,
                       user?.company?.address?.country,
@@ -190,11 +197,10 @@ export default function TravelStoryPage() {
                       .join(", ") || "Location Unspecified"}
                   </p>
                 </div>
-                <div className="grid grid-cols-4   gap-2 w-full mt-8">
+                <div className="flex justify-center  gap-8 w-full mt-8">
                   {[
                     { label: "Upvotes", value: user?.upvotes },
-                    { label: "Framed", value: user?.framed },
-                    { label: "Downloads", value: user?.downloads }
+                    { label: "Framed", value: user?.framed }
                   ].map((s) => (
                     <div key={s.label} className="flex flex-col items-center">
                       <p className="text-[#4f46e5] text-xl font-black">
@@ -290,7 +296,7 @@ export default function TravelStoryPage() {
               </button>
 
               <button
-                onClick={() => setActiveTab("space")}
+                // onClick={() => setActiveTab("space")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
       ${activeTab === "space"
                     ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
@@ -551,7 +557,7 @@ export default function TravelStoryPage() {
           onClick={() => setSelectedBadge(null)}
         >
           <div
-            className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out"
+            className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out min-h-[400px]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute top-4 w-12 h-1.5 bg-gray-900 rounded-full opacity-10"></div>
@@ -561,29 +567,36 @@ export default function TravelStoryPage() {
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
-            <div className="relative w-40 h-40 md:w-52 md:h-52 mb-8">
-              <div
-                className={`absolute inset-0 bg-gradient-to-b from-gray-100 to-transparent rounded-full blur-2xl scale-90 ${selectedBadge.isLocked ? "opacity-20" : "opacity-40"}`}
-              ></div>
-              <Image
-                src={selectedBadge.isLocked ? LOCK_ICON : selectedBadge.icon}
-                alt={selectedBadge.name}
-                fill
-                className={`relative object-contain ${selectedBadge.isLocked ? "" : "animate-in bounce-in duration-700"}`}
-              />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 text-center mb-4 tracking-tight">
-              {selectedBadge.name}
-            </h2>
-            <p className="text-sm md:text-base font-medium text-gray-500 text-center leading-relaxed">
-              {selectedBadge.description ||
-                "The user hasn't unlocked this achievement yet."}
-            </p>
-            <div className="mt-10 w-full flex justify-center">
-              <div className="h-1.5 w-32 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gray-200 w-full"></div>
+            {isBadgeDetailLoading ? (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="relative w-40 h-40 md:w-52 md:h-52 mb-8">
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-b from-gray-100 to-transparent rounded-full blur-2xl scale-90 ${badgeDetail?.isLocked ? "opacity-20" : "opacity-40"}`}
+                  ></div>
+                  <img
+                    src={badgeDetail?.isLocked ? LOCK_ICON : badgeDetail?.icon?.location}
+                    alt={badgeDetail?.name || "Badge"}
+                    className={`relative object-contain ${badgeDetail?.isLocked ? "" : "animate-in bounce-in duration-700"}`}
+                  />
+                </div>
+                <h2 className="text-2xl md:text-3xl font-black text-gray-900 text-center mb-4 tracking-tight">
+                  {badgeDetail?.name}
+                </h2>
+                <p className="text-sm md:text-base font-medium text-gray-500 text-center leading-relaxed">
+                  {badgeDetail?.description ||
+                    "The user hasn't unlocked this achievement yet."}
+                </p>
+                <div className="mt-10 w-full flex justify-center">
+                  <div className="h-1.5 w-32 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-gray-200 w-full"></div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

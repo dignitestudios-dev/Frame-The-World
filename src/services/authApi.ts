@@ -103,6 +103,12 @@ export const getBadgesApi = async () => {
   return res.data;
 };
 
+// GET /badges/:badgeId - Get Single Badge details
+export const getSingleBadgeApi = async (badgeId: string) => {
+  const res = await API.get(`/badges/${badgeId}`);
+  return res.data;
+};
+
 
 // PATCH /users/ - Update user profile (FormData)
 export const updateUserApi = async (formData: FormData) => {

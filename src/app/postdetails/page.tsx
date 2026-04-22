@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import SaveModal from "@/components/global/SaveModal";
 import { usePostStore } from "@/store/PostStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,7 +63,7 @@ const getReturnedCount = (...values: unknown[]): number | null => {
   return null;
 };
 
-export default function PostDetails() {
+function PostDetailsContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { postDetails, setPostDetails } = usePostStore();
@@ -571,5 +571,17 @@ export default function PostDetails() {
         onClose={() => setIsInsightsOpen(false)}
       />
     </div>
+  );
+}
+
+export default function PostDetails() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen backdrop-blur-3xl bg-blur-15 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <PostDetailsContent />
+    </Suspense>
   );
 }

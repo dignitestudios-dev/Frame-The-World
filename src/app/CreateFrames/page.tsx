@@ -1,6 +1,6 @@
 "use client";
 import Header from '@/components/global/header';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import LocationAutocomplete, { PlaceSelectionDetails } from '@/components/global/LocationAutocomplete';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createFrameApi } from '@/services/frameApi';
@@ -20,7 +20,7 @@ const getFirstAddressComponent = (
   types: string[]
 ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
 
-const CreateFrame = () => {
+const CreateFrameContent = () => {
    const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('postId');
@@ -389,4 +389,16 @@ const CreateFrame = () => {
   );
 };
 
-export default CreateFrame;
+const CreateFrame = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <CreateFrameContent />
+    </Suspense>
+  );
+};
+
+export default CreateFrame;

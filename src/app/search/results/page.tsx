@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/global/header";
@@ -33,7 +33,7 @@ const isImageUrl = (url: string | null | undefined): url is string => {
   return /\.(jpg|jpeg|png|webp|gif|bmp|svg|jfif)$/i.test(url);
 };
 
-export default function SearchResultsPage() {
+function SearchResultsContent() {
   const router = useRouter();
   const queryParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SearchTab>("all");
@@ -275,5 +275,17 @@ export default function SearchResultsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <SearchResultsContent />
+    </Suspense>
   );
 }

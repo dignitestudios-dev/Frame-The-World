@@ -248,7 +248,7 @@ const CreateFrameContent = () => {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="relative w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-700 hover:bg-gray-100 transition-colors text-left overflow-hidden"
+              className="relative w-full px-4  py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-700 hover:bg-gray-100 transition-colors text-left overflow-hidden"
               style={
                 coverPreviewUrl
                   ? {

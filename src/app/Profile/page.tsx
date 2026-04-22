@@ -35,7 +35,7 @@ export default function TravelStoryPage() {
     router.push(`/postdetails?id=${postId}`);
   };
 
-  const LOCK_ICON = "/images/badge-lock-icon.png";
+  const LOCK_ICON = "/images/badge4.png";
 
   // Fetch latest user profile and sync with store
   const { data: profileData } = useQuery({
@@ -100,7 +100,7 @@ export default function TravelStoryPage() {
 
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
-      <Header />
+      <Header title={"My Travel Profile"} subtitle={"Your public and private travel profile, all here."} />
       <div className="min-h-screen bg-white px-8 py-10 font-sans text-[#1a1a1a]">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-12">
           {/* ================= LEFT PROFILE CARD ================= */}
@@ -188,7 +188,7 @@ export default function TravelStoryPage() {
                       .join(", ") || "Location Unspecified"}
                   </p>
                 </div>
-                <div className="grid grid-cols-4 gap-2 w-full mt-8">
+                <div className="grid grid-cols-4   gap-2 w-full mt-8">
                   {[
                     { label: "Upvotes", value: user?.upvotes },
                     { label: "Framed", value: user?.framed },
@@ -198,7 +198,7 @@ export default function TravelStoryPage() {
                       <p className="text-[#4f46e5] text-xl font-black">
                         {s.value ?? 0}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                      <p className="text-[10px] text-gray-400 font-bold text-center tracking-tighter">
                         {s.label}
                       </p>
                     </div>
@@ -206,7 +206,7 @@ export default function TravelStoryPage() {
                 </div>
                 <div className="w-full mt-10">
                   <h3 className="text-xl font-bold mb-6 text-gray-900 text-left w-full">
-                    Achievements
+                    Badges
                   </h3>
                   <div className="grid grid-cols-4 gap-y-6 gap-x-2 min-h-[100px] items-center justify-center">
                     {isBadgesLoading ? (
@@ -230,10 +230,10 @@ export default function TravelStoryPage() {
                                 src={isLocked ? LOCK_ICON : badge?.icon}
                                 alt={!isLocked ? badge?.name : "Locked badge"}
                                 fill
-                                className={`object-contain relative z-10 ${isLocked ? "opacity-80 grayscale-[0.5]" : ""}`}
+                                className={`object-contain relative z-10 ${isLocked ? "" : ""}`}
                               />
                             </div>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter text-center line-clamp-1">
+                            <p className="text-[9px] font-bold text-gray-400 tracking-tighter text-center line-clamp-1">
                               {badge?.name}
                             </p>
                           </div>
@@ -303,7 +303,7 @@ export default function TravelStoryPage() {
                     className={`object-contain ${activeTab === "space" ? "opacity-100" : "opacity-60"}`}
                   />
                 </div>
-                My Space
+                Personal
               </button>
             </div>
 

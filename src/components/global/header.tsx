@@ -12,7 +12,7 @@ import { useMutation } from "@tanstack/react-query";
 import { logoutApi } from "@/services/authApi";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 
-export default function Header() {
+export default function Header({ title, subtitle }: { title?: string, subtitle?: string }) {
   const router = useRouter();
   const { logout, user } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -182,10 +182,10 @@ export default function Header() {
 
             <div className="overflow-hidden">
               <h1 className="text-lg md:text-xl font-[800] text-gray-900 truncate">
-                {headerTitle}
+                {title || headerTitle}
               </h1>
-              <p className="text-[12px] md:text-[14px] text-black hidden xs:block truncate">
-                {headerSubtitle}
+              <p className="text-[12px] md:text-[14px] text-black xs:block truncate">
+                {subtitle || headerSubtitle}
               </p>
             </div>
           </div>

@@ -101,7 +101,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
   }, [imagePreview]);
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header title={"Create Post"} subtitle={""} />
       {isImage ? (
         <Imagepage
           handleRemoveImage={handleRemoveImage}

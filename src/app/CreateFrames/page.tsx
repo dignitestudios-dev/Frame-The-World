@@ -234,38 +234,56 @@ const CreateFrameContent = () => {
           </div>
 
           {/* Cover Upload */}
-          <div className="mb-6">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                setCoverFile(e.target.files?.[0] || null);
-                setFieldErrors((prev) => ({ ...prev, cover: undefined }));
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="relative w-full px-4  py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-700 hover:bg-gray-100 transition-colors text-left overflow-hidden"
-              style={
-                coverPreviewUrl
-                  ? {
-                    backgroundImage: `url(${coverPreviewUrl})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }
-                  : undefined
-              }
-            >
-              {coverPreviewUrl ? <span className="absolute inset-0 bg-black/35" /> : null}
-              <span className="relative">
-                {coverFile ? `Cover: ${coverFile.name}` : 'Upload cover image'}
-              </span>
-            </button>
-            {fieldErrors.cover ? <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.cover}</p> : null}
+          <div className="mb-4 ">
+            {coverPreviewUrl && (
+              <div className="mt-4 flex justify-center">
+                <div className=" w-full h-70 group relative">
+                  <img
+                    src={coverPreviewUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded-xl border shadow-sm"
+                  />
+
+                  {/* Overlay */}
+                  <div className="absolute inset-0  rounded-xl  flex items-start justify-end  p-2">
+                    <button
+                      type="button"
+                      onClick={() => setCoverFile(null)}
+                      className="bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center shadow hover:scale-110 transition"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!coverPreviewUrl && (
+              <label
+                htmlFor="image-upload"
+                className="relative block w-full border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl p-12 text-center cursor-pointer group hover:bg-blue-100 transition-colors"
+              >
+                <div className="text-xs text-gray-500">
+                  <div className="text-blue-600 font-medium mb-1">
+                    Upload Picture
+                  </div>
+                  Max Limit 5Mbs, PNG, JPG, JPEG
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  id="image-upload"
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={(e) => {
+                    setCoverFile(e.target.files?.[0] || null);
+                    setFieldErrors((prev) => ({ ...prev, cover: undefined }));
+                  }}
+                />
+              </label>
+            )}
           </div>
+
 
           {/* Frame Name Input */}
           <div className="mb-6">

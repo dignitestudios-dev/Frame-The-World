@@ -70,7 +70,7 @@ const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
       />
 
       {/* Status Badge */}
-      {post.status && (
+      {post.status && post.status != "completed" && (
         <div
           className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 backdrop-blur-sm ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded-full z-10 shadow-sm border`}
         >

@@ -306,7 +306,7 @@ function PostDetailsContent() {
   if (isFetchingPost) {
     return (
       <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-        <Header />
+        <Header title="Today’s Travel Story" subtitle={``} />
         <div className="flex items-center justify-center min-h-[70vh]">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -320,7 +320,7 @@ function PostDetailsContent() {
   if (!currentPost && !isFetchingPost) {
     return (
       <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-        <Header />
+        <Header title="Today’s Travel Story" />
         <Toast
           open={toast.open}
           message={toast.message}
@@ -348,7 +348,7 @@ function PostDetailsContent() {
 
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-      <Header />
+      <Header title="Today’s Travel Story" subtitle={`${relatedPosts?.length}+ new memories for you`} />
       {/* Toaster */}
 
       <Toast

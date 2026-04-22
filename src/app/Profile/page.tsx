@@ -31,8 +31,10 @@ export default function TravelStoryPage() {
   // handlePostClick update karo
   const handlePostClick = (post: any) => {
     const postId = post.id || post._id;
-    setPostDetails(post);
-    router.push(`/postdetails?id=${postId}`);
+    if (post.status != "pending") {
+      setPostDetails(post);
+      router.push(`/postdetails?id=${postId}`);
+    }
   };
 
   const LOCK_ICON = "/images/badge4.png";

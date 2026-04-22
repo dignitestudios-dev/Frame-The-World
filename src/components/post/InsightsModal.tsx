@@ -40,27 +40,45 @@ const InsightsModal: React.FC<InsightsModalProps> = ({ postId, isOpen, onClose }
   const graphArray = rawData?.graph || [];
 
   // SVG Graph Logic
-  // Sum engagement metrics for graph points
-  const graphDataPoints = graphArray.length > 0
-    ? graphArray.map((item: any) => (item.downloads || 0) + (item.upvotes || 0) + (item.framed || 0))
-    : [0, 0]; // Fallback
+  const width = 440;
+  const height = 140;
+  const maxVal = Math.max(
+    ...graphArray.map((i: any) => Math.max(i.downloads || 0, i.upvotes || 0, i.framed || 0)),
+    5
+  );
 
-  const graphPoints = graphDataPoints.length === 1
-    ? [graphDataPoints[0], graphDataPoints[0]] // Duplicate if only 1 point
-    : graphDataPoints;
+  const getPoints = (key: string) => {
+    const vals = graphArray.map((item: any) => item[key] || 0);
+    return vals.length === 0 ? [0, 0] : vals.length === 1 ? [vals[0], vals[0]] : vals;
+  };
 
-  const maxVal = Math.max(...graphPoints, 10);
-  const width = 400;
-  const height = 120; // Shorter graph for compactness
-  const stepX = width / (graphPoints.length - 1 || 1);
+  const downloadsPoints = getPoints("downloads");
+  const upvotesPoints = getPoints("upvotes");
+  const framedPoints = getPoints("framed");
 
-  const pathContent = graphPoints.reduce((acc: string, val: number, i: number) => {
-    const x = i * stepX;
-    const y = height - (val / maxVal) * height;
-    return acc + (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
-  }, "");
+  const stepX = width / (downloadsPoints.length - 1 || 1);
 
-  const areaPath = `${pathContent} L ${width} ${height} L 0 ${height} Z`;
+  const getSmoothPath = (points: number[]) => {
+    if (points.length < 1) return "";
+    return points.reduce((acc, val, i) => {
+      const x = i * stepX;
+      const y = height - (val / maxVal) * height;
+      if (i === 0) return `M ${x} ${y}`;
+      
+      const prevX = (i - 1) * stepX;
+      const prevY = height - (points[i - 1] / maxVal) * height;
+      const cp1x = prevX + (x - prevX) / 2;
+      const cp2x = prevX + (x - prevX) / 2;
+      
+      return `${acc} C ${cp1x} ${prevY}, ${cp2x} ${y}, ${x} ${y}`;
+    }, "");
+  };
+
+  const metrics = [
+    { key: "downloads", label: "Downloads", color: "#3b82f6", points: downloadsPoints },
+    { key: "upvotes", label: "Upvotes", color: "#10b981", points: upvotesPoints },
+    { key: "framed", label: "Framed", color: "#8b5cf6", points: framedPoints },
+  ];
 
   return (
     <div
@@ -71,7 +89,6 @@ const InsightsModal: React.FC<InsightsModalProps> = ({ postId, isOpen, onClose }
         className="w-full absolute top-[7%] px-3 py-4 max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag Handle for Mobile Look */}
         <div className="mx-auto w-12 h-1 bg-gray-900/10 rounded-full mb-4"></div>
 
         <div className="flex items-center justify-center mb-6 relative">
@@ -84,7 +101,6 @@ const InsightsModal: React.FC<InsightsModalProps> = ({ postId, isOpen, onClose }
           </button>
         </div>
 
-        {/* Timeframe Tabs */}
         <div className="flex bg-gray-100 p-1 rounded-full mb-6">
           {timeframes.map((tf) => (
             <button
@@ -107,75 +123,100 @@ const InsightsModal: React.FC<InsightsModalProps> = ({ postId, isOpen, onClose }
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Stats List */}
             <div className="grid grid-cols-1 gap-1">
               <StatItem
                 icon={<Download className="w-4 h-4 text-blue-600" />}
-                label="Downloads"
+                label="Total Downloads"
                 value={summary.downloads || 0}
               />
               <div className="h-px bg-gray-50 mx-4" />
               <StatItem
-                icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
-                label="Upvotes"
+                icon={<ArrowUp className="w-4 h-4 text-emerald-600" />}
+                label="Total Upvotes"
                 value={summary.upvotes || 0}
               />
               <div className="h-px bg-gray-50 mx-4" />
               <StatItem
-                icon={<Layers className="w-4 h-4 text-blue-600" />}
-                label="Added To Frame"
-                value={summary.framed || summary.addedToFrame || 0}
+                icon={<Layers className="w-4 h-4 text-violet-600" />}
+                label="Times Framed"
+                value={summary.framed || 0}
               />
             </div>
 
-            {/* Performance Graph */}
-            <div className="bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-[24px] p-4 border border-blue-100/50">
-              <h3 className="text-center text-xs font-bold text-gray-900 mb-4">Average Performance Summary</h3>
+            <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-sm font-bold text-gray-900">Performance Trend</h3>
+                <div className="flex gap-3">
+                  {metrics.map((m) => (
+                    <div key={m.key} className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: m.color }} />
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">{m.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-              <div className="relative h-[120px] w-full overflow-hidden">
-                {/* Grid Lines */}
-                <div className="absolute inset-0 flex flex-col justify-between opacity-[0.03]">
+              <div className="relative h-[160px] w-full">
+                {/* Y-Axis Grid */}
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-full h-px bg-blue-900" />
+                    <div key={i} className="w-full h-px bg-gray-100" />
                   ))}
                 </div>
 
-                {/* SVG Graph */}
-                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full preserve-aspect-ratio-none overflow-visible">
-                  <defs>
-                    <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
+                <div className="absolute inset-x-0 top-0 bottom-6">
+                  <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full preserve-aspect-ratio-none overflow-visible">
+                    {/* Vertical Grid Lines */}
+                    {graphArray.map((_: any, i: number) => (
+                      <line
+                        key={i}
+                        x1={i * stepX}
+                        y1={0}
+                        x2={i * stepX}
+                        y2={height}
+                        stroke="#f3f4f6"
+                        strokeWidth="1"
+                      />
+                    ))}
 
-                  {/* Area */}
-                  <path d={areaPath} fill="url(#graphGradient)" />
+                    {metrics.map((m) => {
+                      const path = getSmoothPath(m.points);
+                      return (
+                        <g key={m.key}>
+                          <path
+                            d={path}
+                            fill="none"
+                            stroke={m.color}
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                          />
+                          {m.points.map((val: number, i: number) => (
+                            <circle
+                              key={i}
+                              cx={i * stepX}
+                              cy={height - (val / maxVal) * height}
+                              r="3.5"
+                              fill="white"
+                              stroke={m.color}
+                              strokeWidth="2"
+                            />
+                          ))}
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
 
-                  {/* Line */}
-                  <path
-                    d={pathContent}
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="drop-shadow-[0_2px_4px_rgba(59,130,246,0.3)]"
-                  />
-
-                  {/* Points (dots) for better visibility if only few points */}
-                  {graphPoints.length < 5 && graphPoints.map((val: number, i: number) => (
-                    <circle
-                      key={i}
-                      cx={i * stepX}
-                      cy={height - (val / maxVal) * height}
-                      r="3.5"
-                      fill="#3b82f6"
-                      stroke="white"
-                      strokeWidth="1.5"
-                    />
+                {/* X-Axis Labels */}
+                <div className="absolute bottom-0 inset-x-0 flex justify-between">
+                  {graphArray.map((item: any, i: number) => (
+                    <span key={i} className="text-[10px] font-bold text-gray-400">
+                      {item.date}
+                    </span>
                   ))}
-                </svg>
+                </div>
               </div>
             </div>
           </div>

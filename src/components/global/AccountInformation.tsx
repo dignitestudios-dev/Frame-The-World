@@ -254,7 +254,7 @@ export default function AccountInformation() {
                   {...register("country")}
                   icon={<ArrowRight className="w-5 h-5 stroke-[2.5]" />}
                   onLocationSelect={(address) => {
-                    setValue("country", address, { shouldValidate: true });
+                    setValue("country", address?.country || "", { shouldValidate: true });
                   }}
                 />
               </div>

@@ -2,21 +2,21 @@ import { ChevronRight } from "lucide-react";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 import { useAuthStore } from "@/store/authStore";
 
-const menuItems = [
-  "Account Information",
-  "Category Preferences",
-  "Notifications",
-  "Change Password",
-  "Delete Account",
-  "App Walkthrough",
-  "Terms of Services",
-  "Privacy Policy",
-];
+
 
 export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   const { executeWithCheck } = useAccessControl();
   const { user } = useAuthStore();
-
+  const menuItems = [
+    "Account Information",
+    "Category Preferences",
+    "Notifications",
+    `${user?.isPasswordSet ? "Change Password" : "Set Password"} `,
+    "Delete Account",
+    "App Walkthrough",
+    "Terms of Services",
+    "Privacy Policy",
+  ];
   const handleTabClick = (item: string) => {
     if (item === "Terms of Services") {
       window.open("https://www.frametheworld.org/terms-condition", "_blank");
@@ -27,6 +27,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
       return;
     }
 
+
     // Only Account Information and legal docs are allowed for pending users in Settings
     const isAllowedForPending = [
       "Category Preferences",
@@ -34,6 +35,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
       "Terms of Services",
       "Privacy Policy",
       "Change Password",
+      "Set Password",
       "App Walkthrough"
     ].includes(item);
 

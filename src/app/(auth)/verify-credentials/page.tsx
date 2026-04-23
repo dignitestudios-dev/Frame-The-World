@@ -145,11 +145,10 @@ export default function VerifyCredentialsPage() {
           <Button
             type="submit"
             disabled={isPending || !isValid}
-            className={`w-full mt-4 h-12 rounded-full font-medium transition-all shadow-lg ${
-              isPending || !isValid 
-                ? "bg-gray-300 cursor-not-allowed shadow-none text-gray-500" 
-                : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-500 hover:to-blue-800 shadow-blue-300"
-            }`}
+            className={`w-full mt-4 h-12 rounded-full font-medium transition-all shadow-lg ${isPending || !isValid
+              ? "bg-gray-300 cursor-not-allowed shadow-none text-gray-500"
+              : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-500 hover:to-blue-800 shadow-blue-300"
+              }`}
           >
 
             {isPending ? (
@@ -164,9 +163,20 @@ export default function VerifyCredentialsPage() {
               "Verify"
             )}
           </Button>
-
-         {/* Terms and Conditions */}
-          <div className="text-sm text-gray-600 mb-6 mt-6 text-center">
+          <div className="mt-4 flex gap-2 items-start bg-transparent">
+            <div className="flex-shrink-0 mt-0.5">
+              <div className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#5D92F3] text-white shadow-sm">
+                <span className="text-[11px] font-black italic">i</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-500 leading-relaxed font-medium">
+              CLIA verification is processed manually and will be sent to the admin for approval.
+              Please ensure the information provided is accurate, as incorrect details may lead to
+              rejection.
+            </p>
+          </div>
+          {/* Terms and Conditions */}
+          {/* <div className="text-sm text-gray-600 mb-6 mt-6 text-center">
             I accept the{" "}
             <Link href="https://www.frametheworld.org/terms-condition" target="_blank" className="text-blue-600 hover:underline">
               Terms of Services
@@ -175,7 +185,7 @@ export default function VerifyCredentialsPage() {
             <Link href="https://www.frametheworld.org/privacy-policy" target="_blank" className="text-blue-600 hover:underline">
               Privacy policy
             </Link>
-          </div>
+          </div> */}
         </form>
       </div>
 

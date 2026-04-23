@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { JSX, useState } from "react";
 import SettingsSidebar from "@/components/global/SettingsSidebar";
 import ChangePassword from "@/components/global/ChangePassword";
 import Header from "@/components/global/header";
@@ -16,7 +16,20 @@ import CategoryPreferences from "@/components/global/CategoryPreferences";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("Account Information");
-
+  
+  const tabComponents: Record<string, JSX.Element> = {
+    "Change Password": <ChangePassword />,
+    "Set Password": <ChangePassword />,
+    "Account Information": <AccountInformation />,
+    "Category Preferences": <CategoryPreferences />,
+    "Subscription": <Subscription />,
+    "Notifications": <Notifications />,
+    "App Walkthrough": <AppWalkthrough />,
+    "Delete Account": <DeleteAccount />,
+    "Terms of Services": <TermsandConditions />,
+    "Privacy Policy": <PrivacyPolicy />,
+    "Badges": <Badges />,
+  };
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
       <Header />
@@ -25,7 +38,7 @@ export default function SettingsPage() {
           <SettingsSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
           <main className="flex-1 w-full max-w-[800px] mx-auto">
-            {activeTab === "Change Password" ? (
+            {activeTab == "Change Password " || activeTab == "Set Password " ? (
               <ChangePassword />
             ) : activeTab === "Account Information" ? (
               <AccountInformation />

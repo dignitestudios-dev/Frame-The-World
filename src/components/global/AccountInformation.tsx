@@ -90,6 +90,7 @@ export default function AccountInformation() {
   const toggleEditMode = () => {
     if (isEditing && profileData?.data) {
       const u = profileData.data;
+      console.log(profileData, "profile-completed")
       reset({
         name: u.name || "",
         bio: u.bio || "",
@@ -231,6 +232,7 @@ export default function AccountInformation() {
               <Input
                 placeholder="Company name"
                 disabled={!isEditing}
+                maxLength={150}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 disabled:opacity-70 disabled:cursor-not-allowed"
                 {...register("companyName", {
                   onChange: (e) => {
@@ -251,10 +253,11 @@ export default function AccountInformation() {
                 <LocationAutocomplete
                   placeholder="Company Address/Location"
                   disabled={!isEditing}
+                  value={profileData?.data?.company?.address?.country || ""}
                   {...register("country")}
                   icon={<ArrowRight className="w-5 h-5 stroke-[2.5]" />}
-                  onLocationSelect={(place) => {
-                    setValue("country", place.address, { shouldValidate: true });
+                  onLocationSelect={(address) => {
+                    setValue("country", address?.country || "", { shouldValidate: true });
                   }}
                 />
               </div>

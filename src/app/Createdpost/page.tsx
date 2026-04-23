@@ -101,7 +101,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
   }, [imagePreview]);
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header title={"Create Post"} subtitle={""} />
       {isImage ? (
         <Imagepage
           handleRemoveImage={handleRemoveImage}
@@ -207,9 +207,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2 px-1">
               <label className="text-sm font-bold text-gray-700">Caption</label>
-              <span className={`text-xs ${formData.caption.length >= 500 ? 'text-red-500' : 'text-gray-400'}`}>
-                {formData.caption.length}/500
-              </span>
+
             </div>
             <textarea
               placeholder="Enter Caption"
@@ -221,6 +219,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
               }
               className="w-full px-4 py-3 bg-blue-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             />
+            <p className={`text-xs flex justify-end  ${formData.caption.length >= 500 ? 'text-red-500' : 'text-gray-400'}`}>
+              {formData.caption.length}/500
+            </p>
           </div>
 
           {/* fetch Categories Here */}

@@ -9,7 +9,7 @@ export default function ReviewPlanPage() {
   const router = useRouter();
   // const searchParams = useSearchParams();
   // const plan = searchParams.get("plan") ?? "monthly";
-    const plan = "monthly";
+  const plan = "monthly";
 
   // const method = searchParams.get("method") ?? "google-pay";
   const method = "google-pay";
@@ -38,7 +38,7 @@ export default function ReviewPlanPage() {
 
         {/* Title */}
         <h1 className="mt-2 mb-6 text-center text-2xl font-extrabold text-gray-900">
-          Review Plan
+          Review Your Plan
         </h1>
 
         {/* Plan Card */}
@@ -99,14 +99,14 @@ export default function ReviewPlanPage() {
 
         {/* Subtotal */}
         <div className="bg-[#6cabdf4a] rounded-2xl p-3 mb-2">
-        <div className="mb-2 flex items-center justify-between text-sm text-gray-600">
-          <span>Subtotal</span>
-          <span>$ {price}</span>
-        </div>  
-        <div className="mb-2 flex items-center justify-between text-sm font-semibold text-blue-600">
-          <span>Subtotal</span>
-          <span>$ {price}</span>
-        </div>
+          <div className="mb-2 flex items-center justify-between text-sm text-gray-600">
+            <span>Subtotal</span>
+            <span>$ {price}</span>
+          </div>
+          <div className="mb-2 flex items-center justify-between text-sm font-semibold text-blue-600">
+            <span>Subtotal</span>
+            <span>$ {price}</span>
+          </div>
         </div>
 
         <Button

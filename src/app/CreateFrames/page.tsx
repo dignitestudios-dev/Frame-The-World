@@ -1,6 +1,6 @@
 "use client";
 import Header from '@/components/global/header';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import LocationAutocomplete, { PlaceSelectionDetails } from '@/components/global/LocationAutocomplete';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createFrameApi } from '@/services/frameApi';
@@ -20,8 +20,8 @@ const getFirstAddressComponent = (
   types: string[]
 ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
 
-const CreateFrame = () => {
-   const router = useRouter();
+const CreateFrameContent = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('postId');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -194,198 +194,232 @@ const CreateFrame = () => {
 
   return (
     <div>
-    <div className="min-h-screen bg-gray-50">
-<Header/>
-      <div className="max-w-2xl mx-auto p-6">
-        <Toast
-          open={toastOpen}
-          message={toastMessage}
-          type={toastType}
-          onClose={() => setToastOpen(false)}
-        />
-        {/* Back Button */}
-        <button 
-          type="button"
-          onClick={() => router.back()}
-          className="mb-6 p-2 hover:bg-gray-200 rounded-full transition-colors"
-          aria-label="Go back"
-        >
-          <svg
-            className="w-6 h-6 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-
-        {/* Header Text */}
-        <div className="text-center mb-8">
-          <p className="text-gray-700 text-sm leading-relaxed">
-            Enter the name of this frame, select the frame category (private or<br />
-            public) and select the location to create your new frame!
-          </p>
-        </div>
-
-        {/* Cover Upload */}
-        <div className="mb-6">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              setCoverFile(e.target.files?.[0] || null);
-              setFieldErrors((prev) => ({ ...prev, cover: undefined }));
-            }}
+      <div className="min-h-screen bg-gray-50">
+        <Header title={"Create Frame"} subtitle={""} />
+        <div className="max-w-2xl mx-auto p-6">
+          <Toast
+            open={toastOpen}
+            message={toastMessage}
+            type={toastType}
+            onClose={() => setToastOpen(false)}
           />
+          {/* Back Button */}
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="relative w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-700 hover:bg-gray-100 transition-colors text-left overflow-hidden"
-            style={
-              coverPreviewUrl
-                ? {
-                    backgroundImage: `url(${coverPreviewUrl})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }
-                : undefined
-            }
+            onClick={() => router.back()}
+            className="mb-6 p-2 hover:bg-gray-200 rounded-full transition-colors"
+            aria-label="Go back"
           >
-            {coverPreviewUrl ? <span className="absolute inset-0 bg-black/35" /> : null}
-            <span className="relative">
-              {coverFile ? `Cover: ${coverFile.name}` : 'Upload cover image'}
-            </span>
-          </button>
-          {fieldErrors.cover ? <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.cover}</p> : null}
-        </div>
-
-        {/* Frame Name Input */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-bold text-gray-700">Frame Title</label>
-            <span className={`text-xs ${title.length >= 50 ? 'text-red-500' : 'text-gray-400'}`}>
-              {title.length}/50
-            </span>
-          </div>
-          <input
-            type="text"
-            placeholder="Enter frame title"
-            value={title}
-            maxLength={50}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              setFieldErrors((prev) => ({ ...prev, title: undefined }));
-            }}
-            className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
-          />
-          {fieldErrors.title ? <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.title}</p> : null}
-        </div>
-
-        {/* Frame Category Selection */}
-        <div className="flex gap-4 mb-6">
-          {/* Public Frame */}
-          <button
-            type="button"
-            onClick={() => setCategory('public')}
-            className={`flex-1 py-8 rounded-3xl transition-all ${
-              category === 'public'
-                ? 'bg-gradient-to-tl from-[#0000FE] to-[#6CACDF] text-white shadow-lg'
-                : 'bg-gray-100 text-gray-500'
-            }`}
-          >
-            <div className="flex flex-col items-center gap-3">
-             <img
-  src={
-    category === "public"
-    ? "/images/publicwhite.png"
-    : "/images/world.png"
-  }
-  className="w-[40px] transition-all duration-300 group-hover:opacity-0"
-  alt=""
-/>
-              <span className="font-medium">Public Frame</span>
-            </div>
-          </button>
-
-          {/* Private Frame */}
-          <button
-            type="button"
-            onClick={() => setCategory('private')}
-            className={`flex-1 py-8 rounded-3xl transition-all ${
-              category === 'private'
-                ? 'bg-gradient-to-tl from-[#0000FE] to-[#6CACDF] text-white shadow-lg'
-                : 'bg-gray-100 text-gray-500'
-            }`}
-          >
-            <div className="flex flex-col items-center gap-3">
-<img
-  src={
-    category === "private"
-      ? "/images/lockicon.png"
-      : "/images/lockiconblue.png"
-  }
-  className="w-[40px] transition-all duration-300 group-hover:opacity-0"
-  alt=""
-/>              <span className="font-medium">Private Frame</span>
-            </div>
-          </button>
-        </div>
-
-        {/* Select Location */}
-        <div className="mb-6 relative group">
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
             <svg
-              className="w-6 h-6 text-blue-500 group-hover:text-blue-600 transition-colors"
-              fill="currentColor"
+              className="w-6 h-6 text-gray-800"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
+          </button>
+
+          {/* Header Text */}
+          <div className="text-center mb-8">
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Enter the name of this frame, select the frame category (private or<br />
+              public) and select the location to create your new frame!
+            </p>
           </div>
-          <LocationAutocomplete
-            placeholder="Select Location"
-            value={location}
-            onChange={(e) => {
-              setLocation(e.target.value);
-              setFieldErrors((prev) => ({ ...prev, location: undefined }));
-            }}
-            onLocationSelect={(addr) => {
-              setLocation(addr?.address || '');
-              setFieldErrors((prev) => ({ ...prev, location: undefined }));
-            }}
-            onPlaceSelect={handlePlaceSelect}
-            className="w-full py-4 pl-14 pr-12 bg-gray-100 rounded-full text-gray-700 font-medium hover:bg-gray-200 focus:bg-gray-200 transition-colors focus:outline-none"
-            icon={
-              <svg className="w-5 h-5 text-blue-500 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+
+          {/* Cover Upload */}
+          <div className="mb-4 ">
+            {coverPreviewUrl && (
+              <div className="mt-4 flex justify-center">
+                <div className=" w-full h-70 group relative">
+                  <img
+                    src={coverPreviewUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded-xl border shadow-sm"
+                  />
+
+                  {/* Overlay */}
+                  <div className="absolute inset-0  rounded-xl  flex items-start justify-end  p-2">
+                    <button
+                      type="button"
+                      onClick={() => setCoverFile(null)}
+                      className="bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center shadow hover:scale-110 transition"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!coverPreviewUrl && (
+              <label
+                htmlFor="image-upload"
+                className="relative block w-full border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl p-12 text-center cursor-pointer group hover:bg-blue-100 transition-colors"
+              >
+                <div className="text-xs text-gray-500">
+                  <div className="text-blue-600 font-medium mb-1">
+                    Upload Picture
+                  </div>
+                  Max Limit 5Mbs, PNG, JPG, JPEG
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  id="image-upload"
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={(e) => {
+                    setCoverFile(e.target.files?.[0] || null);
+                    setFieldErrors((prev) => ({ ...prev, cover: undefined }));
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+
+          {/* Frame Name Input */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-bold text-gray-700">Frame Title</label>
+
+            </div>
+            <input
+              type="text"
+              placeholder="Enter frame title"
+              value={title}
+              maxLength={50}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, title: undefined }));
+              }}
+              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+            <div className='flex justify-between items-center'>
+              <div>
+                {fieldErrors.title ? <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.title}</p> : null}
+              </div>
+
+              <p className={`text-xs mt-2 ${title.length >= 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                {title.length}/50
+              </p>
+            </div>
+          </div>
+
+          {/* Frame Category Selection */}
+          <div className="flex gap-4 mb-6">
+            {/* Public Frame */}
+            <button
+              type="button"
+              onClick={() => setCategory('public')}
+              className={`flex-1 py-8 rounded-3xl transition-all ${category === 'public'
+                ? 'bg-gradient-to-tl from-[#0000FE] to-[#6CACDF] text-white shadow-lg'
+                : 'bg-gray-100 text-gray-500'
+                }`}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <img
+                  src={
+                    category === "public"
+                      ? "/images/publicwhite.png"
+                      : "/images/world.png"
+                  }
+                  className="w-[40px] transition-all duration-300 group-hover:opacity-0"
+                  alt=""
+                />
+                <span className="font-medium">Public Frame</span>
+              </div>
+            </button>
+
+            {/* Private Frame */}
+            <button
+              type="button"
+              onClick={() => setCategory('private')}
+              className={`flex-1 py-8 rounded-3xl transition-all ${category === 'private'
+                ? 'bg-gradient-to-tl from-[#0000FE] to-[#6CACDF] text-white shadow-lg'
+                : 'bg-gray-100 text-gray-500'
+                }`}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <img
+                  src={
+                    category === "private"
+                      ? "/images/lockicon.png"
+                      : "/images/lockiconblue.png"
+                  }
+                  className="w-[40px] transition-all duration-300 group-hover:opacity-0"
+                  alt=""
+                />              <span className="font-medium">Private Frame</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Select Location */}
+          <div className="mb-6 relative group">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+              <svg
+                className="w-6 h-6 text-blue-500 group-hover:text-blue-600 transition-colors"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
               </svg>
-            }
-          />
+            </div>
+            <LocationAutocomplete
+              placeholder="Select Location"
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, location: undefined }));
+              }}
+              onLocationSelect={(addr) => {
+                setLocation(addr?.address || '');
+                setFieldErrors((prev) => ({ ...prev, location: undefined }));
+              }}
+              onPlaceSelect={handlePlaceSelect}
+              className="w-full py-4 pl-14 pr-12 bg-gray-100 rounded-full text-gray-700 font-medium hover:bg-gray-200 focus:bg-gray-200 transition-colors focus:outline-none"
+              icon={
+                <svg className="w-5 h-5 text-blue-500 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              }
+            />
+          </div>
+
+          {/* Location details (lat/lng + city/state/country) autocomplete se fill honge */}
+          {fieldErrors.location ? <p className="mb-4 text-[12px] font-bold text-red-500">{fieldErrors.location}</p> : null}
+
+          {/* Create Frame Button */}
+          <button
+            type="button"
+            onClick={handleCreate}
+            disabled={isSubmitting}
+            className="w-full max-w-sm mx-auto block py-4 bg-blue-400 hover:bg-blue-500 text-white font-medium rounded-full transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Creating...' : 'Create Frame'}
+          </button>
         </div>
-
-        {/* Location details (lat/lng + city/state/country) autocomplete se fill honge */}
-        {fieldErrors.location ? <p className="mb-4 text-[12px] font-bold text-red-500">{fieldErrors.location}</p> : null}
-
-        {/* Create Frame Button */}
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={isSubmitting}
-          className="w-full max-w-sm mx-auto block py-4 bg-blue-400 hover:bg-blue-500 text-white font-medium rounded-full transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Creating...' : 'Create Frame'}
-        </button>
       </div>
     </div>
-            </div>
+  );
+};
+
+const CreateFrame = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <CreateFrameContent />
+    </Suspense>
   );
 };
 

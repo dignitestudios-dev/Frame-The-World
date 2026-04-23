@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { changePasswordApi } from "@/services/authApi";
+import { changePasswordApi, getUserProfileApi, setPasswordApi } from "@/services/authApi";
 import { Toast } from "@/components/ui/toast";
 import { passwordSchema } from "@/schemas/Auth";
+import { useAuthStore } from "@/store/authStore";
 
 interface FormErrors {
   password?: string;
@@ -14,6 +15,7 @@ interface FormErrors {
 }
 
 export default function ChangePassword() {
+  const { user } = useAuthStore();
   const [form, setForm] = useState({
     password: "",
     newPassword: "",
@@ -36,21 +38,34 @@ export default function ChangePassword() {
     type: "success",
   });
 
+  const { updateUser } = useAuthStore();
   const mutation = useMutation({
-    mutationFn: changePasswordApi,
+    mutationFn: (data: { password?: string; newPassword: string }) => {
+      if (user?.isPasswordSet) {
+        return changePasswordApi(data);
+      } else {
+        return setPasswordApi({ password: data.newPassword });
+      }
+    },
     onSuccess: () => {
       setToast({
         open: true,
-        message: "Password changed successfully!",
+        message: user?.isPasswordSet ? "Password changed successfully!" : "Password set successfully!",
         type: "success",
       });
+      getUserProfileApi()
+      if (!user?.isPasswordSet) {
+        updateUser({ isPasswordSet: true });
+
+      }
+
       setForm({ password: "", newPassword: "", confirmPassword: "" });
       setErrors({});
     },
     onError: (error: any) => {
       const errorMessage =
         error?.response?.data?.message ||
-        "Failed to change password. Please try again.";
+        "Failed to handle password request. Please try again.";
       setToast({ open: true, message: errorMessage, type: "error" });
     },
   });
@@ -69,7 +84,7 @@ export default function ChangePassword() {
   const validateField = (name: keyof FormErrors, value: string) => {
     const newErrors: FormErrors = { ...errors };
 
-    if (name === "password") {
+    if (name === "password" && user?.isPasswordSet) {
       if (!value) {
         newErrors.password = "Current password is required.";
       } else {
@@ -118,12 +133,14 @@ export default function ChangePassword() {
   const handleSave = () => {
     const newErrors: FormErrors = {};
 
-    if (!form.password) {
-      newErrors.password = "Current password is required.";
-    } else {
-      const result = passwordSchema.safeParse(form.password);
-      if (!result.success) {
-        newErrors.password = getZodMessage(result.error);
+    if (user?.isPasswordSet) {
+      if (!form.password) {
+        newErrors.password = "Current password is required.";
+      } else {
+        const result = passwordSchema.safeParse(form.password);
+        if (!result.success) {
+          newErrors.password = getZodMessage(result.error);
+        }
       }
     }
     if (!form.newPassword) {
@@ -166,50 +183,55 @@ export default function ChangePassword() {
       {/* Title Header */}
       <div className="py-4 md:py-6 border-b border-gray-100">
         <h2 className="text-center text-xl font-bold text-gray-800">
-          Change Password
+          {user?.isPasswordSet ? "Change Password" : "Set Password"}
         </h2>
       </div>
 
       <div className="p-4 md:p-10 max-w-4xl">
         {/* Existing Password Section */}
-        <div className="mb-10">
-          <label className="block text-lg font-bold text-black mb-4">
-            Enter existing password
-          </label>
-          <div className="relative group">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Current password"
-              className={inputClass("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-6 top-1/2 -translate-y-1/2 text-[#4F6EF7] transition-colors"
-            >
-              {showPassword ? (
-                <Eye className="h-5 w-5" />
-              ) : (
-                <EyeOff className="h-5 w-5" />
+        {
+          user?.isPasswordSet && (
+            <div className="mb-10">
+              <label className="block text-lg font-bold text-black mb-4">
+                Enter existing password
+              </label>
+              <div className="relative group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Current password"
+                  className={inputClass("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-[#4F6EF7] transition-colors"
+                >
+                  {showPassword ? (
+                    <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {/* ✅ Inline error */}
+              {errors.password && (
+                <p className="mt-1.5 ml-4 text-sm text-red-500">{errors.password}</p>
               )}
-            </button>
-          </div>
-          {/* ✅ Inline error */}
-          {errors.password && (
-            <p className="mt-1.5 ml-4 text-sm text-red-500">{errors.password}</p>
-          )}
-          {!errors.password && (
-            <div className="mt-3 flex items-start gap-2 text-[#C2C2C2]">
-              <Info className="h-4 w-4 mt-0.5" strokeWidth={2.5} />
-              <p className="text-sm font-medium leading-tight">
-                You must enter current password in order to change your password.
-              </p>
+              {!errors.password && (
+                <div className="mt-3 flex items-start gap-2 text-[#C2C2C2]">
+                  <Info className="h-4 w-4 mt-0.5" strokeWidth={2.5} />
+                  <p className="text-sm font-medium leading-tight">
+                    You must enter current password in order to change your password.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          )
+        }
+
 
         {/* New Password Section */}
         <div className="space-y-6">
@@ -285,7 +307,7 @@ export default function ChangePassword() {
           className="mt-10 w-full md:w-52 py-3.5 rounded-full bg-gradient-to-r from-[#5D92F3] to-[#3B54F0] text-white font-bold text-lg shadow-[0_10px_20px_rgba(59,84,240,0.3)] hover:scale-[1.02] transition-all disabled:opacity-70 disabled:scale-100 flex items-center justify-center gap-2"
         >
           {mutation.isPending && <Loader2 className="h-5 w-5 animate-spin" />}
-          {mutation.isPending ? "Changing..." : "Save"}
+          {mutation.isPending ? (user?.isPasswordSet ? "Changing..." : "Setting...") : "Save"}
         </button>
       </div>
     </div>

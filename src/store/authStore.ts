@@ -20,6 +20,7 @@ interface User {
   upvotes?: number;
   framed?: number;
   downloads?: number;
+  isPasswordSet:boolean
 }
 
 interface AuthState {

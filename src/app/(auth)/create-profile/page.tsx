@@ -212,7 +212,7 @@ export default function CreateProfilePage() {
                     </svg>
                   }
                   onLocationSelect={(address) => {
-                    setValue("country", address.address, { shouldValidate: true });
+                    setValue("country", address.country || "", { shouldValidate: true });
                   }}
                 />
               </div>

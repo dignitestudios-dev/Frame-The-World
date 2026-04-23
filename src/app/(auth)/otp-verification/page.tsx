@@ -190,7 +190,7 @@ export default function OtpVerificationPage() {
       <div className="absolute inset-0 -z-10 grid grid-cols-3 gap-2 opacity-10 blur-[1px] scale-110">
         {bgImages.map((src, i) => (
           <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl grayscale">
-             <img src={src} alt="Travel bg" className="h-full w-full object-cover" />
+            <img src={src} alt="Travel bg" className="h-full w-full object-cover" />
           </div>
         ))}
       </div>
@@ -205,7 +205,7 @@ export default function OtpVerificationPage() {
       <div className="relative w-full max-w-[32em] rounded-[2.5rem] bg-white p-12 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
         <div className="flex justify-center mb-8">
           <div className="relative h-20 w-20">
-             <Image src="/images/warning.png" alt="Verify" fill className="object-contain" />
+            <Image src="/images/warning.png" alt="Verify" fill className="object-contain" />
           </div>
         </div>
 
@@ -238,7 +238,7 @@ export default function OtpVerificationPage() {
           <div className="text-center">
             {!canResend ? (
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Didn't get Code? <span className="text-gray-900">00:{timeLeft.toString().padStart(2, "0")}</span>
+                Didn't get a code? <span className="text-gray-900">00:{timeLeft.toString().padStart(2, "0")}</span>
               </p>
             ) : (
               <button
@@ -255,11 +255,10 @@ export default function OtpVerificationPage() {
           <Button
             type="submit"
             disabled={isPending || !isCodeValid}
-            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${
-              isPending || !isCodeValid 
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" 
+            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${isPending || !isCodeValid
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                 : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
-            }`}
+              }`}
           >
             {isPending ? "Verifying..." : "Verify & Continue"}
           </Button>

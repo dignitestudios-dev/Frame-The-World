@@ -308,7 +308,7 @@ export default function FrameDetailsPage() {
 
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-      <Header />
+      <Header title={frameDetails?.title} />
       <Toast
         open={toastOpen}
         message={toastMessage}

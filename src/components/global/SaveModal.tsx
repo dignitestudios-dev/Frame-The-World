@@ -31,7 +31,7 @@ const SaveModal = ({
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<ModalState>("menu");
   const [selectedFrameTitle, setSelectedFrameTitle] = useState("");
-
+  const [selectedFrameId, setSelectedFrameId] = useState("");
   // Fetch real frames
   const { data: ownFramesData, isLoading: isLoadingFrames } = useQuery({
     queryKey: ["ownFrames"],
@@ -46,8 +46,9 @@ const SaveModal = ({
     mutationFn: async (frame: any) => {
       setSelectedFrameTitle(frame.title || "Frame");
       const frameId = frame._id || frame.id;
+      setSelectedFrameId(frameId)
       const postId = post?.id || post?._id || "";
-      
+
       if (!frameId || !postId) {
         throw new Error("Missing frameId or postId");
       }
@@ -96,7 +97,7 @@ const SaveModal = ({
     </div>
   );
 
-  const ListItem = ({ title, img, locked, onClick, isPending }: any) => (
+  const ListItem = ({ title, img, locked, onClick, isPending, id }: any) => (
     <button
       onClick={onClick}
       disabled={isPending}
@@ -118,7 +119,7 @@ const SaveModal = ({
         <span className="text-[15px] font-bold text-gray-800 line-clamp-1 text-left">{title}</span>
       </div>
       <div className="flex items-center gap-2">
-        {isPending && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
+        {isPending && selectedFrameId == id && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
         {locked && <span className="text-xl">🔒</span>}
       </div>
     </button>
@@ -133,13 +134,13 @@ const SaveModal = ({
         {/* VIEW: MAIN MENU */}
         {view === "menu" && (
           <div className="pb-8">
-            {renderHeader("Save To", false)}
+            {renderHeader("Options", false)}
             <div className="px-4 space-y-2">
               <button onClick={() => setView("frames")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Hash className="w-6 h-6" /></div>
-                <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Frames</p><p className="text-xs text-gray-400">Shared with everyone.</p></div>
+                <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Frames</p><p className="text-xs text-gray-400">Move picture to a frame.</p></div>
               </button>
-              <button 
+              <button
                 onClick={() => {
                   const postId = post?.id || post?._id;
                   router.push(`/CreateFrames${postId ? `?postId=${postId}` : ""}`);
@@ -156,7 +157,7 @@ const SaveModal = ({
               {showDeleteOption ? (
                 <button onClick={() => { onDelete?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                   <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Trash className="w-6 h-6" /></div>
-                  <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Delete Post</p><p className="text-xs text-gray-400">Delete this post.</p></div>
+                  <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Delete Post</p><p className="text-xs text-gray-400">Remove from app permanently.</p></div>
                 </button>
               ) : null}
             </div>
@@ -181,6 +182,7 @@ const SaveModal = ({
               ) : (
                 ownFrames.map((f: any) => (
                   <ListItem
+                    id={f._id || f.id}
                     key={f._id || f.id}
                     title={f.title}
                     img={f.cover?.location || f.cover}

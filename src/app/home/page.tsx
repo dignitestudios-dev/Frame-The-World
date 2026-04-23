@@ -197,7 +197,7 @@ export default function TravelStoryPage() {
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
       {/* Sticky Header */}
-      <Header />
+      <Header title="Today’s Travel Story" subtitle={`${activePosts?.length || frameItems?.length}+ new memories for you`} />
 
       <div className="px-6 py-4">
 

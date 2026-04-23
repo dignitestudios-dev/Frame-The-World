@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { LockIcon, X, Loader2, ImageOff, Building2, MapPin } from "lucide-react";
 import Header from "@/components/global/header";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBadgesApi, getSingleBadgeApi, getUserProfileApi } from "@/services/authApi";
@@ -17,11 +17,28 @@ import { ProfileSidebarSkeleton } from "@/components/global/Skeletons";
 import { getOwnFramesApi } from "@/services/frameApi";
 
 export default function TravelStoryPage() {
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as "posts" | "frames" | "space") || "posts";
   const [activeTab, setActiveTab] = useState<"posts" | "frames" | "space">(
-    "posts",
+    initialTab,
   );
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && (tab === "posts" || tab === "frames" || tab === "space")) {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
+
   const [frameVisibility, setFrameVisibility] = useState("public");
   const router = useRouter();
+
+  useEffect(() => {
+    const visibility = searchParams.get("visibility");
+    if (visibility === "public" || visibility === "private") {
+      setFrameVisibility(visibility);
+    }
+  }, [searchParams]);
   const { user, updateUser } = useAuthStore();
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
   const [editSuccess, setEditSuccess] = useState(false);
@@ -107,7 +124,9 @@ export default function TravelStoryPage() {
   const isFrames = activeTab === "frames";
   const isPosts = activeTab === "posts";
   const isSpace = activeTab === "space";
-  console.log(user, "user-detail")
+  const hasUnlockedBadges = badgesData?.data?.some(
+    (badge: any) => !badge?.isLocked
+  );
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
       <Header title={"My Travel Profile"} subtitle={"Your public and private travel profile, all here."} />
@@ -212,10 +231,18 @@ export default function TravelStoryPage() {
                     </div>
                   ))}
                 </div>
+
                 <div className="w-full mt-10">
+                  {!isBadgesLoading && !hasUnlockedBadges && (
+                    <p className="text-sm text-gray-400 font-semibold text-center mb-4">
+                      No badges earned
+                    </p>
+                  )}
+
                   <h3 className="text-xl font-bold mb-6 text-gray-900 text-left w-full">
                     Badges
                   </h3>
+
                   <div className="grid grid-cols-4 gap-y-6 gap-x-2 min-h-[100px] items-center justify-center">
                     {isBadgesLoading ? (
                       <div className="col-span-4 flex justify-center py-4">
@@ -235,10 +262,10 @@ export default function TravelStoryPage() {
                                 <div className="absolute inset-0 bg-gray-100/30 rounded-full blur-md scale-75 z-0"></div>
                               )}
                               <Image
-                                src={isLocked ? LOCK_ICON : badge?.icon}
+                                src={isLocked ? LOCK_ICON : badge?.icon?.location}
                                 alt={!isLocked ? badge?.name : "Locked badge"}
                                 fill
-                                className={`object-contain relative z-10 ${isLocked ? "" : ""}`}
+                                className="object-contain relative z-10"
                               />
                             </div>
                             <p className="text-[9px] font-bold text-gray-400 tracking-tighter text-center line-clamp-1">
@@ -470,7 +497,7 @@ export default function TravelStoryPage() {
                     ownFrames.map((frame: any, i: number) => {
                       const image1 =
                         frame.cover?.location ||
-                        frame.cover ||
+                        frame.cover?.location ||
                         `/images/${(i % 4) + 1}.jpg`;
                       const frameName = frame.title || "Frame Name";
                       const id = frame.id || frame._id;
@@ -484,28 +511,28 @@ export default function TravelStoryPage() {
                             className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px] cursor-pointer"
                             onClick={() => id && router.push(`/framedetails/${id}`)}
                           >
-                            <Image
+                            <img
                               src={image1}
                               alt={frameName}
-                              fill
+                              width={200}
+                              height={200}
                               className="object-cover"
                             />
                             <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
                             <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-white">
                               <div
-                                className="text-3xl font-bold pt-20"
+                                className="text-3xl text-center font-bold pt-20"
                               >
                                 {frame?.totalPosts
                                   ? `${frame?.totalPosts}+`
                                   : ""}
+                                <div className="text-[16px] font-semibold text-white line-clamp-1 truncate max-w-[180px]">
+                                  {frameName}
+                                </div>
                               </div>
                             </div>
                           </div>
-                          <div className="mt-4 text-center">
-                            <div className="text-[16px] font-semibold text-gray-800 line-clamp-1 truncate max-w-[180px]">
-                              {frameName}
-                            </div>
-                          </div>
+
                         </div>
                       );
                     })

@@ -77,9 +77,9 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
   const sidebarItems = [
     { icon: Home, label: "Home", hasArrow: false, route: "/home", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: Globe, label: "Public frames", hasArrow: true, func: () => setIsFrameType("public"), title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: Lock, label: "Private frames", hasArrow: true, func: () => setIsFrameType("private"), title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: Pin, label: "Personal Storage", hasArrow: true, func: () => setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Globe, label: "Public frames", hasArrow: true, route: "/Profile?tab=frames&visibility=public", func: () => setIsFrameType("public"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Lock, label: "Private frames", hasArrow: true, route: "/Profile?tab=frames&visibility=private", func: () => setIsFrameType("private"), title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: Pin, label: "Personal Storage", hasArrow: true, route: "/Profile?tab=space", func: () => setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Sparkles, label: "AI Content generator", hasArrow: false, route: "/AiGenerator", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Settings, label: "Settings", hasArrow: false, title: "Create Post", subtitle: "Shared with everyone.", route: "/settings" },
     {
@@ -151,7 +151,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
   );
 
   const headerTitle = activeItem?.label || "Dashboard";
-  const headerSubtitle = activeItem?.subtitle || "Welcome to your dashboard.";
+  const headerSubtitle = activeItem?.subtitle || "";
   console.log(user, "user---response")
   return (
     <>
@@ -329,7 +329,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                           key={index}
                           className="flex-1 bg-[#FAFAFA] rounded-xl sm:rounded-full p-2 items-center shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-100 group"
                         >
-                          <div className="flex items-center text-left gap-3 sm:gap-1">
+                          <div className="flex items-center text-left gap-3  sm:gap-1">
                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                               <Image
                                 src={card.image}
@@ -339,7 +339,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                                 className="object-contain"
                               />
                             </div>
-                            <div className="pr-2">
+                            <div className="pr-2 ml-2">
                               <h3 className="font-bold text-gray-900 text-xs md:text-sm">{card.title}</h3>
                               <p className="text-[10px] md:text-[12px] text-gray-500 line-clamp-1">{card.subtitle}</p>
                             </div>
@@ -394,7 +394,10 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                       </div>
                       <button
                         onClick={() => {
-                          router.push("/Profile");
+                          const tab = isFrameType === "personal" ? "space" : "frames";
+                          const visibility = isFrameType === "private" ? "private" : "public";
+                          const route = tab === "space" ? "/Profile?tab=space" : `/Profile?tab=frames&visibility=${visibility}`;
+                          router.push(route);
                           setIsMenuOpen(false);
                           setIsFrameType(null);
                         }}

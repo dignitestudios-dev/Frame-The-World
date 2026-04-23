@@ -602,7 +602,8 @@ export default function FrameDetailsPage() {
                 return (
                   <div
                     key={post._id}
-                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${isTall ? "row-span-2" : "row-span-3"
+                    onClick={() => router.push(`/postdetails?id=${post._id}`)}
+                    className={`relative cursor-pointer overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${isTall ? "row-span-2" : "row-span-3"
                       }`}
                   >
                     <img

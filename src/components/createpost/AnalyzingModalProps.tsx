@@ -173,7 +173,7 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-10 z-50  flex items-end justify-center">
+    <div className="fixed inset-10 z-50  flex items-center justify-center">
       {/* Modal container */}
       <div
         className={`relative w-full max-w-sm h-auto bg-white rounded-t-3xl shadow-sm transition-transform duration-500 ${visible ? "translate-y-0" : "translate-y-full"
@@ -220,8 +220,8 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
             </button> */}
             <h2 className="text-center flex items-center justify-center w-full text-xl font-semibold text-gray-900">
               {step === "analyzing" && "Analyzing..."}
-              {step === "result" && "Verification Results"}
-              {step === "final-error" && "Verification Failed"}
+              {step === "result" && "Analysis Complete"}
+              {step === "final-error" && "Analysis Complete"}
             </h2>
           </div>
         </div>

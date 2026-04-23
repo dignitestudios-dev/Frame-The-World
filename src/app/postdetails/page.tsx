@@ -59,7 +59,6 @@ const getReturnedCount = (...values: unknown[]): number | null => {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) return parsed;
   }
-
   return null;
 };
 
@@ -78,6 +77,11 @@ function PostDetailsContent() {
     Boolean(postDetails?.isUpvoted ?? postDetails?.upvoted),
   );
 
+  // This ref prevents API refetch from overwriting local upvote state
+  // after the user has manually toggled the upvote button.
+  const hasInteracted = useRef(false);
+  // Always-current upvote count — avoids stale closure reads in onMutate
+  const upvoteCountRef = useRef<number>(getSafeCount(postDetails?.upvotes || postDetails?.upvoteCount));
 
   // Modals state
   const [analyzingModalOpen, setAnalyzingModalOpen] = useState(false);
@@ -92,6 +96,16 @@ function PostDetailsContent() {
   const [editingPost, setEditingPost] = useState<any>(null);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
+
+  const [toast, setToast] = useState<ToastState>({
+    open: false,
+    message: "",
+    type: "success",
+  });
+
+  const showToast = (message: string, type: ToastState["type"] = "success") => {
+    setToast({ open: true, message, type });
+  };
 
   const { data: fetchedPostData, isLoading: isFetchingPost, error: fetchError } = useQuery({
     queryKey: ["post", postIdFromUrl],
@@ -126,7 +140,7 @@ function PostDetailsContent() {
         categories: postToDisplay?.categories?.map((c: any) => c._id || c.id) || [],
       }),
     enabled: !!postToDisplay,
-    refetchOnMount: "always", // Ensure fresh data on every mount/reload
+    refetchOnMount: "always",
     staleTime: 0,
   });
 
@@ -154,17 +168,92 @@ function PostDetailsContent() {
       },
     });
 
-  useEffect(() => {
-    if (postToDisplay) {
-      setCurrentPost(postToDisplay);
-      setHasUpvoted(Boolean(postToDisplay?.isUpvoted ?? postToDisplay?.upvoted));
+  const syncPost = (updater: (previousPost: any | null) => any | null) => {
+    setCurrentPost((previousPost: any | null) => {
+      const nextPost = updater(previousPost);
+      setTimeout(() => setPostDetails(nextPost), 0);
+      return nextPost;
+    });
+  };
 
-      // Handle status-based modals only when not fetching fresh data
-      // This prevents list-view partial data from triggering modals prematurely
+  const invalidatePostLists = () => {
+    queryClient.invalidateQueries({ queryKey: ["ownPosts"] });
+    queryClient.invalidateQueries({ queryKey: ["for-you-feed"] });
+    queryClient.invalidateQueries({ queryKey: ["featured-feed"] });
+  };
+
+  const { mutate: upvotePost, isPending: isUpvoting } = useMutation({
+    mutationFn: ({ postId, upvote }: { postId: string; upvote: boolean }) =>
+      upvotePostApi(postId, { upvote }),
+    onMutate: ({ upvote }) => {
+      hasInteracted.current = true;
+      // Read from ref (never stale) and update immediately
+      const prevUpvoted = hasUpvoted;
+      const prevCount = upvoteCountRef.current;
+      const newCount = upvote ? prevCount + 1 : Math.max(0, prevCount - 1);
+      upvoteCountRef.current = newCount; // update ref before next render
+      setHasUpvoted(upvote);
+      setCurrentPost((prev: any) =>
+        prev ? { ...prev, upvotes: newCount, isUpvoted: upvote, upvoted: upvote } : prev
+      );
+      return { prevUpvoted, prevCount };
+    },
+    onSuccess: (response, variables) => {
+      const updatedPost = response?.data ?? response;
+      const isUpvotedAction = variables.upvote;
+      // Only trust the API count if it's a real positive number.
+      // API sometimes returns 0 which is misleading — prefer our optimistic count.
+      const apiCount = getReturnedCount(
+        updatedPost?.upvotes,
+        updatedPost?.data?.upvotes,
+      );
+      if (apiCount !== null && apiCount > 0) {
+        upvoteCountRef.current = apiCount;
+        setCurrentPost((prev: any) =>
+          prev ? { ...prev, upvotes: apiCount, isUpvoted: isUpvotedAction, upvoted: isUpvotedAction } : prev
+        );
+      } else {
+        // Keep the optimistic count already set in onMutate
+        setCurrentPost((prev: any) =>
+          prev ? { ...prev, isUpvoted: isUpvotedAction, upvoted: isUpvotedAction } : prev
+        );
+      }
+      setHasUpvoted(isUpvotedAction);
+      invalidatePostLists();
+      showToast(isUpvotedAction ? "Post upvoted successfully." : "Post unvoted successfully.");
+    },
+    onError: (error, _variables, context: any) => {
+      hasInteracted.current = false;
+      if (context) {
+        upvoteCountRef.current = context.prevCount;
+        setHasUpvoted(context.prevUpvoted);
+        setCurrentPost((prev: any) =>
+          prev
+            ? { ...prev, upvotes: context.prevCount, isUpvoted: context.prevUpvoted, upvoted: context.prevUpvoted }
+            : prev
+        );
+      }
+      showToast(getApiErrorMessage(error), "error");
+    },
+  });
+
+  useEffect(() => {
+    if (postToDisplay && !isUpvoting) {
+      if (!hasInteracted.current) {
+        // Only sync from API when user hasn't interacted (voted/unvoted)
+        setCurrentPost(postToDisplay);
+        setHasUpvoted(Boolean(postToDisplay?.isUpvoted ?? postToDisplay?.upvoted));
+        upvoteCountRef.current = getSafeCount(postToDisplay?.upvotes || postToDisplay?.upvoteCount);
+      }
+
       if (!isFetchingPost) {
         const status = postToDisplay.status?.toLowerCase();
         if (status === "rejected") {
-          setRejectionReason(postToDisplay.reason || postToDisplay.rejectionReason || "Your post was rejected by our AI verification system.");
+          setRejectionReason(
+            postToDisplay.reason ||
+            postToDisplay.rejectionReason ||
+            "Your post was rejected by our AI verification system.",
+          );
           setAiDetection(postToDisplay.aiDetection);
           setHumanDetection(postToDisplay.humanDetection);
           setEditingDetection(postToDisplay.editingDetection);
@@ -180,7 +269,7 @@ function PostDetailsContent() {
         }
       }
     }
-  }, [postToDisplay, isFetchingPost]);
+  }, [postToDisplay, isFetchingPost, isUpvoting]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,32 +279,6 @@ function PostDetailsContent() {
       updateRejectedImage({ postId: currentPostId, formData });
     }
   };
-  const [toast, setToast] = useState<ToastState>({
-    open: false,
-    message: "",
-    type: "success",
-  });
-
-
-
-  const showToast = (message: string, type: ToastState["type"] = "success") => {
-    setToast({ open: true, message, type });
-  };
-
-  const syncPost = (updater: (previousPost: any | null) => any | null) => {
-    setCurrentPost((previousPost: any | null) => {
-      const nextPost = updater(previousPost);
-      setPostDetails(nextPost);
-      return nextPost;
-    });
-  };
-
-  const invalidatePostLists = () => {
-    queryClient.invalidateQueries({ queryKey: ["ownPosts"] });
-    queryClient.invalidateQueries({ queryKey: ["for-you-feed"] });
-    queryClient.invalidateQueries({ queryKey: ["featured-feed"] });
-  };
-
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: (postId: string) => deletePostApi(postId),
@@ -225,34 +288,6 @@ function PostDetailsContent() {
       setPostDetails(null);
       showToast("Post deleted successfully.");
       router.push("/Profile");
-    },
-    onError: (error) => {
-      showToast(getApiErrorMessage(error), "error");
-    },
-  });
-
-  const { mutate: upvotePost, isPending: isUpvoting } = useMutation({
-    mutationFn: (postId: string) => upvotePostApi(postId),
-    onSuccess: (response) => {
-      const updatedPost = response?.data ?? response;
-      syncPost((previousPost) => {
-        if (!previousPost) return previousPost;
-
-        const nextUpvoteCount = getReturnedCount(
-          updatedPost?.upvotes,
-          updatedPost?.data?.upvotes,
-        );
-
-        return {
-          ...previousPost,
-          upvotes: nextUpvoteCount ?? getSafeCount(previousPost?.upvotes) + 1,
-          isUpvoted: true,
-          upvoted: true,
-        };
-      });
-      setHasUpvoted(true);
-      invalidatePostLists();
-      showToast("Post upvoted successfully.");
     },
     onError: (error) => {
       showToast(getApiErrorMessage(error), "error");
@@ -299,14 +334,13 @@ function PostDetailsContent() {
       showToast("You can only delete your own post.", "error");
       return;
     }
-
     deletePost(deletingPostId);
   };
 
   if (isFetchingPost) {
     return (
       <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-        <Header title="Today’s Travel Story" subtitle={``} />
+        <Header title="Today's Travel Story" subtitle={``} />
         <div className="flex items-center justify-center min-h-[70vh]">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -320,7 +354,7 @@ function PostDetailsContent() {
   if (!currentPost && !isFetchingPost) {
     return (
       <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-        <Header title="Today’s Travel Story" />
+        <Header title="Today's Travel Story" />
         <Toast
           open={toast.open}
           message={toast.message}
@@ -338,8 +372,7 @@ function PostDetailsContent() {
           </button>
           <h2 className="text-2xl font-bold text-gray-900">No post selected</h2>
           <p className="mt-3 text-sm text-gray-500">
-            Open a post from the listing first, then its details will appear
-            here.
+            Open a post from the listing first, then its details will appear here.
           </p>
         </div>
       </div>
@@ -348,8 +381,10 @@ function PostDetailsContent() {
 
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-      <Header title="Today’s Travel Story" subtitle={`${relatedPosts?.length}+ new memories for you`} />
-      {/* Toaster */}
+      <Header
+        title="Today's Travel Story"
+        subtitle={`${relatedPosts?.length}+ new memories for you`}
+      />
 
       <Toast
         open={toast.open}
@@ -367,7 +402,6 @@ function PostDetailsContent() {
               fill
               className="object-cover"
             />
-
             <button
               onClick={() => router.back()}
               className="absolute top-5 left-5 h-11 w-11 rounded-md bg-white/30 flex items-center justify-center shadow"
@@ -388,16 +422,14 @@ function PostDetailsContent() {
             </div>
 
             <p className="text-sm flex gap-2 text-gray-400 mb-6">
-              {
-                currentPost?.categories?.map((category: any) => (
-                  <span
-                    key={category?.id}
-                    className="px-4 py-1.5 rounded-full text-xs font-bold gradient-bg text-white border-none shadow-md"
-                  >
-                    {category?.name}
-                  </span>
-                ))
-              }
+              {currentPost?.categories?.map((category: any) => (
+                <span
+                  key={category?.id}
+                  className="px-4 py-1.5 rounded-full text-xs font-bold gradient-bg text-white border-none shadow-md"
+                >
+                  {category?.name}
+                </span>
+              ))}
             </p>
 
             <div className="flex items-center justify-between gap-4">
@@ -416,20 +448,25 @@ function PostDetailsContent() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={!currentPostId || isUpvoting || hasUpvoted}
-                  onClick={() => currentPostId && upvotePost(currentPostId)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full border-[1.5px] transition ${hasUpvoted
-                    ? "border-blue-500 bg-blue-500 text-white"
-                    : "border-blue-500 text-blue-500 hover:bg-blue-50"
-                    } disabled:cursor-not-allowed disabled:opacity-70`}
-                >
-                  <ArrowBigUpDash className="w-5 h-5 fill-current" />
-                  <span className="font-bold">
-                    {getSafeCount(currentPost?.upvotes)}
-                  </span>
-                </button>
+                {!canDeletePost && (
+                  <button
+                    type="button"
+                    disabled={!currentPostId || isUpvoting}
+                    onClick={() =>
+                      currentPostId &&
+                      upvotePost({ postId: currentPostId, upvote: !hasUpvoted })
+                    }
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full border-[1.5px] transition ${hasUpvoted
+                      ? "border-blue-500 bg-blue-500 text-white"
+                      : "border-blue-500 text-blue-500 bg-transparent"
+                      } disabled:cursor-not-allowed disabled:opacity-70`}
+                  >
+                    <ArrowBigUpDash className="w-5 h-5 fill-current" />
+                    <span className="font-bold">
+                      {getSafeCount(currentPost?.upvotes)}
+                    </span>
+                  </button>
+                )}
 
                 {canDeletePost && (
                   <button
@@ -454,7 +491,6 @@ function PostDetailsContent() {
                   </span>
                 </button>
 
-
                 <button
                   type="button"
                   onClick={() => setIsSaveOpen(true)}
@@ -468,9 +504,7 @@ function PostDetailsContent() {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-6">
-            More related to explore!
-          </h3>
+          <h3 className="text-lg font-semibold mb-6">More related to explore!</h3>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 auto-rows-[120px] gap-6">
             {isLoadingRelated ? (
@@ -517,7 +551,7 @@ function PostDetailsContent() {
         </div>
       </div>
 
-      {/* Popup */}
+      {/* Modals */}
       <SaveModal
         isOpen={isSaveOpen}
         onClose={() => setIsSaveOpen(false)}
@@ -576,11 +610,13 @@ function PostDetailsContent() {
 
 export default function PostDetails() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen backdrop-blur-3xl bg-blur-15 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen backdrop-blur-3xl bg-blur-15 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }
+    >
       <PostDetailsContent />
     </Suspense>
   );

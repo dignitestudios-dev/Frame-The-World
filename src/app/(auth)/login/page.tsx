@@ -47,7 +47,7 @@ export default function LoginPage() {
 
       setTimeout(() => {
         if (user?.isProfileCompleted) {
-          router.push("/home");
+          router.push("/setup-completed");
         } else if (user?.isEmailVerified) {
           // Email already verified — skip OTP and continue onboarding
           router.push("/create-profile");
@@ -79,7 +79,7 @@ export default function LoginPage() {
 
       setTimeout(() => {
         if (user?.isProfileCompleted) {
-          router.push("/home");
+          router.push("/setup-completed");
         } else {
           // Social auth users skip email OTP verification
           router.push("/create-profile");
@@ -161,8 +161,11 @@ export default function LoginPage() {
       <div className="rounded-2xl bg-white p-[4em] shadow-xl">
         {/* Title */}
         <h1 className="mb-2 text-3xl font-bold text-gray-900 text-center text-shadow">
-          Login
+          Welcome Back
         </h1>
+        <p className="text-sm text-gray-600 text-center">
+          Enter your details to login
+        </p>
         <p className="text-sm mb-8 text-gray-600 text-center">
           No account? Enter your details to create one.
         </p>

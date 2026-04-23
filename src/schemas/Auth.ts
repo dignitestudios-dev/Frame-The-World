@@ -66,6 +66,17 @@ export const profileSchema = z.object({
   street: z.string().optional(),
   city: z.string().optional(),
   country: z.string().min(1, "Location is required"),
+  avatarFile: z
+    .any()
+    .refine((file) => file instanceof File, "Profile picture is required")
+    .refine((file) => file?.size <= 50 * 1024 * 1024, "Max file size is 50MB")
+    .refine(
+      (file) =>
+        ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
+          file?.type,
+        ),
+      "Only .jpg, .jpeg, .png and .webp formats are supported",
+    ),
 });
 
 

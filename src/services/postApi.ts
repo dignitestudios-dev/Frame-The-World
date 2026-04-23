@@ -40,8 +40,8 @@ export const deletePostApi = async (postId: string) => {
 };
 
 // POST /posts/:postId/upvote
-export const upvotePostApi = async (postId: string) => {
-  const res = await API.post(`/posts/${postId}/upvote`);
+export const upvotePostApi = async (postId: string, payload?: { upvote: boolean }) => {
+  const res = await API.post(`/posts/${postId}/upvote`, payload);
   return res.data;
 };
 

@@ -7,6 +7,7 @@ import { updatePostApi } from "@/services/postApi";
 import { getCategoriesApi } from "@/services/authApi";
 import Image from "next/image";
 import LocationAutocomplete from "@/components/global/LocationAutocomplete";
+import ContentReleaseModal from "@/components/global/ContentReleaseModal";
 
 interface Post {
   id?: string;
@@ -39,6 +40,9 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [newImage, setNewImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
 
   useEffect(() => {
     if (post) {
@@ -50,6 +54,8 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
       setSelectedCategories(catIds);
       setNewImage(null);
       setImagePreview(null);
+      setLocationError("");
+      setAgreedToTerms(false);
     }
   }, [post]);
 
@@ -103,12 +109,17 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   });
 
   const handleSubmit = () => {
+    if (!location.trim()) {
+      setLocationError("Location is required.");
+      return;
+    }
     const data = new FormData();
     data.append("status", "completed");
     data.append("country", locationData?.country || "");
     data.append("state", locationData?.state || "");
     data.append("latitude", locationData?.latitude?.toString() || "");
     data.append("longitude", locationData?.longitude?.toString() || "");
+    data.append("isContentReleaseAccepted", agreedToTerms.toString());
     mutate(data);
   };
 
@@ -116,7 +127,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4"
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <div
@@ -125,7 +136,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 flex items-center justify-between border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900">Edit Post</h2>
+          <h2 className="text-lg font-bold text-gray-900">Create Post</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-white/70 transition-colors"
@@ -169,12 +180,21 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
             <LocationAutocomplete
               placeholder="Enter location..."
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                if (locationError) setLocationError("");
+              }}
               onLocationSelect={(data) => {
                 setLocation(data.address);
                 setLocationData(data);
+                if (locationError) setLocationError("");
               }}
             />
+            {locationError && (
+              <p className="mt-1.5 text-xs font-bold text-red-500">
+                {locationError}
+              </p>
+            )}
           </div>
 
           {/* Caption (Read-only) */}
@@ -238,6 +258,33 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
                 "Failed to update post. Please try again."}
             </div>
           )}
+          
+          {/* Checkbox */}
+          <div className="mb-2">
+            <label className="flex items-start cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5"
+              />
+              <span className="ml-3 text-sm text-blue-600">
+                I agree to{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsReleaseModalOpen(true)}
+                  className="underline hover:text-blue-800 transition-colors"
+                >
+                  content release statement
+                </button>
+              </span>
+            </label>
+          </div>
+
+          <ContentReleaseModal
+            isOpen={isReleaseModalOpen}
+            onClose={() => setIsReleaseModalOpen(false)}
+          />
 
           {/* Actions */}
           <div className="flex gap-3 pt-1">
@@ -250,7 +297,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isPending}
+              disabled={isPending || !agreedToTerms}
               className="flex-1 py-3 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isPending ? (

@@ -17,7 +17,6 @@ export default function CreateProfilePage() {
   const { user, tempProfileData, setTempProfileData, logout } = useAuthStore();
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [toastOpen, setToastOpen] = useState(false);
@@ -39,21 +38,15 @@ export default function CreateProfilePage() {
   });
 
   const onSubmit = (data: ProfileFormData) => {
-    if (!avatarFile) {
-      setToastMessage("Please upload a profile picture");
-      setToastType("error");
-      setToastOpen(true);
-      return;
-    }
     // Save to store and proceed to Step 2
-    setTempProfileData({ ...data, avatarFile });
+    setTempProfileData(data);
     router.push("/category-preference");
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAvatarFile(file);
+    setValue("avatarFile", file, { shouldValidate: true });
     const url = URL.createObjectURL(file);
     setAvatarPreview(url);
   };
@@ -140,6 +133,11 @@ export default function CreateProfilePage() {
               </button>
             </div>
             <p className="text-xs font-black text-gray-900">Upload Image <span className="text-red-500">*</span></p>
+            {errors.avatarFile && (
+              <p className="text-red-500 text-[10px] font-bold">
+                {errors.avatarFile.message as string}
+              </p>
+            )}
           </div>
 
           {/* Form Fields */}
@@ -189,7 +187,7 @@ export default function CreateProfilePage() {
             <div className="space-y-3">
               <Input
                 placeholder="Enter your company name"
-                maxLength={100}
+                maxLength={150}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
                 {...register("companyName", {
                   onChange: (e) => {
@@ -225,8 +223,8 @@ export default function CreateProfilePage() {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={!isValid || !avatarFile}
-            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${!isValid || !avatarFile
+            disabled={!isValid}
+            className={`w-full h-14 rounded-full font-bold text-base transition-all shadow-xl tracking-tight ${!isValid
               ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
               : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90 shadow-blue-200"
               }`}

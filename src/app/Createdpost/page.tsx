@@ -7,6 +7,7 @@ import { getCategoriesApi } from "@/services/authApi";
 import { createPostApi } from "@/services/postApi";
 import { CategoryChipSkeleton } from "@/components/global/Skeletons";
 import { useRouter } from "next/navigation";
+import ContentReleaseModal from "@/components/global/ContentReleaseModal";
 
 interface UploadFormProps {
   onGenerate?: (data: any) => void;
@@ -28,6 +29,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImage, setIsImage] = useState<boolean>(false);
+  const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const router = useRouter();
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
@@ -51,7 +53,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
     mutationFn: createPostApi,
     onSuccess: (data) => {
       console.log("Post created successfully:", data);
-      router.push("/Profile")
+      router.push("/Profile?tab=posts")
       // Success handling is done inside the AnalyzingModal via the onSuccess prop
     },
     onError: (err) => {
@@ -86,6 +88,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
     formData.categories.forEach((catId, index) => {
       data.append(`categories[${index}]`, catId);
     });
+    // data.append("isContentReleaseAccepted", formData.agreedToTerms.toString());
     const values = Object.fromEntries(data.entries());
     console.log(values, "form-->data--->");
     // setIsImage(true);
@@ -267,11 +270,23 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
                 }
                 className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5"
               />
-              <span className="ml-3 text-sm text-blue-600 underline">
-                I agree to content release statement
+              <span className="ml-3 text-sm text-blue-600">
+                I agree to{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsReleaseModalOpen(true)}
+                  className="underline hover:text-blue-800 transition-colors"
+                >
+                  content release statement
+                </button>
               </span>
             </label>
           </div>
+
+          <ContentReleaseModal
+            isOpen={isReleaseModalOpen}
+            onClose={() => setIsReleaseModalOpen(false)}
+          />
 
           {/* Generate Button */}
           <button
@@ -284,7 +299,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
             }
             className="w-full py-4 bg-gradient-to-r from-blue-400 to-purple-400 text-white font-medium rounded-full hover:from-blue-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {status === "pending" ? "Analyzing..." : "Generate"}
+            {status === "pending" ? "Posting..." : "Post"}
           </button>
         </div>
       )}

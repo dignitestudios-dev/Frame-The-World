@@ -73,21 +73,25 @@ const CreateFrameContent = () => {
   };
 
   const handleCreate = async () => {
-    setFieldErrors({});
+    const errors: { title?: string; location?: string; cover?: string } = {};
     setToastOpen(false);
 
     if (!coverFile) {
-      setFieldErrors({ cover: 'Please upload a cover image.' });
-      return;
+      errors.cover = 'Please upload a cover image.';
     }
     if (!title.trim()) {
-      setFieldErrors({ title: 'Please enter frame title.' });
-      return;
+      errors.title = 'Please enter frame title.';
     }
     if (!location.trim()) {
-      setFieldErrors({ location: 'Please select location.' });
+      errors.location = 'Please select location.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
+
+    setFieldErrors({});
 
     // If user typed a location manually (without selecting Google suggestions),
     // resolve lat/lng + city/state/country using geocoding at submit time.
@@ -151,7 +155,7 @@ const CreateFrameContent = () => {
     }
 
     const payload = new FormData();
-    payload.append('cover', coverFile);
+    payload.append('cover', coverFile!);
     payload.append('title', title.trim());
     payload.append('longitude', resolvedLongitude);
     payload.append('latitude', resolvedLatitude);
@@ -165,7 +169,7 @@ const CreateFrameContent = () => {
 
     try {
       setIsSubmitting(true);
-      await createFrameApi(payload);
+      const response = await createFrameApi(payload);
       setToastMessage("Frame Create Succesfully");
       setToastType("success");
       setToastOpen(true);
@@ -180,7 +184,12 @@ const CreateFrameContent = () => {
       setCoverFile(null);
       // Toast show hone de, phir redirect
       setTimeout(() => {
-        router.push("/Profile");
+        const createdId = response?.data?._id || response?.data?.id || response?._id || response?.id;
+        if (postId && createdId) {
+          router.push(`/framedetails/${createdId}`);
+        } else {
+          router.push("/Profile?tab=frames");
+        }
       }, 250);
     } catch (error) {
       const msg = getApiErrorMessage(error);
@@ -282,6 +291,7 @@ const CreateFrameContent = () => {
                 />
               </label>
             )}
+            {fieldErrors.cover && <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.cover}</p>}
           </div>
 
 

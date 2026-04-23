@@ -43,15 +43,15 @@ export const AccessControlProvider = ({ children }: { children: ReactNode }) => 
     }
 
     // 2. Check "not-provided" Status
-    if (user?.identityStatus === "not-provided") {
-        router.push("/settings");
-        setToast({ 
-            open: true, 
-            message: "Please provide your IATA or CLIA number. Profile verification is required to access all features.", 
-            type: "error" 
-        });
-        return;
-    }
+    // if (user?.identityStatus === "not-provided") {
+    //     router.push("/settings");
+    //     setToast({ 
+    //         open: true, 
+    //         message: "Please provide your IATA or CLIA number. Profile verification is required to access all features.", 
+    //         type: "error" 
+    //     });
+    //     return;
+    // }
 
     // 3. Check Pending Status
     const isPending = user?.identityStatus === "pending";

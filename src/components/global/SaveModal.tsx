@@ -137,7 +137,7 @@ const SaveModal = ({
             {renderHeader("Options", false)}
             <div className="px-4 space-y-2">
               <button onClick={() => setView("frames")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Hash className="w-6 h-6" /></div>
+                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/save-to-frame.png" className="w-6 h-6" alt="" /></div>
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Frames</p><p className="text-xs text-gray-400">Move picture to a frame.</p></div>
               </button>
               <button
@@ -151,12 +151,12 @@ const SaveModal = ({
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Create New Frame & Add</p><p className="text-xs text-gray-400">Start a new frame for this memory.</p></div>
               </button>
               <button onClick={() => setView("storage")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Contact2 className="w-6 h-6" /></div>
+                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/storage.png" className="w-6 h-6" alt="" /></div>
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Personal Storage</p><p className="text-xs text-gray-400">Save before posting.</p></div>
               </button>
               {showDeleteOption ? (
                 <button onClick={() => { onDelete?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
-                  <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Trash className="w-6 h-6" /></div>
+                  <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/delete.png" className="w-6 h-6" alt="" /></div>
                   <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Delete Post</p><p className="text-xs text-gray-400">Remove from app permanently.</p></div>
                 </button>
               ) : null}
@@ -218,15 +218,15 @@ const SaveModal = ({
               <h2 className="text-3xl font-bold text-gray-900">Successfully Saved</h2>
               <p className="text-gray-400 text-sm leading-relaxed">
                 {view === "success_frame"
-                  ? `Picture has been successfully saved to the ${selectedFrameTitle} frame`
-                  : "Your picture has been successfully saved to the Personal Storage"}
+                  ? "Saved to frame"
+                  : "Saved to frame"}
               </p>
-              <button
+              {/* <button
                 onClick={onClose}
                 className="mt-6 w-full py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors"
               >
                 Done
-              </button>
+              </button> */}
             </div>
           </div>
         )}

@@ -218,8 +218,9 @@ export default function TravelStoryPage() {
                 </div>
                 <div className="flex justify-center  gap-8 w-full mt-8">
                   {[
-                    { label: "Upvotes", value: user?.upvotes },
-                    { label: "Framed", value: user?.framed }
+                    { label: "Up votes", value: user?.upvotes },
+                    { label: "Framed", value: user?.framed },
+                    { label: "Downloads", value: user?.downloads }
                   ].map((s) => (
                     <div key={s.label} className="flex flex-col items-center">
                       <p className="text-[#4f46e5] text-xl font-black">

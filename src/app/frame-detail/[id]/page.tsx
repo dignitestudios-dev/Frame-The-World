@@ -35,7 +35,7 @@ const getFirstAddressComponent = (
   types: string[]
 ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
 
-export default function FrameDetailsPage() {
+export default function Page() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { user } = useAuthStore();

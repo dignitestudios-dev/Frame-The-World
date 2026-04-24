@@ -35,12 +35,12 @@ const getFirstAddressComponent = (
   types: string[]
 ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
 
-export default function FrameDetailsPage({ params   }: { params: { id: string } }) {
+export default function FrameDetailsPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { user } = useAuthStore();
-  console.log("params", params);
-  const frameId = params?.id;
+  const params = useParams();
+  const frameId = params.id as string;
   const [open, setOpen] = useState(false);
   const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

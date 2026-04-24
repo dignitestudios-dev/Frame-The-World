@@ -218,7 +218,7 @@ function ProfileContent() {
                 </div>
                 <div className="flex justify-center  gap-8 w-full mt-8">
                   {[
-                    { label: "Up votes", value: user?.upvotes },
+                    { label: "Upvotes", value: user?.upvotes },
                     { label: "Framed", value: user?.framed },
                     { label: "Downloads", value: user?.downloads }
                   ].map((s) => (

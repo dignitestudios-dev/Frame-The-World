@@ -7,6 +7,7 @@ import { changePasswordApi, getUserProfileApi, setPasswordApi } from "@/services
 import { Toast } from "@/components/ui/toast";
 import { passwordSchema } from "@/schemas/Auth";
 import { useAuthStore } from "@/store/authStore";
+import SuccessModal from "./SuccessModal";
 
 interface FormErrors {
   password?: string;
@@ -38,6 +39,16 @@ export default function ChangePassword() {
     type: "success",
   });
 
+  const [successModal, setSuccessModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+  });
+
   const { updateUser } = useAuthStore();
   const mutation = useMutation({
     mutationFn: (data: { password?: string; newPassword: string }) => {
@@ -48,10 +59,10 @@ export default function ChangePassword() {
       }
     },
     onSuccess: () => {
-      setToast({
-        open: true,
-        message: user?.isPasswordSet ? "Password changed successfully!" : "Password set successfully!",
-        type: "success",
+      setSuccessModal({
+        isOpen: true,
+        title: user?.isPasswordSet ? "Password changed successfully" : "Password Set Successfully",
+        description: "You can now login with your password",
       });
       getUserProfileApi()
       if (!user?.isPasswordSet) {
@@ -313,6 +324,13 @@ export default function ChangePassword() {
           {mutation.isPending ? (user?.isPasswordSet ? "Changing..." : "Setting...") : "Save"}
         </button>
       </div>
+
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal((prev) => ({ ...prev, isOpen: false }))}
+        title={successModal.title}
+        description={successModal.description}
+      />
     </div>
   );
 }

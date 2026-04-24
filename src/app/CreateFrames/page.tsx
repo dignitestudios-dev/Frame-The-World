@@ -188,7 +188,7 @@ const CreateFrameContent = () => {
         if (postId && createdId) {
           router.push(`/frame-detail/${createdId}`);
         } else {
-          router.push("/Profile?tab=frames");
+          router.push(`/Profile?tab=frames&visibility=${category}`);
         }
       }, 250);
     } catch (error) {

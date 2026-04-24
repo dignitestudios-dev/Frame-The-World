@@ -86,7 +86,7 @@ export default function OwnPostView({
     const rawData = insightsData?.data || insightsData;
     const summary = rawData?.summary || { downloads: 0, upvotes: 0, framed: 0 };
     const graphArray: any[] = rawData?.graph || [];
-
+    console.log(currentPost, "post-categories")
     // ── Render ──────────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
@@ -140,8 +140,8 @@ export default function OwnPostView({
                         </div>
                         <p className="text-[16px] font-normal text-black/70 leading-[22px] tracking-[-0.408px] mt-0.5">
                             {currentPost?.categories?.length
-                                ? currentPost.categories.map((c: any) => `#${c?.name || c}`).join(", ")
-                                : "#Eiffel, #Tower, #land, #history"}
+                                ? currentPost.categories.map((c: any) => `${c?.title || c}`).join(", ")
+                                : ""}
                         </p>
                     </div>
 
@@ -215,8 +215,8 @@ export default function OwnPostView({
                                             key={tf.id}
                                             onClick={() => setActiveTimeframe(tf.id)}
                                             className={`h-[28px] px-[10px] rounded-[100px] text-[12px] font-medium leading-[16px] text-center capitalize transition-all ${activeTimeframe === tf.id
-                                                    ? "text-white"
-                                                    : "bg-white/50 text-black/70"
+                                                ? "text-white"
+                                                : "bg-white/50 text-black/70"
                                                 }`}
                                             style={
                                                 activeTimeframe === tf.id
@@ -284,7 +284,7 @@ export default function OwnPostView({
                                                 <ArrowUp className="w-5 h-5 text-blue-600" />
                                             </div>
                                             <span className="text-[16px] font-medium text-black leading-[21px] text-center">
-                                                Up Votes
+                                                Upvotes
                                             </span>
                                         </div>
                                         <span
@@ -330,71 +330,83 @@ export default function OwnPostView({
                                 </div>
                             </div>
 
-                            {/* ── Right: area chart ── */}
-                            <div className="flex-1 relative overflow-hidden rounded-r-[12px] p-6">
-                                {graphArray.length > 0 ? (
+                            <div className="flex-1 relative overflow-hidden rounded-r-[12px] p-4">
+                                {graphArray.length > 1 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart
                                             data={graphArray}
-                                            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                                            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                                         >
                                             <defs>
                                                 <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#6CACDF" stopOpacity={0.4} />
-                                                    <stop offset="95%" stopColor="#6CACDF" stopOpacity={0} />
+                                                    <stop offset="0%" stopColor="#818CF8" stopOpacity={0.5} />
+                                                    <stop offset="100%" stopColor="#818CF8" stopOpacity={0.05} />
                                                 </linearGradient>
                                                 <linearGradient id="colorUpvotes" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.4} />
-                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                                    <stop offset="0%" stopColor="#6CACDF" stopOpacity={0.5} />
+                                                    <stop offset="100%" stopColor="#6CACDF" stopOpacity={0.05} />
                                                 </linearGradient>
                                                 <linearGradient id="colorFramed" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                                    <stop offset="0%" stopColor="#00a1feff" stopOpacity={0.35} />
+                                                    <stop offset="100%" stopColor="#007ffeff" stopOpacity={0.02} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,254,0.08)" />
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,254,0.06)" />
                                             <XAxis dataKey="date" hide />
                                             <YAxis hide />
                                             <Tooltip
                                                 contentStyle={{
                                                     borderRadius: "12px",
                                                     border: "none",
-                                                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                                                    fontWeight: "bold",
+                                                    boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                                                    fontSize: "12px",
+                                                    fontWeight: 600,
+                                                    background: "white",
+                                                    padding: "8px 12px",
                                                 }}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="downloads"
-                                                name="Downloads"
-                                                stroke="#6CACDF"
-                                                fillOpacity={1}
-                                                fill="url(#colorDownloads)"
-                                                strokeWidth={3}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="upvotes"
-                                                name="Up Votes"
-                                                stroke="#2563eb"
-                                                fillOpacity={1}
-                                                fill="url(#colorUpvotes)"
-                                                strokeWidth={3}
+                                                cursor={{ stroke: "rgba(0,0,254,0.15)", strokeWidth: 1 }}
                                             />
                                             <Area
                                                 type="monotone"
                                                 dataKey="framed"
                                                 name="Framed"
-                                                stroke="#8b5cf6"
+                                                stroke="#0098feff"
+                                                strokeWidth={2.5}
                                                 fillOpacity={1}
                                                 fill="url(#colorFramed)"
-                                                strokeWidth={3}
+                                                dot={false}
+                                                activeDot={false}
+                                                isAnimationActive={false}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="upvotes"
+                                                name="Upvotes"
+                                                stroke="#6CACDF"
+                                                strokeWidth={2.5}
+                                                fillOpacity={1}
+                                                fill="url(#colorUpvotes)"
+                                                dot={false}
+                                                activeDot={false}
+                                                isAnimationActive={false}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="downloads"
+                                                name="Downloads"
+                                                stroke="#818CF8"
+                                                strokeWidth={2.5}
+                                                fillOpacity={1}
+                                                fill="url(#colorDownloads)"
+                                                dot={false}
+                                                activeDot={false}
+                                                isAnimationActive={false}
                                             />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 ) : (
-                                    <div className="flex items-center justify-center h-full w-full text-gray-500 font-medium">
-                                        No insights data available for this timeframe.
+                                    <div className="flex items-center justify-center h-full w-full text-gray-400 text-sm font-medium">
+                                        Not enough data to display chart.
                                     </div>
                                 )}
                             </div>
@@ -424,7 +436,10 @@ export default function OwnPostView({
             <AnalyzingModal
                 isOpen={analyzingModalOpen}
                 status={analyzingModalStatus}
-                onClose={() => setAnalyzingModalOpen(false)}
+                onClose={() => {
+                    setAnalyzingModalOpen(false)
+                    router.push("/Profile")
+                }}
                 reason={rejectionReason}
                 aiDetection={aiDetection}
                 humanDetection={humanDetection}

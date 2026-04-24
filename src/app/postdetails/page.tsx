@@ -631,6 +631,7 @@ function PostDetailsContent() {
         humanDetection={humanDetection}
         editingDetection={editingDetection}
         onClose={() => {
+          router.push("/Profile")
           setAnalyzingModalOpen(false);
           setAnalyzingModalStatus("idle");
         }}

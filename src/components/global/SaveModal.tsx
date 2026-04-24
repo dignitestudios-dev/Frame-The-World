@@ -14,22 +14,26 @@ interface SaveModalProps {
   onClose: () => void;
   onDelete?: () => void;
   showDeleteOption?: boolean;
+  onEdit?: () => void;
+  showEditOption?: boolean;
   post?: any;
+  initialView?: "menu" | "frames" | "storage" | "success_frame" | "success_storage" | "delete";
 }
-
-
 
 const SaveModal = ({
   isOpen,
   onClose,
   onDelete,
   showDeleteOption = true,
+  onEdit,
+  showEditOption = false,
   post,
+  initialView = "menu",
 }: SaveModalProps) => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [view, setView] = useState<ModalState>("menu");
+  const [view, setView] = useState<ModalState>(initialView);
   const [selectedFrameTitle, setSelectedFrameTitle] = useState("");
   const [selectedFrameId, setSelectedFrameId] = useState("");
   // Fetch real frames
@@ -70,9 +74,11 @@ const SaveModal = ({
 
   useEffect(() => {
     if (!isOpen) {
-      setView("menu");
+      setTimeout(() => setView("menu"), 300);
+    } else {
+      setView(initialView);
     }
-  }, [isOpen]);
+  }, [isOpen, initialView]);
 
   if (!mounted || !isOpen) return null;
 
@@ -153,7 +159,7 @@ const SaveModal = ({
               <button onClick={() => setView("storage")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/storage.png" className="w-6 h-6" alt="" /></div>
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Personal Storage</p><p className="text-xs text-gray-400">Save before posting.</p></div>
-              </button>
+              </button>        
               {showDeleteOption ? (
                 <button onClick={() => { onDelete?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                   <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/delete.png" className="w-6 h-6" alt="" /></div>

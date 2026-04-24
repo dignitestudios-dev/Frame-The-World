@@ -9,6 +9,9 @@ import {
   EllipsisVertical,
   MapPin,
   BarChart3,
+  ArrowUp,
+  Layers,
+  Loader2,
 } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,6 +34,9 @@ import InsightsModal from "@/components/post/InsightsModal";
 import { useAuthStore } from "@/store/authStore";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { Toast } from "@/components/ui/toast";
+import { useQuery as useInsightsQuery } from "@tanstack/react-query";
+import { getPostInsightsApi } from "@/services/postApi";
+import OwnPostView from "./OwnPostView";
 
 const FALLBACK_POST_IMAGE =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -61,6 +67,15 @@ const getReturnedCount = (...values: unknown[]): number | null => {
   }
   return null;
 };
+
+// ─── Timeframes for insights ────────────────────────────────────────────────
+const TIMEFRAMES = [
+  { id: "24h", label: "24h" },
+  { id: "week", label: "Week" },
+  { id: "month", label: "Monthly" },
+  { id: "year", label: "Year" },
+];
+
 
 function PostDetailsContent() {
   const router = useRouter();
@@ -379,6 +394,47 @@ function PostDetailsContent() {
     );
   }
 
+  // --- Own Post View (owner layout) ---
+  if (canDeletePost) {
+    return (
+      <OwnPostView
+        currentPost={currentPost}
+        currentPostId={currentPostId}
+        imageUrl={imageUrl}
+        locationText={locationText}
+        isDownloading={isDownloading}
+        onBack={() => router.back()}
+        onDownload={() => currentPostId && downloadPost(currentPostId)}
+        onSave={() => setIsSaveOpen(true)}
+        onDeleteClick={() => setDeletingPostId(currentPostId)}
+        toast={toast}
+        setToast={setToast}
+        isSaveOpen={isSaveOpen}
+        setIsSaveOpen={setIsSaveOpen}
+        deletingPostId={deletingPostId}
+        setDeletingPostId={setDeletingPostId}
+        handleDeleteConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        editingPost={editingPost}
+        setEditingPost={setEditingPost}
+        queryClient={queryClient}
+        showToast={showToast}
+        analyzingModalOpen={analyzingModalOpen}
+        setAnalyzingModalOpen={setAnalyzingModalOpen}
+        analyzingModalStatus={analyzingModalStatus}
+        rejectionReason={rejectionReason}
+        aiDetection={aiDetection}
+        humanDetection={humanDetection}
+        editingDetection={editingDetection}
+        hiddenFileInputRef={hiddenFileInputRef}
+        handleImageChange={handleImageChange}
+        isUpdatingImage={isUpdatingImage}
+        getSafeCount={getSafeCount}
+      />
+    );
+  }
+
+  // --- Other User's Post View ---
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
       <Header

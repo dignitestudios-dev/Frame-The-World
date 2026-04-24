@@ -125,7 +125,7 @@ function ProfileContent() {
   const isPosts = activeTab === "posts";
   const isSpace = activeTab === "space";
   const hasUnlockedBadges = badgesData?.data?.some(
-    (badge: any) => !badge?.isLocked
+    (badge: any) => badge?.isEarned
   );
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
@@ -251,7 +251,7 @@ function ProfileContent() {
                       </div>
                     ) : (
                       badgesData?.data?.map((badge: any, i: number) => {
-                        const isLocked = badge?.isLocked;
+                        const isLocked = !badge?.isEarned;
                         return (
                           <div
                             key={i}
@@ -264,7 +264,7 @@ function ProfileContent() {
                               )}
                               <Image
                                 src={isLocked ? LOCK_ICON : badge?.icon?.location}
-                                alt={!isLocked ? badge?.name : "Locked badge"}
+                                alt={isLocked ? badge?.name : "Locked badge"}
                                 fill
                                 className="object-contain relative z-10"
                               />

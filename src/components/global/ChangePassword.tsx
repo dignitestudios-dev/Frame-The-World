@@ -183,8 +183,15 @@ export default function ChangePassword() {
       {/* Title Header */}
       <div className="py-4 md:py-6 border-b border-gray-100">
         <h2 className="text-center text-xl font-bold text-gray-800">
-          {user?.isPasswordSet ? "Change Password" : "Set Password"}
+          {user?.isPasswordSet ? "Change Password" : "Set Your Password"}
         </h2>
+        {
+          !user?.isPasswordSet && (
+            <p className="text-center text-sm text-gray-500">
+              To secure your account, please set a password for your travel profile
+            </p>
+          )
+        }
       </div>
 
       <div className="p-4 md:p-10 max-w-4xl">
@@ -235,10 +242,6 @@ export default function ChangePassword() {
 
         {/* New Password Section */}
         <div className="space-y-6">
-          <label className="block text-lg font-bold text-black">
-            Enter new password & confirm
-          </label>
-
           <div>
             <div className="relative group">
               <input

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { LockIcon, X, Loader2, ImageOff, Building2, MapPin } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +16,7 @@ import { usePostStore } from "@/store/PostStore";
 import { ProfileSidebarSkeleton } from "@/components/global/Skeletons";
 import { getOwnFramesApi } from "@/services/frameApi";
 
-export default function TravelStoryPage() {
+function ProfileContent() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as "posts" | "frames" | "space") || "posts";
   const [activeTab, setActiveTab] = useState<"posts" | "frames" | "space">(
@@ -629,5 +629,19 @@ export default function TravelStoryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TravelStoryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <ProfileContent />
+    </Suspense>
   );
 }

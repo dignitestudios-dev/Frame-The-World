@@ -140,7 +140,7 @@ const SaveModal = ({
         {/* VIEW: MAIN MENU */}
         {view === "menu" && (
           <div className="pb-8">
-            {renderHeader("Options", false)}
+            {renderHeader("Save To", false)}
             <div className="px-4 space-y-2">
               <button onClick={() => setView("frames")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/save-to-frame.png" className="w-6 h-6" alt="" /></div>
@@ -159,7 +159,7 @@ const SaveModal = ({
               <button onClick={() => setView("storage")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/storage.png" className="w-6 h-6" alt="" /></div>
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Personal Storage</p><p className="text-xs text-gray-400">Save before posting.</p></div>
-              </button>        
+              </button>
               {showDeleteOption ? (
                 <button onClick={() => { onDelete?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                   <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/delete.png" className="w-6 h-6" alt="" /></div>

@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import SaveModal from "@/components/global/SaveModal"; // Import SaveModal
 
-export default function framedetails() {
+export default function FrameDetails() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSaveOpen, setIsSaveOpen] = useState(false); // Modal state

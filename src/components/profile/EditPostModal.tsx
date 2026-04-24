@@ -119,7 +119,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
     data.append("state", locationData?.state || "");
     data.append("latitude", locationData?.latitude?.toString() || "");
     data.append("longitude", locationData?.longitude?.toString() || "");
-    data.append("isContentReleaseAccepted", agreedToTerms.toString());
+    data.append("isContentReleaseAccepted", true.toString());
     mutate(data);
   };
 
@@ -258,28 +258,6 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
                 "Failed to update post. Please try again."}
             </div>
           )}
-          
-          {/* Checkbox */}
-          <div className="mb-2">
-            <label className="flex items-start cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5"
-              />
-              <span className="ml-3 text-sm text-blue-600">
-                I agree to{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsReleaseModalOpen(true)}
-                  className="underline hover:text-blue-800 transition-colors"
-                >
-                  content release statement
-                </button>
-              </span>
-            </label>
-          </div>
 
           <ContentReleaseModal
             isOpen={isReleaseModalOpen}
@@ -289,24 +267,17 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
           {/* Actions */}
           <div className="flex gap-3 pt-1">
             <button
-              onClick={onClose}
-              disabled={isPending}
-              className="flex-1 py-3 border border-gray-200 text-gray-600 font-semibold rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
               onClick={handleSubmit}
               disabled={isPending || !agreedToTerms}
-              className="flex-1 py-3 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 w-full py-3 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
+                  Posting...
                 </>
               ) : (
-                "Save Changes"
+                "Post"
               )}
             </button>
           </div>

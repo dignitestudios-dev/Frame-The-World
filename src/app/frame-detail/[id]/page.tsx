@@ -40,7 +40,7 @@ export default function FrameDetailsPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const params = useParams();
-  const frameId = params.id as string;
+  const frameId = params?.id as string;
   const [open, setOpen] = useState(false);
   const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

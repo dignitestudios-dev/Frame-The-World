@@ -510,7 +510,7 @@ function ProfileContent() {
                         >
                           <div
                             className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px] cursor-pointer"
-                            onClick={() => id && router.push(`/framedetails/${id}`)}
+                            onClick={() => id && router.push(`/frame-detail/${id}`)}
                           >
                             <img
                               src={image1}

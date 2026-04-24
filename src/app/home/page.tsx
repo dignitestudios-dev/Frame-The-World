@@ -340,7 +340,7 @@ export default function TravelStoryPage() {
                       <div
                         key={frame._id}
                         onClick={() =>
-                          executeWithCheck(() => router.push(`/framedetails/${frame._id}`), {
+                          executeWithCheck(() => router.push(`/frame-detail/${frame._id}`), {
                             isPendingAllowed: false,
                           })
                         }

@@ -115,9 +115,8 @@ function SearchResultsContent() {
         return (
           <div
             key={item.id}
-            className={`relative overflow-hidden rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.28)] ${
-              isSmall ? "aspect-square" : "aspect-[3/4]"
-            }`}
+            className={`relative overflow-hidden rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.28)] ${isSmall ? "aspect-square" : "aspect-[3/4]"
+              }`}
           >
             <Image
               src={item.image}
@@ -138,7 +137,7 @@ function SearchResultsContent() {
       {items.map((item) => (
         <div
           key={item.id}
-          onClick={() => router.push(`/framedetails/${item.id}`)}
+          onClick={() => router.push(`/frame-detail/${item.id}`)}
           className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] aspect-square"
         >
           <img src={item.image} alt={item.title} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
@@ -197,17 +196,16 @@ function SearchResultsContent() {
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`rounded-full px-7 py-3 text-base capitalize transition ${
-                activeTab === tab
-                  ? "bg-gradient-to-br from-[#6CACDF] to-[#0000FE] font-semibold text-white"
-                  : "bg-black/20 text-white"
-              }`}
+              className={`rounded-full px-7 py-3 text-base capitalize transition ${activeTab === tab
+                ? "bg-gradient-to-br from-[#6CACDF] to-[#0000FE] font-semibold text-white"
+                : "bg-black/20 text-white"
+                }`}
             >
               {tab}
             </button>
           ))}
 
-         
+
         </div>
 
         <div className={activeTab === "all" ? "space-y-8" : "h-[68vh] overflow-y-auto pr-1"}>
@@ -217,14 +215,14 @@ function SearchResultsContent() {
             </div>
           )}
 
-       
+
 
           {shouldFetchFilteredResults && activeTab === "all" ? (
             <div className="space-y-8">
               <section className="rounded-2xl bg-white/50 p-6">
                 <div className="flex justify-between items-center pb-[1em]">
-                <h2 className="mb-4 text-[1.4em] font-bold text-black">Images</h2>
-                <button className="text-blue-600 font-bold">See All</button>
+                  <h2 className="mb-4 text-[1.4em] font-bold text-black">Images</h2>
+                  <button className="text-blue-600 font-bold">See All</button>
                 </div>
                 <div className="h-[70vh] overflow-y-auto pr-1">
                   {isPostsLoading ? (
@@ -239,8 +237,8 @@ function SearchResultsContent() {
 
               <section className="rounded-2xl bg-white/50 p-6">
                 <div className="flex justify-between items-center pb-[1em]">
-                <h2 className="mb-4 text-[1.4em] font-bold text-black">Frames</h2>
-                <button className="text-blue-600 font-bold">See All</button>
+                  <h2 className="mb-4 text-[1.4em] font-bold text-black">Frames</h2>
+                  <button className="text-blue-600 font-bold">See All</button>
                 </div>
                 <div className="h-[70vh] overflow-y-auto pr-1">
                   {isFramesLoading ? (

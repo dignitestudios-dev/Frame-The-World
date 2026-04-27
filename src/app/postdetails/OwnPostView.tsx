@@ -85,7 +85,18 @@ export default function OwnPostView({
 
     const rawData = insightsData?.data || insightsData;
     const summary = rawData?.summary || { downloads: 0, upvotes: 0, framed: 0 };
-    const graphArray: any[] = rawData?.graph || [];
+    let graphArray: any[] = rawData?.graph || [];
+    if (graphArray.length === 0) {
+        graphArray = [
+            { date: "Mon", downloads: 0, upvotes: 0, framed: 0 },
+            { date: "Tue", downloads: 0, upvotes: 0, framed: 0 },
+            { date: "Wed", downloads: 0, upvotes: 0, framed: 0 },
+            { date: "Thu", downloads: 0, upvotes: 0, framed: 0 },
+            { date: "Fri", downloads: 0, upvotes: 0, framed: 0 },
+            { date: "Sat", downloads: 0, upvotes: 0, framed: 0 },
+            { date: "Sun", downloads: 0, upvotes: 0, framed: 0 },
+        ];
+    }
     console.log(currentPost, "post-categories")
     // ── Render ──────────────────────────────────────────────────────────────────
     return (
@@ -140,7 +151,7 @@ export default function OwnPostView({
                         </div>
                         <p className="text-[16px] font-normal text-black/70 leading-[22px] tracking-[-0.408px] mt-0.5">
                             {currentPost?.categories?.length
-                                ? currentPost.categories.map((c: any) => `${c?.title || c}`).join(", ")
+                                ? currentPost.categories.map((c: any) => `${c?.name || c}`).join(", ")
                                 : ""}
                         </p>
                     </div>
@@ -331,84 +342,88 @@ export default function OwnPostView({
                             </div>
 
                             <div className="flex-1 relative overflow-hidden rounded-r-[12px] p-4">
-                                {graphArray.length > 1 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart
-                                            data={graphArray}
-                                            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                                        >
-                                            <defs>
-                                                <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#818CF8" stopOpacity={0.5} />
-                                                    <stop offset="100%" stopColor="#818CF8" stopOpacity={0.05} />
-                                                </linearGradient>
-                                                <linearGradient id="colorUpvotes" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#6CACDF" stopOpacity={0.5} />
-                                                    <stop offset="100%" stopColor="#6CACDF" stopOpacity={0.05} />
-                                                </linearGradient>
-                                                <linearGradient id="colorFramed" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#00a1feff" stopOpacity={0.35} />
-                                                    <stop offset="100%" stopColor="#007ffeff" stopOpacity={0.02} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,254,0.06)" />
-                                            <XAxis dataKey="date" hide />
-                                            <YAxis hide />
-                                            <Tooltip
-                                                contentStyle={{
-                                                    borderRadius: "12px",
-                                                    border: "none",
-                                                    boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                                                    fontSize: "12px",
-                                                    fontWeight: 600,
-                                                    background: "white",
-                                                    padding: "8px 12px",
-                                                }}
-                                                cursor={{ stroke: "rgba(0,0,254,0.15)", strokeWidth: 1 }}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="framed"
-                                                name="Framed"
-                                                stroke="#0098feff"
-                                                strokeWidth={2.5}
-                                                fillOpacity={1}
-                                                fill="url(#colorFramed)"
-                                                dot={false}
-                                                activeDot={false}
-                                                isAnimationActive={false}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="upvotes"
-                                                name="Upvotes"
-                                                stroke="#6CACDF"
-                                                strokeWidth={2.5}
-                                                fillOpacity={1}
-                                                fill="url(#colorUpvotes)"
-                                                dot={false}
-                                                activeDot={false}
-                                                isAnimationActive={false}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="downloads"
-                                                name="Downloads"
-                                                stroke="#818CF8"
-                                                strokeWidth={2.5}
-                                                fillOpacity={1}
-                                                fill="url(#colorDownloads)"
-                                                dot={false}
-                                                activeDot={false}
-                                                isAnimationActive={false}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="flex items-center justify-center h-full w-full text-gray-400 text-sm font-medium">
-                                        Not enough data to display chart.
-                                    </div>
-                                )}
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart
+                                        data={graphArray}
+                                        margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
+                                    >
+                                        <defs>
+                                            <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="#818CF8" stopOpacity={0.5} />
+                                                <stop offset="100%" stopColor="#818CF8" stopOpacity={0.05} />
+                                            </linearGradient>
+                                            <linearGradient id="colorUpvotes" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="#6CACDF" stopOpacity={0.5} />
+                                                <stop offset="100%" stopColor="#6CACDF" stopOpacity={0.05} />
+                                            </linearGradient>
+                                            <linearGradient id="colorFramed" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="#00a1feff" stopOpacity={0.35} />
+                                                <stop offset="100%" stopColor="#007ffeff" stopOpacity={0.02} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,254,0.06)" />
+                                        <XAxis 
+                                            dataKey="date" 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fontSize: 10, fill: '#9CA3AF', fontWeight: 600 }}
+                                            dy={10}
+                                        />
+                                        <YAxis 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fontSize: 10, fill: '#9CA3AF', fontWeight: 600 }}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                borderRadius: "12px",
+                                                border: "none",
+                                                boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                                                fontSize: "12px",
+                                                fontWeight: 600,
+                                                background: "white",
+                                                padding: "8px 12px",
+                                            }}
+                                            cursor={{ stroke: "rgba(0,0,254,0.15)", strokeWidth: 1 }}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="framed"
+                                            name="Framed"
+                                            stroke="#0098feff"
+                                            strokeWidth={2.5}
+                                            fillOpacity={1}
+                                            fill="url(#colorFramed)"
+                                            dot={false}
+                                            activeDot={false}
+                                            isAnimationActive={false}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="upvotes"
+                                            name="Upvotes"
+                                            stroke="#6CACDF"
+                                            strokeWidth={2.5}
+                                            fillOpacity={1}
+                                            fill="url(#colorUpvotes)"
+                                            dot={false}
+                                            activeDot={false}
+                                            isAnimationActive={false}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="downloads"
+                                            name="Downloads"
+                                            stroke="#818CF8"
+                                            strokeWidth={2.5}
+                                            fillOpacity={1}
+                                            fill="url(#colorDownloads)"
+                                            dot={false}
+                                            activeDot={false}
+                                            isAnimationActive={false}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
                     )}

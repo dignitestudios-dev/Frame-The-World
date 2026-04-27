@@ -41,6 +41,11 @@ const statusStyles: Record<string, { bg: string; dot: string; text: string }> = 
     dot: "bg-red-300",
     text: "text-white",
   },
+  needs_human_removal: {
+    bg: "bg-red-500/80 border-red-300/40",
+    dot: "bg-red-300",
+    text: "text-white",
+  },
 };
 
 const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
@@ -80,7 +85,7 @@ const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
             )}
             <span className={`relative inline-flex rounded-full h-2 w-2 ${style.dot}`} />
           </span>
-          {post.status}
+          {post.status == "needs_human_removal" ? "Rejected" : post.status}
         </div>
       )}
     </div>

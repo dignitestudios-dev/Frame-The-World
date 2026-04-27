@@ -254,7 +254,7 @@ export default function TravelStoryPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  executeWithCheck(() => router.push("/framedetails"), { isPendingAllowed: false });
+                  router.push("/framedetails");
                 }}
                 className="
               absolute bottom-3 right-3
@@ -339,11 +339,7 @@ export default function TravelStoryPage() {
                     return (
                       <div
                         key={frame._id}
-                        onClick={() =>
-                          executeWithCheck(() => router.push(`/frame-detail/${frame._id}`), {
-                            isPendingAllowed: false,
-                          })
-                        }
+                        onClick={() => router.push(`/frame-detail/${frame._id}`)}
                         className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px]"
                       >
                         <img
@@ -455,10 +451,8 @@ export default function TravelStoryPage() {
                           onClick={() => {
                             const post = item as any;
                             const postId = post._id || post.id;
-                            executeWithCheck(() => {
-                              setPostDetails(post);
-                              router.push(`/postdetails?id=${postId}`);
-                            }, { isPendingAllowed: false });
+                            setPostDetails(post);
+                            router.push(`/postdetails?id=${postId}`);
                           }}
                           className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${isTall ? "row-span-2" : "row-span-3"
                             }`}

@@ -10,11 +10,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBadgesApi, getSingleBadgeApi, getUserProfileApi } from "@/services/authApi";
 import {
   getOwnPostsApi,
+  getPostApi,
 } from "@/services/postApi";
 import OwnPostCard from "@/components/profile/OwnPostCard";
 import { usePostStore } from "@/store/PostStore";
 import { ProfileSidebarSkeleton } from "@/components/global/Skeletons";
 import { getOwnFramesApi } from "@/services/frameApi";
+import AnalyzingModal from "@/components/createpost/AnalyzingModalProps";
+import EditPostModal from "@/components/profile/EditPostModal";
 
 function ProfileContent() {
   const searchParams = useSearchParams();
@@ -45,9 +48,44 @@ function ProfileContent() {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const { setPostDetails } = usePostStore();
 
-  // handlePostClick update karo
+  const [analyzingModalOpen, setAnalyzingModalOpen] = useState(false);
+  const [analyzingModalStatus, setAnalyzingModalStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [aiDetection, setAiDetection] = useState<any>(null);
+  const [humanDetection, setHumanDetection] = useState<any>(null);
+  const [editingDetection, setEditingDetection] = useState<any>(null);
+
+  const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
+  const [currentPostStatus, setCurrentPostStatus] = useState<string | undefined>(undefined);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const { mutate: fetchAnalysisResults } = useMutation({
+    mutationFn: (postId: string) => getPostApi(postId),
+    onSuccess: (data) => {
+      const post = data?.data || data;
+      setAiDetection(post.aiDetection);
+      setHumanDetection(post.humanDetection);
+      setEditingDetection(post.editingDetection);
+      setRejectionReason(post.rejectionReason);
+      setAnalyzingModalStatus(post.status === "rejected" ? "error" : "success");
+    },
+    onError: () => {
+      setAnalyzingModalStatus("error");
+    }
+  });
+
   const handlePostClick = (post: any) => {
     const postId = post.id || post._id;
+    setCurrentPostId(postId);
+    setCurrentPostStatus(post.status);
+    setSelectedPost(post);
+    if (post.status === "rejected" || post.status === "needs_human_removal") {
+      setAnalyzingModalOpen(true);
+      setAnalyzingModalStatus("pending");
+      fetchAnalysisResults(postId);
+      return;
+    }
     if (post.status != "pending") {
       setPostDetails(post);
       router.push(`/postdetails?id=${postId}`);
@@ -585,7 +623,7 @@ function ProfileContent() {
           onClick={() => setSelectedBadge(null)}
         >
           <div
-            className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out min-h-[400px]"
+            className="relative w-full max-w-sm bg-gray-300 rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out min-h-[400px]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute top-4 w-12 h-1.5 bg-gray-900 rounded-full opacity-10"></div>
@@ -628,6 +666,38 @@ function ProfileContent() {
           </div>
         </div>
       )}
+
+      <AnalyzingModal
+        isOpen={analyzingModalOpen}
+        onClose={() => setAnalyzingModalOpen(false)}
+        status={analyzingModalStatus}
+        reason={rejectionReason}
+        aiDetection={aiDetection}
+        humanDetection={humanDetection}
+        editingDetection={editingDetection}
+        postId={currentPostId}
+        postStatus={currentPostStatus}
+        onRemoveHumanSuccess={() => refetchPosts()}
+        onSuccess={() => {
+          setAnalyzingModalOpen(false);
+          refetchPosts();
+        }}
+        onChangeImage={() => {
+          setAnalyzingModalOpen(false);
+          setIsEditModalOpen(true);
+        }}
+        setIsImage={() => { }}
+      />
+
+      <EditPostModal
+        isOpen={isEditModalOpen}
+        post={selectedPost}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => {
+          refetchPosts();
+          setIsEditModalOpen(false);
+        }}
+      />
     </div>
   );
 }

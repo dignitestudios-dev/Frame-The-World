@@ -1,6 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import DiscardUploadModal from "./DiscardUploadModal";
+import { removeHumanApi, confirmRemoveHumanApi } from "@/services/postApi";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 type ModalStep = "analyzing" | "result" | "final-error";
 
@@ -8,6 +11,7 @@ interface CheckItem {
   id: number;
   label: string;
   status: "success" | "error" | "loading";
+  message?: string;
 }
 
 interface AnalyzingModalProps {
@@ -24,6 +28,9 @@ interface AnalyzingModalProps {
   aiDetection?: { isAI: boolean | null; processedAt?: string | null };
   humanDetection?: { hasHuman: boolean | null; processedAt?: string | null };
   editingDetection?: { isEdited: boolean | null; processedAt?: string | null };
+  postId?: string;
+  postStatus?: string;
+  onRemoveHumanSuccess?: () => void;
 }
 
 const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
@@ -39,10 +46,32 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
   aiDetection,
   humanDetection,
   editingDetection,
+  postId,
+  postStatus,
+  onRemoveHumanSuccess,
 }) => {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState<ModalStep>("analyzing");
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
+  const [humanRemoved, setHumanRemoved] = useState(false);
+  const [removedFileId, setRemovedFileId] = useState<string | null>(null);
+
+  const { mutate: handleRemoveHuman, isPending: isRemovingHuman } = useMutation({
+    mutationFn: () => removeHumanApi(postId || ""),
+    onSuccess: (res) => {
+      setHumanRemoved(true);
+      const fileId = res?.data?._id || res?.data?.id;
+      if (fileId) setRemovedFileId(fileId);
+      onRemoveHumanSuccess?.();
+    },
+  });
+
+  const { mutate: handleConfirmRemoveHuman, isPending: isConfirming } = useMutation({
+    mutationFn: () => confirmRemoveHumanApi(postId || "", removedFileId || ""),
+    onSuccess: () => {
+      onSuccess?.();
+    },
+  });
 
   const [checks, setChecks] = useState<CheckItem[]>([
     { id: 1, label: "Human Detection Check", status: "loading" },
@@ -74,9 +103,24 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
           : "success";
 
     return [
-      { id: 1, label: "Human Detection Check", status: humanStatus },
-      { id: 2, label: "Editing Manipulation Check", status: editingStatus },
-      { id: 3, label: "AI Generated Content Check", status: aiStatus },
+      {
+        id: 1,
+        label: "Human Detection Check",
+        status: humanStatus,
+        message: humanStatus === "error" ? "Humans are not allowed in the frame." : undefined
+      },
+      {
+        id: 2,
+        label: "Editing Manipulation Check",
+        status: editingStatus,
+        message: editingStatus === "error" ? "The image shows signs of digital manipulation." : undefined
+      },
+      {
+        id: 3,
+        label: "AI Generated Content Check",
+        status: aiStatus,
+        message: aiStatus === "error" ? "The content appears to be AI generated." : undefined
+      },
     ];
   };
 
@@ -176,32 +220,32 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
     <div className="fixed inset-10 z-50  flex items-center justify-center">
       {/* Modal container */}
       <div
-        className={`relative w-full max-w-sm h-auto bg-white rounded-t-3xl shadow-sm transition-transform duration-500 ${visible ? "translate-y-0" : "translate-y-full"
+        className={`relative rounded-lg w-full max-w-sm h-auto bg-white rounded-t-3xl shadow-sm transition-transform duration-500 ${visible ? "translate-y-0" : "translate-y-full"
           }`}
       >
         {/* Header */}
-        <div className="w-full bg-gradient-to-b from-blue-100 to-blue-50 px-2 py-4 flex items-center">
-          {step === "final-error" && (
-            <button
-              onClick={onClose}
-              className="hover:bg-blue-200 rounded-full transition-colors mr-2"
-              aria-label="Go back"
+        <div className="w-full bg-gradient-to-b rounded-lg from-blue-100 to-blue-50 px-2 py-4 flex items-center">
+
+          <button
+            onClick={onClose}
+            className="hover:bg-blue-200 rounded-full transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <svg
+              className="w-6 h-6 text-gray-800"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-6 h-6 text-gray-800"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+
           <div className="flex items-center justify-center w-full">
             {/* <button onClick={() => setIsDiscardModalOpen(true)}>
               <svg
@@ -234,10 +278,17 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
               {checks.map((check) => (
                 <div
                   key={check.id}
-                  className="flex items-center gap-4 border-b border-gray-200 rounded-lg p-4"
+                  className="flex flex-col border-b border-gray-200 rounded-lg p-4"
                 >
-                  <StatusIcon status={check.status} />
-                  <span>{check.label}</span>
+                  <div className="flex items-center gap-4">
+                    <StatusIcon status={check.status} />
+                    <span className="font-medium">{check.label}</span>
+                  </div>
+                  {check.status === "error" && check.message && (
+                    <p className="mt-2 ml-14 text-xs text-red-500 font-medium">
+                      {check.message}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -264,37 +315,74 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
                 {checks.map((check) => (
                   <div
                     key={check.id}
-                    className="flex items-center gap-4 border-b border-gray-200 rounded-lg p-3"
+                    className="flex flex-col border-b border-gray-200 rounded-lg p-3 text-left"
                   >
-                    <StatusIcon status={check.status} />
-                    <span className="text-sm">{check.label}</span>
+                    <div className="flex items-center gap-4">
+                      <StatusIcon status={check.status} />
+                      <span className="text-sm font-medium">{check.label}</span>
+                    </div>
+                    {check.status === "error" && check.message && (
+                      <p className="mt-1 ml-14 text-[11px] text-red-500 font-medium">
+                        {check.message}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
 
               {/* Rejection Reason */}
-              <div className="text-sm font-medium text-red-700 bg-red-50 p-4 rounded-xl border border-red-100 text-left">
+              {/* <div className="text-sm font-medium text-red-700 bg-red-50 p-4 rounded-xl border border-red-100 text-left">
                 <span className="block font-bold mb-1">Rejection Reason:</span>
                 {buildRejectionReason()}
-              </div>
+              </div> */}
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-3 mt-4">
-                {/* <button
-                  onClick={onAiEdit}
-                  className="w-full py-3 rounded-full font-medium text-base transition-all
-                   bg-gradient-to-b from-[#CBFE8B] to-[#81DE76] text-black shadow-md"
-                >
-                  AI Edit
-                </button> */}
+                {postStatus === "needs_human_removal" && !humanRemoved && (
+                  <button
+                    onClick={() => handleRemoveHuman()}
+                    disabled={isRemovingHuman}
+                    className="w-full py-3 rounded-full font-medium text-base flex items-center justify-center gap-2
+                     bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md disabled:opacity-70"
+                  >
+                    {isRemovingHuman ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Removing Human...
+                      </>
+                    ) : (
+                      "Remove Human"
+                    )}
+                  </button>
+                )}
 
-                <button
-                  onClick={onChangeImage}
-                  className="w-full py-3 rounded-full font-medium text-base
-                   bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md"
-                >
-                  Upload New Image
-                </button>
+                {humanRemoved && (
+                  <button
+                    onClick={() => handleConfirmRemoveHuman()}
+                    disabled={isConfirming}
+                    className="w-full py-3 rounded-full font-medium text-base flex items-center justify-center gap-2
+                     bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md disabled:opacity-70"
+                  >
+                    {isConfirming ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Finalizing...
+                      </>
+                    ) : (
+                      "Continue"
+                    )}
+                  </button>
+                )}
+
+                {(aiDetection?.isAI || editingDetection?.isEdited || !postId) && !humanRemoved && (
+                  <button
+                    onClick={onChangeImage}
+                    className="w-full py-3 rounded-full font-medium text-base
+                     bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md"
+                  >
+                    Update Image
+                  </button>
+                )}
               </div>
             </div>
           )}

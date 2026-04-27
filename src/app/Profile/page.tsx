@@ -623,7 +623,7 @@ function ProfileContent() {
           onClick={() => setSelectedBadge(null)}
         >
           <div
-            className="relative w-full max-w-sm bg-gray-300 rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out min-h-[400px]"
+            className="bg-[url('/images/badge_sheet.jpg')] bg-cover bg-center relative w-full max-w-sm  rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out min-h-[400px]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute top-4 w-12 h-1.5 bg-gray-900 rounded-full opacity-10"></div>

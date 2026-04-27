@@ -80,14 +80,16 @@ export default function CategoryPreferencePage() {
     }
 
     const formData = new FormData();
-
+   console.log(tempProfileData,'tempProfileData-=-=')
     if (tempProfileData) {
       formData.append("name", tempProfileData.fullName);
       if (tempProfileData.bio) formData.append("bio", tempProfileData.bio);
       if (tempProfileData.companyName) formData.append("company[name]", tempProfileData.companyName);
-      if (tempProfileData.street) formData.append("company[address][street]", tempProfileData.street);
-      if (tempProfileData.city) formData.append("company[address][city]", tempProfileData.city);
-      if (tempProfileData.country) formData.append("company[address][country]", tempProfileData.country);
+      if (tempProfileData.address?.street) formData.append("company[address][street]", tempProfileData.address.street);
+      if (tempProfileData.address?.city) formData.append("company[address][city]", tempProfileData.address.city);
+      if (tempProfileData.address?.country) formData.append("company[address][country]", tempProfileData.address.country);
+      if (tempProfileData.address?.state) formData.append("company[address][state]", tempProfileData.address.state);
+      if (tempProfileData.address?.postalCode) formData.append("company[address][postalCode]", tempProfileData.address.postalCode);
       if (tempProfileData.avatarFile) {
         formData.append("profilePicture", tempProfileData.avatarFile);
       }

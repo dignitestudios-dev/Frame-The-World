@@ -1,5 +1,11 @@
 import { API } from "@/lib/axios";
 
+// POST /auth/check-email - { email }
+export const checkEmailApi = async (data: { email: string }) => {
+  const res = await API.post("/auth/check-email", data);
+  return res.data;
+};
+
 // POST /auth/signup - { email, method: "email", password }
 export const signupApi = async (data: { email: string; password: string }) => {
   const res = await API.post("/auth", {

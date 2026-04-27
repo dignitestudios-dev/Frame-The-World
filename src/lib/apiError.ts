@@ -7,17 +7,30 @@ export function getApiErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     const data = error.response?.data;
 
-    // Handle common API error response shapes
+    // 1. Handle Top-level message (e.g. "Invalid credentials")
+    if (data?.message && typeof data.message === "string" && data.message !== "Unprocessable Entity") {
+      return data.message;
+    }
+
+    // 2. Handle nested error array (e.g. validation errors)
+    if (Array.isArray(data?.error) && data.error.length > 0) {
+      const firstError = data.error[0];
+      if (typeof firstError === "string") return firstError;
+      if (firstError?.message) return firstError.message;
+    }
+
+    // 3. Handle data.message if it's an array or other shape
     if (data?.message) {
       return typeof data.message === "string"
         ? data.message
         : Array.isArray(data.message)
-        ? data.message[0]
-        : "Something went wrong";
+          ? data.message[0]
+          : "Something went wrong";
     }
 
-    if (data?.error) {
-      return typeof data.error === "string" ? data.error : "Something went wrong";
+    // 4. Handle data.error.message (older shape)
+    if (data?.error?.message) {
+      return typeof data.error.message === "string" ? data.error.message : "Something went wrong";
     }
 
     // Handle HTTP status based messages

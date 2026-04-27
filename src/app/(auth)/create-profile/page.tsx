@@ -203,18 +203,23 @@ export default function CreateProfilePage() {
               <div className="relative">
                 <LocationAutocomplete
                   placeholder="Select Company Location"
-                  {...register("country")}
+                  {...register("fullAddress")}
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   }
                   onLocationSelect={(address) => {
-                    setValue("country", address.country || "", { shouldValidate: true });
+                    setValue("fullAddress", address.address || "", { shouldValidate: true });
+                    setValue("address.country", address.country || "", { shouldValidate: true });
+                    setValue("address.city", address.city || "", { shouldValidate: true });
+                    setValue("address.street", address.street || address.address || "", { shouldValidate: true });
+                    setValue("address.state", address.state || "", { shouldValidate: true });
+                    setValue("address.postalCode", address.postalCode || "", { shouldValidate: true });
                   }}
                 />
               </div>
-              {(errors.city || errors.country || errors.street) && (
+              {(errors.address?.city || errors.address?.country || errors.address?.street) && (
                 <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">Please complete professional location details</p>
               )}
             </div>

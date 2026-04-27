@@ -63,9 +63,15 @@ export const profileSchema = z.object({
     .max(100, "Company name must be at most 100 characters")
     .regex(/^[^\s].*$/, "Company name cannot start with a whitespace")
     .transform((val) => val.trim()),
-  street: z.string().optional(),
-  city: z.string().optional(),
-  country: z.string().min(1, "Location is required"),
+  address: z
+    .object({
+      street: z.string().max(150).optional(),
+      city: z.string().max(50).optional(),
+      state: z.string().max(50).optional(),
+      country: z.string().min(1, "Location is required").max(100),
+      postalCode: z.string().max(20).optional(),
+    }),
+  fullAddress: z.string().optional(),
   avatarFile: z
     .any()
     .refine((file) => file instanceof File, "Profile picture is required")

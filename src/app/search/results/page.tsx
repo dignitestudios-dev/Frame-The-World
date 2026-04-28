@@ -191,17 +191,23 @@ function SearchResultsContent() {
         </div>
 
         <div className="mb-6 flex items-center justify-start gap-3">
-          {(["all", "images", "frames"] as const).map((tab) => (
+          {(
+            [
+              { key: "all", label: "all" },
+              { key: "images", label: "posts" },
+              { key: "frames", label: "frames" },
+            ] as const
+          ).map((tab) => (
             <button
-              key={tab}
+              key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`rounded-full px-7 py-3 text-base capitalize transition ${activeTab === tab
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-full px-7 py-3 text-base capitalize transition ${activeTab === tab.key
                 ? "bg-gradient-to-br from-[#6CACDF] to-[#0000FE] font-semibold text-white"
                 : "bg-black/20 text-white"
                 }`}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
 
@@ -221,8 +227,14 @@ function SearchResultsContent() {
             <div className="space-y-8">
               <section className="rounded-2xl bg-white/50 p-6">
                 <div className="flex justify-between items-center pb-[1em]">
-                  <h2 className="mb-4 text-[1.4em] font-bold text-black">Images</h2>
-                  <button className="text-blue-600 font-bold">See All</button>
+                  <h2 className="mb-4 text-[1.4em] font-bold text-black">Posts</h2>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("images")}
+                    className="text-blue-600 font-bold"
+                  >
+                    See All
+                  </button>
                 </div>
                 <div className="h-[70vh] overflow-y-auto pr-1">
                   {isPostsLoading ? (
@@ -238,7 +250,13 @@ function SearchResultsContent() {
               <section className="rounded-2xl bg-white/50 p-6">
                 <div className="flex justify-between items-center pb-[1em]">
                   <h2 className="mb-4 text-[1.4em] font-bold text-black">Frames</h2>
-                  <button className="text-blue-600 font-bold">See All</button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("frames")}
+                    className="text-blue-600 font-bold"
+                  >
+                    See All
+                  </button>
                 </div>
                 <div className="h-[70vh] overflow-y-auto pr-1">
                   {isFramesLoading ? (

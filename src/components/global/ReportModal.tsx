@@ -5,13 +5,15 @@ import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { reportEntityApi } from "@/services/authApi";
-import { toast } from "react-hot-toast";
+// import { toast } from "react-hot-toast";
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   entityId: string;
   entityType: "User" | "Post" | "Frame";
+  supportingEntityId?: string;
+  supportingEntityType?: "User" | "Post" | "Frame";
 }
 
 const REPORT_REASONS = [
@@ -28,6 +30,8 @@ const ReportModal = ({
   onClose,
   entityId,
   entityType,
+  supportingEntityId,
+  supportingEntityType,
 }: ReportModalProps) => {
   const [mounted, setMounted] = useState(false);
   const [selectedReason, setSelectedReason] = useState("");
@@ -40,21 +44,23 @@ const ReportModal = ({
   const { mutate: submitReport, isPending } = useMutation({
     mutationFn: reportEntityApi,
     onSuccess: () => {
-      toast.success(`${entityType} reported successfully.`);
+      // toast.success(`${entityType} reported successfully.`);
       onClose();
       setSelectedReason("");
       setDescription("");
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to submit report. Please try again.");
+      // toast.error(error?.response?.data?.message || "Failed to submit report. Please try again.");
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReason) return;
+    
+    // For "Other", description is required. For others, it's optional but we can send it if user typed something.
     if (selectedReason === "Other" && !description.trim()) {
-      toast.error("Please provide a reason for reporting.");
+      // toast.error("Please provide more details for 'Other' reason.");
       return;
     }
     
@@ -62,7 +68,9 @@ const ReportModal = ({
       entityId,
       entityType,
       reason: selectedReason,
-      description: selectedReason === "Other" ? description.trim() : undefined,
+      description: description.trim() || undefined,
+      supportingEntityId: supportingEntityId ,
+      supportingEntityType: supportingEntityType ,
     });
   };
 
@@ -98,7 +106,11 @@ const ReportModal = ({
                     type="button"
                     onClick={() => {
                       setSelectedReason(reason);
-                      if (reason !== "Other") setDescription("");
+                      if (reason !== "Other" && !description) {
+                         // Keep description if user switched back and forth? 
+                         // Or clear it? Snippet didn't show description for non-other.
+                         // User asked for text box only for "Other".
+                      }
                     }}
                     className="flex items-center gap-6 w-full text-left group outline-none"
                   >

@@ -12,6 +12,7 @@ import OwnPostCard from "@/components/profile/OwnPostCard";
 import { usePostStore } from "@/store/PostStore";
 import { ProfileSidebarSkeleton } from "@/components/global/Skeletons";
 import OtherUserOptions from "@/components/profile/OtherUserOptions";
+import ReportModal from "@/components/global/ReportModal";
 
 function OtherProfileContent({ userId }: { userId: string }) {
   const searchParams = useSearchParams();
@@ -29,6 +30,17 @@ function OtherProfileContent({ userId }: { userId: string }) {
   const { user: currentUser } = useAuthStore();
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
   const { setPostDetails } = usePostStore();
+  const [reportConfig, setReportConfig] = useState<{
+    isOpen: boolean;
+    entityId: string;
+    entityType: "User" | "Post" | "Frame";
+    supportingEntityId?: string;
+    supportingEntityType?: "User" | "Post" | "Frame";
+  }>({
+    isOpen: false,
+    entityId: "",
+    entityType: "Post",
+  });
 
   // Redirect to my profile if it's the current user
   useEffect(() => {
@@ -188,8 +200,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
                 <div className="flex justify-center gap-8 w-full mt-8">
                   {[
                     { label: "Upvotes", value: targetUser?.upvotes },
-                    { label: "Framed", value: targetUser?.framed },
-                    { label: "Downloads", value: targetUser?.downloads }
+                    { label: "Framed", value: (targetUser?.framed || 0) + (targetUser?.downloads || 0) }
                   ].map((s) => (
                     <div key={s.label} className="flex flex-col items-center">
                       <p className="text-[#4f46e5] text-xl font-black">{s.value ?? 0}</p>
@@ -305,7 +316,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
                       const image = frame.cover?.location || `/images/${(i % 4) + 1}.jpg`;
                       const id = frame._id;
                       return (
-                        <div key={id || i} className="flex flex-col items-center">
+                        <div key={id || i} className="flex flex-col items-center group relative">
                           <div
                             className="relative overflow-hidden rounded-[49.26px] shadow-lg w-[200px] h-[200px] cursor-pointer"
                             onClick={() => id && router.push(`/frame-detail/${id}`)}
@@ -318,6 +329,26 @@ function OtherProfileContent({ userId }: { userId: string }) {
                               </div>
                             </div>
                           </div>
+
+                          {/* Report Frame Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (id) {
+                                setReportConfig({
+                                  isOpen: true,
+                                  entityId: id,
+                                  entityType: "Frame",
+                                  supportingEntityId: id,
+                                  supportingEntityType: "Frame"
+                                });
+                              }
+                            }}
+                            className="absolute top-4 right-8 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm text-gray-500 hover:text-orange-500 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                            title="Report Frame"
+                          >
+                            <Flag className="w-4 h-4" />
+                          </button>
                         </div>
                       );
                     })}
@@ -352,6 +383,16 @@ function OtherProfileContent({ userId }: { userId: string }) {
           </div>
         </div>
       )}
+
+      {/* Global Report Modal */}
+      <ReportModal
+        isOpen={reportConfig.isOpen}
+        onClose={() => setReportConfig(prev => ({ ...prev, isOpen: false }))}
+        entityId={reportConfig.entityId}
+        entityType={reportConfig.entityType}
+        supportingEntityId={reportConfig.supportingEntityId}
+        supportingEntityType={reportConfig.supportingEntityType}
+      />
     </div>
   );
 }

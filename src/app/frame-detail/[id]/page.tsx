@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {  EllipsisVertical, MapPin, PlusIcon, Trash2 } from "lucide-react";
+import { EllipsisVertical, MapPin, PlusIcon, Trash2, Flag } from "lucide-react";
 import Header from "@/components/global/header";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useEffect } from "react";
@@ -16,6 +16,7 @@ import { getGeocode, getLatLng } from "use-places-autocomplete";
 import { Toast } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/authStore";
 import ConfirmDeleteModal from "@/components/global/ConfirmDeleteModal";
+import ReportModal from "@/components/global/ReportModal";
 
 const FALLBACK_IMAGE_URL =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -62,6 +63,7 @@ export default function FrameDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRemovePostModalOpen, setIsRemovePostModalOpen] = useState(false);
   const [postToRemove, setPostToRemove] = useState<string | null>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -561,7 +563,15 @@ export default function FrameDetailPage() {
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : (
+              <button
+                onClick={() => setIsReportModalOpen(true)}
+                className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-orange-600 shadow-sm transition-all active:scale-90"
+                title="Report Frame"
+              >
+                <Flag className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </h1>
 
@@ -635,6 +645,15 @@ export default function FrameDetailPage() {
           )}
         </div>
       </div>
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        entityId={frameDetails?.createdBy?._id || ""}
+        entityType="User"
+        supportingEntityId={frameId || ""}
+        supportingEntityType="Frame"
+      />
     </div>
   );
 }

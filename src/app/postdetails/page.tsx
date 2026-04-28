@@ -494,7 +494,7 @@ function PostDetailsContent() {
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 min-w-0">
-                <div 
+                <div
                   className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => {
                     const authorId = getEntityId(currentPost?.createdBy);
@@ -508,7 +508,7 @@ function PostDetailsContent() {
                     className="object-cover"
                   />
                 </div>
-                <span 
+                <span
                   className="text-md font-bold text-gray-900 truncate cursor-pointer hover:underline underline-offset-2"
                   onClick={() => {
                     const authorId = getEntityId(currentPost?.createdBy);
@@ -638,8 +638,10 @@ function PostDetailsContent() {
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        entityId={currentPostId || ""}
-        entityType="Post"
+        entityId={currentPost?.createdBy?._id || ""}
+        entityType="User"
+        supportingEntityId={currentPostId || ""}
+        supportingEntityType="Post"
       />
 
       <DeleteConfirmModal

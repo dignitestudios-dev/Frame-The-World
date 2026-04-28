@@ -235,6 +235,11 @@ export type FrameFeedItem = {
     createdAt?: string;
     updatedAt?: string;
   } | null;
+  createdBy?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+  }
 };
 
 export type FramesFeedResponse = {

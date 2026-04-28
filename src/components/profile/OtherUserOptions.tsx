@@ -60,6 +60,8 @@ const OtherUserOptions = ({ userId }: OtherUserOptionsProps) => {
         onClose={() => setIsReportModalOpen(false)}
         entityId={userId}
         entityType="User"
+        supportingEntityId={userId}
+        supportingEntityType="User"
       />
     </div>
   );

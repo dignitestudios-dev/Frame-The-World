@@ -115,8 +115,9 @@ function SearchResultsContent() {
         return (
           <div
             key={item.id}
+            onClick={() => router.push(`/postdetails?id=${item.id}`)}
             className={`relative overflow-hidden rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.28)] ${isSmall ? "aspect-square" : "aspect-[3/4]"
-              }`}
+              } cursor-pointer`}
           >
             <Image
               src={item.image}

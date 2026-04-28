@@ -273,8 +273,10 @@ function ProfileContent() {
                 <div className="flex justify-center  gap-8 w-full mt-8">
                   {[
                     { label: "Upvotes", value: user?.upvotes },
-                    { label: "Framed", value: user?.framed },
-                    { label: "Downloads", value: user?.downloads }
+                    {
+                      label: "Framed",
+                      value: (user?.framed || 0) + (user?.downloads || 0)
+                    }
                   ].map((s) => (
                     <div key={s.label} className="flex flex-col items-center">
                       <p className="text-[#4f46e5] text-xl font-black">
@@ -656,7 +658,7 @@ function ProfileContent() {
                               fill
                               className="object-cover"
                             />
-                          
+
                           </div>
                           <p className="mt-3 text-sm font-semibold text-black text-center line-clamp-1">
                             {folderName}

@@ -92,7 +92,7 @@ export default function TravelStoryPage() {
       const { currentPage, totalPages } = lastPage.pagination;
       return currentPage < totalPages ? currentPage + 1 : undefined;
     },
-    enabled: activeTab === "frames",
+    enabled: true,
   });
 
   const forYouPosts = useMemo(() => {
@@ -113,6 +113,10 @@ export default function TravelStoryPage() {
     if (!framesPages?.pages) return [];
     return framesPages.pages.flatMap((page) => page.data);
   }, [framesPages]);
+
+  const topFrameItems = useMemo(() => {
+    return [...frameItems].sort((a, b) => (b.totalPosts ?? 0) - (a.totalPosts ?? 0));
+  }, [frameItems]);
 
   const isForYouTab = activeTab === "forYou";
   const isFeaturedTab = activeTab === "featured";
@@ -220,43 +224,82 @@ export default function TravelStoryPage() {
         [scrollbar-width:none]
       "
         >
-          {[25, 15, 25, 15, 20].map((item, i) => (
-            <div
-              key={i}
-              className="
+          {isFramesLoading && topFrameItems.length === 0
+            ? Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={`frame-slider-skeleton-${index}`}
+                className="
+            shrink-0
+            snap-start
+            min-w-[343px] h-[120px]
+            rounded-3xl
+            bg-gray-200
+            animate-pulse
+            relative overflow-hidden
+            shadow
+          "
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200" />
+                <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                  <div className="h-7 w-16 rounded-md bg-gray-300/90" />
+                  <div className="h-4 w-36 rounded-md bg-gray-300/90" />
+                </div>
+              </div>
+            ))
+            : topFrameItems.length === 0
+              ? (
+                <div className="min-w-full h-[120px] rounded-3xl bg-gray-100 flex items-center justify-center text-gray-600 font-medium">
+                  No frame found
+                </div>
+              )
+              : topFrameItems.slice(0, 10).map((frame) => {
+              const coverUrl =
+                isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL;
+
+              return (
+                <div
+                  key={frame._id}
+                  onClick={() =>
+                    executeWithCheck(() => router.push(`/framedetails/${frame._id}`), {
+                      isPendingAllowed: false,
+                    })
+                  }
+                  className="
             shrink-0
             snap-start
             min-w-[343px] h-[120px]
             rounded-3xl
             bg-gray-900
-            relative overflow-hidden
+            relative overflow-hidden cursor-pointer
             shadow
           "
-            >
-              <Image
-                src="/images/2.jpg"
-                alt="Story"
-                fill
-                className="object-cover opacity-80"
-              />
+                >
+                  <Image
+                    src={coverUrl}
+                    alt={frame.title || "Frame"}
+                    fill
+                    className="object-cover opacity-80"
+                  />
 
-              {/* Card Content */}
-              <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                <span className="text-white text-2xl font-bold">
-                  {item}+
-                </span>
-                <span className="text-sm text-gray-200">
-                  Frame name here
-                </span>
-              </div>
+                  {/* Card Content */}
+                  <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                    <span className="text-white text-2xl font-bold">
+                      {frame.totalPosts}+
+                    </span>
+                    <span className="text-sm text-gray-200">
+                      {frame.title || "Untitled Frame"}
+                    </span>
+                  </div>
 
-              {/* Bottom Right Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  executeWithCheck(() => router.push("/framedetails"), { isPendingAllowed: false });
-                }}
-                className="
+                  {/* Bottom Right Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      executeWithCheck(() => router.push(`/framedetails/${frame._id}`), {
+                        isPendingAllowed: false,
+                      });
+                    }}
+                    className="
               absolute bottom-3 right-3
               bg-transparent backdrop-blur
               rounded-full
@@ -267,11 +310,12 @@ export default function TravelStoryPage() {
               transition
               z-10
             "
-              >
-                <ArrowRight className="w-5 h-5 text-white font-bold" />
-              </button>
-            </div>
-          ))}
+                  >
+                    <ArrowRight className="w-5 h-5 text-white font-bold" />
+                  </button>
+                </div>
+              );
+            })}
         </section>
 
 

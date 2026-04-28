@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
-import { LockIcon, X, Loader2, ImageOff, Building2, MapPin } from "lucide-react";
+import { X, Loader2, ImageOff, Building2, MapPin } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -14,7 +14,10 @@ import {
 import OwnPostCard from "@/components/profile/OwnPostCard";
 import { usePostStore } from "@/store/PostStore";
 import { ProfileSidebarSkeleton } from "@/components/global/Skeletons";
-import { getOwnFramesApi } from "@/services/frameApi";
+import { getFoldersApi, getOwnFramesApi } from "@/services/frameApi";
+
+const PERSONAL_FOLDER_PAGE = 1;
+const PERSONAL_FOLDER_LIMIT = 12;
 
 function ProfileContent() {
   const searchParams = useSearchParams();
@@ -119,6 +122,19 @@ function ProfileContent() {
     ownFramesData?.data?.results ||
     ownFramesData?.data ||
     [];
+
+  const {
+    data: foldersData,
+    isLoading: isFoldersLoading,
+    isError: isFoldersError,
+    refetch: refetchFolders,
+  } = useQuery({
+    queryKey: ["personalFolders", PERSONAL_FOLDER_PAGE, PERSONAL_FOLDER_LIMIT],
+    queryFn: () => getFoldersApi({ page: PERSONAL_FOLDER_PAGE, limit: PERSONAL_FOLDER_LIMIT }),
+    enabled: activeTab === "space",
+  });
+
+  const personalFolders: any[] = foldersData?.data || [];
 
 
   const isFrames = activeTab === "frames";
@@ -324,7 +340,7 @@ function ProfileContent() {
               </button>
 
               <button
-                // onClick={() => setActiveTab("space")}
+                onClick={() => setActiveTab("space")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition
       ${activeTab === "space"
                     ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
@@ -544,34 +560,77 @@ function ProfileContent() {
 
             {/* ================= MY SPACE GRID ================= */}
             {isSpace && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pl-2">
-                {Array.from({ length: 12 }).map((_, i) => {
-                  const frameNumber = (i % 4) + 1;
-                  const frameName = `Frame ${i + 1}`;
-                  return (
-                    <div key={i} className="flex flex-col items-center">
-                      <div
-                        className="relative overflow-hidden rounded-[24px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px]"
-                        onClick={() => router.push("/framedetails")}
-                      >
-                        <Image
-                          src={`/images/${frameNumber}.jpg`}
-                          alt={frameName}
-                          fill
-                          className="object-cover cursor-pointer"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/30 shadow-3xl">
-                            <LockIcon className="text-white w-10 h-10" />
-                          </div>
-                        </div>
+              <div className="pl-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {isFoldersLoading ? (
+                    Array.from({ length: PERSONAL_FOLDER_LIMIT }).map((_, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className="w-[200px] h-[200px] bg-gray-100 rounded-[24px] animate-pulse" />
+                        <div className="w-24 h-4 bg-gray-100 rounded-full mt-3 animate-pulse" />
                       </div>
-                      <p className="mt-3 text-sm font-semibold text-black text-center">
-                        Frame Name
-                      </p>
+                    ))
+                  ) : isFoldersError ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4 text-center">
+                      <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+                        <ImageOff className="w-8 h-8 text-red-400" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-800 mb-1">Failed to load folders</p>
+                        <p className="text-sm text-gray-400">Something went wrong. Please try again.</p>
+                      </div>
+                      <button
+                        onClick={() => refetchFolders()}
+                        className="px-6 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors"
+                      >
+                        Try Again
+                      </button>
                     </div>
-                  );
-                })}
+                  ) : personalFolders.length === 0 ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4 text-center">
+                      <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
+                        <ImageOff className="w-10 h-10 text-blue-300" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-800 mb-1">No folders yet</p>
+                        <p className="text-sm text-gray-400">Create your first folder to see it here.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    personalFolders.map((folder: any, i: number) => {
+                      const folderId = folder.id || folder._id;
+                      const folderName = folder.name || "Untitled Folder";
+                      const noOfImagesCount = Number(folder.noOfImages ?? 0);
+                      const imageUrl = "/images/folder.png";
+
+                      return (
+                        <div key={folderId || i} className="flex flex-col items-center">
+                          <div
+                            className="relative overflow-hidden rounded-[24px] w-[200px] h-[200px] cursor-pointer"
+                            onClick={() => {
+                              if (!folderId) return;
+                              const encodedFolderName = encodeURIComponent(folderName);
+                              router.push(`/personal-storage/${folderId}?name=${encodedFolderName}`);
+                            }}
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={folderName}
+                              fill
+                              className="object-cover"
+                            />
+                          
+                          </div>
+                          <p className="mt-3 text-sm font-semibold text-black text-center line-clamp-1">
+                            {folderName}
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500 text-center">
+                            {noOfImagesCount} items
+                          </p>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             )}
           </section>

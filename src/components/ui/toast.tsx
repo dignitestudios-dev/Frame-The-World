@@ -30,7 +30,7 @@ export function Toast({
   const isError = type === "error";
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 top-4 z-[9999] flex justify-center px-4">
       <div
         className={`pointer-events-auto flex items-center gap-3 rounded-full px-4 py-2 shadow-lg text-sm font-medium text-white ${
           isError ? "bg-red-500" : "bg-emerald-500"

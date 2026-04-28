@@ -37,7 +37,19 @@ const InsightsModal: React.FC<InsightsModalProps> = ({ postId, isOpen, onClose }
 
   const rawData = insightsData?.data || insightsData;
   const summary = rawData?.summary || { downloads: 0, upvotes: 0, framed: 0 };
-  const graphArray = rawData?.graph || [];
+  let graphArray = rawData?.graph || [];
+
+  if (graphArray.length === 0) {
+    graphArray = [
+      { date: "Mon", downloads: 0, upvotes: 0, framed: 0 },
+      { date: "Tue", downloads: 0, upvotes: 0, framed: 0 },
+      { date: "Wed", downloads: 0, upvotes: 0, framed: 0 },
+      { date: "Thu", downloads: 0, upvotes: 0, framed: 0 },
+      { date: "Fri", downloads: 0, upvotes: 0, framed: 0 },
+      { date: "Sat", downloads: 0, upvotes: 0, framed: 0 },
+      { date: "Sun", downloads: 0, upvotes: 0, framed: 0 },
+    ];
+  }
 
   // SVG Graph Logic
   const width = 440;

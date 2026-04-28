@@ -135,12 +135,12 @@ const SaveModal = ({
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-[380px] h-auto bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-[420px] h-auto bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
 
         {/* VIEW: MAIN MENU */}
         {view === "menu" && (
           <div className="pb-8">
-            {renderHeader("Options", false)}
+            {renderHeader(!showDeleteOption?"Save To":"Options", false)}
             <div className="px-4 space-y-2">
               <button onClick={() => setView("frames")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/save-to-frame.png" className="w-6 h-6" alt="" /></div>
@@ -159,7 +159,7 @@ const SaveModal = ({
               <button onClick={() => setView("storage")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/storage.png" className="w-6 h-6" alt="" /></div>
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Personal Storage</p><p className="text-xs text-gray-400">Save before posting.</p></div>
-              </button>        
+              </button>
               {showDeleteOption ? (
                 <button onClick={() => { onDelete?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                   <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/delete.png" className="w-6 h-6" alt="" /></div>

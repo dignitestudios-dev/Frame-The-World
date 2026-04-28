@@ -8,6 +8,7 @@ import { createPostApi } from "@/services/postApi";
 import { CategoryChipSkeleton } from "@/components/global/Skeletons";
 import { useRouter } from "next/navigation";
 import ContentReleaseModal from "@/components/global/ContentReleaseModal";
+import Link from "next/link";
 
 interface UploadFormProps {
   onGenerate?: (data: any) => void;
@@ -270,15 +271,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
                 }
                 className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5"
               />
-              <span className="ml-3 text-sm text-blue-600">
-                I agree to{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsReleaseModalOpen(true)}
-                  className="underline hover:text-blue-800 transition-colors"
-                >
-                  content release statement
-                </button>
+              <span className="ml-3 text-sm text-gray-600">
+                By uploading any images, you are granting a license to Frame The World LLC, as set forth in the
+                <Link href="https://www.frametheworld.org/terms-condition" className="underline text-blue-600 hover:text-blue-800 transition-colors"> Terms of Service</Link>
               </span>
             </label>
           </div>

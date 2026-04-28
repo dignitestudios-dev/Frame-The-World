@@ -1,37 +1,39 @@
 
 
 "use client";
- 
+
 import React, { useEffect, forwardRef } from "react";
 import { useLoadScript } from "@react-google-maps/api";
 import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
 import { Input } from "@/components/ui/input";
- 
+
 const libraries: ("places")[] = ["places"];
- 
+
 export interface PlaceSelectionDetails {
+  street?: string
   address: string;
   latitude?: number;
   longitude?: number;
   city?: string;
   state?: string;
   country?: string;
+  postalCode?: string;
 }
- 
+
 export interface LocationAutocompleteProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value"> {
   onLocationSelect?: (data: PlaceSelectionDetails) => void;
   onPlaceSelect?: (place: PlaceSelectionDetails) => void;
   value?: string;
   icon?: React.ReactNode;
 }
- 
+
 const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompleteProps>(
   ({ onLocationSelect, onPlaceSelect, className, disabled, value, onChange, icon, ...props }, ref) => {
     const { isLoaded } = useLoadScript({
       googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
       libraries,
     });
- 
+
     const {
       ready,
       value: autocompleteValue,
@@ -44,13 +46,13 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
       debounce: 300,
       initOnMount: false,
     });
- 
+
     useEffect(() => {
       if (isLoaded) {
         init();
       }
     }, [isLoaded, init]);
- 
+
     // Sync external value with autocomplete value
     useEffect(() => {
       if (value !== undefined) {
@@ -60,17 +62,17 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
         }
       }
     }, [value, setAutocompleteValue]);
- 
+
     const getAddressComponent = (
       components: google.maps.GeocoderAddressComponent[] | undefined,
       type: string
     ) => components?.find((component) => component.types.includes(type))?.long_name || "";
- 
+
     const getFirstAddressComponent = (
       components: google.maps.GeocoderAddressComponent[] | undefined,
       types: string[]
     ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
- 
+
     const handleSelect = async (description: string) => {
       setAutocompleteValue(description, false);
       clearSuggestions();
@@ -95,6 +97,8 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
             "administrative_area_level_2",
           ]),
           country: getAddressComponent(addressComponents, "country"),
+          postalCode: getAddressComponent(addressComponents, "postal_code"),
+          street: `${getAddressComponent(addressComponents, "street_number")} ${getAddressComponent(addressComponents, "route")}`.trim(),
         };
 
         if (onLocationSelect) {
@@ -120,14 +124,14 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
         }
       }
     };
- 
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setAutocompleteValue(e.target.value);
       if (onChange) {
         onChange(e);
       }
     };
- 
+
     return (
       <div className="relative w-full">
         <Input
@@ -154,14 +158,14 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
         )}
         {icon && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5D92F3]">
-             {icon}
+            {icon}
           </div>
         )}
       </div>
     );
   }
 );
- 
+
 LocationAutocomplete.displayName = "LocationAutocomplete";
- 
+
 export default LocationAutocomplete;

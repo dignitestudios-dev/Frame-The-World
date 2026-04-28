@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/schemas/Auth";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation } from "@tanstack/react-query";
-import { signinApi, socialAuthApi } from "@/services/authApi";
+import { checkEmailApi, signinApi, signupApi, socialAuthApi } from "@/services/authApi";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider, appleProvider } from "@/lib/firebase";
@@ -27,12 +27,66 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    watch,
+    trigger,
+    getValues,
     formState: { errors, isValid },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   });
+ 
+  const watchedEmail = watch("email");
+  const isEmailValid = !!watchedEmail && !errors.email;
 
+  const [step, setStep] = useState<"email" | "login" | "signup">("email");
+  const [emailValue, setEmailValue] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  const { mutate: checkEmail, isPending: isCheckingEmail } = useMutation({
+    mutationFn: checkEmailApi,
+    onSuccess: (data) => {
+      if (data.success && data.data?.exists) {
+        setStep("login");
+      } else {
+        setStep("signup");
+      }
+    },
+    onError: (error: any) => {
+      if (error?.response?.status === 404) {
+        setStep("signup");
+      } else {
+        setToastMessage(getApiErrorMessage(error));
+        setToastType("error");
+        setToastOpen(true);
+      }
+    },
+  });
+
+  const { mutate: signupMutate, isPending: isSignupPending } = useMutation({
+    mutationFn: signupApi,
+    onSuccess: (data) => {
+      const user = data.data?.user || data.user;
+      const token = data.data?.token || data.token;
+
+      login({ user, token });
+      setToastMessage(data?.message || "Signup successful");
+      setToastType("success");
+      setToastOpen(true);
+
+      setTimeout(() => {
+        useAuthStore.getState().setAuthEmail(user?.email);
+        useAuthStore.getState().setOtpMode("signup");
+        router.push("/otp-verification");
+      }, 200);
+    },
+    onError: (error) => {
+      setToastMessage(getApiErrorMessage(error));
+      setToastType("error");
+      setToastOpen(true);
+    },
+  });
 
   const { mutate, isPending } = useMutation({
     mutationFn: signinApi,
@@ -49,10 +103,8 @@ export default function LoginPage() {
         if (user?.isProfileCompleted) {
           router.push("/setup-completed");
         } else if (user?.isEmailVerified) {
-          // Email already verified — skip OTP and continue onboarding
           router.push("/create-profile");
         } else {
-          // Email not yet verified — send to OTP screen
           useAuthStore.getState().setAuthEmail(user?.email);
           useAuthStore.getState().setOtpMode("signup");
           router.push("/otp-verification");
@@ -81,7 +133,6 @@ export default function LoginPage() {
         if (user?.isProfileCompleted) {
           router.push("/setup-completed");
         } else {
-          // Social auth users skip email OTP verification
           router.push("/create-profile");
         }
       }, 200);
@@ -135,14 +186,38 @@ export default function LoginPage() {
     }
   };
 
-  const onSubmit = (data: LoginFormData) => {
+  const handleContinue = async () => {
+    const isEmailValid = await trigger("email");
+    if (isEmailValid) {
+      const email = getValues("email");
+      setEmailValue(email);
+      checkEmail({ email });
+    }
+  };
+
+  const onSubmit = async (data: LoginFormData) => {
     if (!accepted) {
       setToastMessage("Please accept the terms and conditions");
       setToastType("error");
       setToastOpen(true);
       return;
     }
-    mutate({ email: data.email, password: data.password });
+
+    if (step === "email") {
+      setEmailValue(data.email);
+      checkEmail({ email: data.email });
+      return;
+    }
+
+    if (step === "login") {
+      mutate({ email: data.email, password: data.password });
+    } else if (step === "signup") {
+      if (data.password !== confirmPassword) {
+        setConfirmPasswordError("Passwords do not match");
+        return;
+      }
+      signupMutate({ email: data.email, password: data.password });
+    }
   };
 
   const handleGuestMode = () => {
@@ -159,7 +234,6 @@ export default function LoginPage() {
         onClose={() => setToastOpen(false)}
       />
       <div className="rounded-2xl bg-white p-[4em] shadow-xl">
-        {/* Title */}
         <h1 className="mb-2 text-3xl font-bold text-gray-900 text-center text-shadow">
           Welcome Back
         </h1>
@@ -169,30 +243,17 @@ export default function LoginPage() {
         <p className="text-sm mb-8 text-gray-600 text-center">
           No account? Enter your details to create one.
         </p>
-        {/* Subtitle */}
-        {/* <p className="mb-8 text-sm text-gray-600 text-center">
-          Enter your details to begin your journey. <br></br>{" "}
-          <span className="flex  items-baseline justify-center">
-            Only
-            <img
-              src={"/images/check-mark.png"}
-              alt="check-mark-icon"
-              className="ml-1 w-3.25 h-2.75 mr-1"
-            />
-            verified travel professionals can contribute.
-          </span>
-        </p> */}
 
-        {/* Form */}
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {/* Email */}
-          <div>
+          <div className={`${step !== "email" ? "opacity-60 pointer-events-none" : ""}`}>
             <Input
               id="email"
               type="email"
               placeholder="Enter Your Email"
               className="w-full"
               {...register("email")}
+              readOnly={step !== "email"}
             />
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">
@@ -202,50 +263,78 @@ export default function LoginPage() {
           </div>
 
           {/* Password */}
-          <div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter Your Password"
-              className="w-full"
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+          {step !== "email" && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter Your Password"
+                className="w-full"
+                {...register("password")}
+                autoFocus
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Confirm Password (only for signup) */}
+          {step === "signup" && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm Your Password"
+                className="w-full"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (confirmPasswordError) setConfirmPasswordError("");
+                }}
+              />
+              {confirmPasswordError && (
+                <p className="text-red-500 text-sm mt-1">
+                  {confirmPasswordError}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Forgot Password */}
-          <div className="flex justify-end -mt-1 mb-2">
-            <Link
-              href="/forget-password"
-              className="text-sm gradient-text font-medium hover:text-blue-700 hover:underline"
-            >
-              Forgot Password?
-            </Link>
-          </div>
+          {step === "login" && (
+            <div className="flex justify-end -mt-1 mb-2">
+              <Link
+                href="/forget-password"
+                className="text-sm gradient-text font-medium hover:text-blue-700 hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+          )}
 
           <Button
-            type="submit"
-            disabled={isPending || !isValid}
-            className={`w-full mt-3 h-12 font-medium mb-4 text-white transition-all ${isPending || !isValid
+            type={step === "email" ? "button" : "submit"}
+            onClick={step === "email" ? handleContinue : undefined}
+            disabled={isPending || isCheckingEmail || isSignupPending || (step === "email" && !isEmailValid) || (step !== "email" && !isValid)}
+            className={`w-full mt-3 h-12 font-medium mb-4 text-white transition-all ${isPending || isCheckingEmail || isSignupPending || (step === "email" && !isEmailValid) || (step !== "email" && !isValid)
               ? "bg-gray-300  rounded-[100px] cursor-not-allowed"
               : "gradient-bg  hover:shadow-lg shadow-blue-200"
               }`}
           >
 
-            {isPending ? (
+            {isPending || isCheckingEmail || isSignupPending ? (
               <span className="flex items-center gap-2">
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Logging in...
+                {step === "email" ? "Checking..." : step === "login" ? "Logging in..." : "Signing up..."}
               </span>
             ) : (
-              "Login"
+              step === "email" ? "Continue" : step === "login" ? "Login" : "Signup"
             )}
           </Button>
 

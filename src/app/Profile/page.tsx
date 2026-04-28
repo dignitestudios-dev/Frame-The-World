@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBadgesApi, getSingleBadgeApi, getUserProfileApi } from "@/services/authApi";
 import {
   getOwnPostsApi,
+  getPostApi,
 } from "@/services/postApi";
 import OwnPostCard from "@/components/profile/OwnPostCard";
 import { usePostStore } from "@/store/PostStore";
@@ -18,6 +19,8 @@ import { getFoldersApi, getOwnFramesApi } from "@/services/frameApi";
 
 const PERSONAL_FOLDER_PAGE = 1;
 const PERSONAL_FOLDER_LIMIT = 12;
+import AnalyzingModal from "@/components/createpost/AnalyzingModalProps";
+import EditPostModal from "@/components/profile/EditPostModal";
 
 function ProfileContent() {
   const searchParams = useSearchParams();
@@ -48,9 +51,44 @@ function ProfileContent() {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const { setPostDetails } = usePostStore();
 
-  // handlePostClick update karo
+  const [analyzingModalOpen, setAnalyzingModalOpen] = useState(false);
+  const [analyzingModalStatus, setAnalyzingModalStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [aiDetection, setAiDetection] = useState<any>(null);
+  const [humanDetection, setHumanDetection] = useState<any>(null);
+  const [editingDetection, setEditingDetection] = useState<any>(null);
+
+  const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
+  const [currentPostStatus, setCurrentPostStatus] = useState<string | undefined>(undefined);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const { mutate: fetchAnalysisResults } = useMutation({
+    mutationFn: (postId: string) => getPostApi(postId),
+    onSuccess: (data) => {
+      const post = data?.data || data;
+      setAiDetection(post.aiDetection);
+      setHumanDetection(post.humanDetection);
+      setEditingDetection(post.editingDetection);
+      setRejectionReason(post.rejectionReason);
+      setAnalyzingModalStatus(post.status === "rejected" ? "error" : "success");
+    },
+    onError: () => {
+      setAnalyzingModalStatus("error");
+    }
+  });
+
   const handlePostClick = (post: any) => {
     const postId = post.id || post._id;
+    setCurrentPostId(postId);
+    setCurrentPostStatus(post.status);
+    setSelectedPost(post);
+    if (post.status === "rejected" || post.status === "needs_human_removal") {
+      setAnalyzingModalOpen(true);
+      setAnalyzingModalStatus("pending");
+      fetchAnalysisResults(postId);
+      return;
+    }
     if (post.status != "pending") {
       setPostDetails(post);
       router.push(`/postdetails?id=${postId}`);
@@ -234,7 +272,7 @@ function ProfileContent() {
                 </div>
                 <div className="flex justify-center  gap-8 w-full mt-8">
                   {[
-                    { label: "Up votes", value: user?.upvotes },
+                    { label: "Upvotes", value: user?.upvotes },
                     { label: "Framed", value: user?.framed },
                     { label: "Downloads", value: user?.downloads }
                   ].map((s) => (
@@ -526,7 +564,7 @@ function ProfileContent() {
                         >
                           <div
                             className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px] cursor-pointer"
-                            onClick={() => id && router.push(`/framedetails/${id}`)}
+                            onClick={() => id && router.push(`/frame-detail/${id}`)}
                           >
                             <img
                               src={image1}
@@ -644,7 +682,7 @@ function ProfileContent() {
           onClick={() => setSelectedBadge(null)}
         >
           <div
-            className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out min-h-[400px]"
+            className="bg-[url('/images/badge_sheet.jpg')] bg-cover bg-center relative w-full max-w-sm  rounded-[3rem] p-10 flex flex-col items-center shadow-2xl animate-in slide-in-from-bottom-12 duration-500 ease-out min-h-[400px]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute top-4 w-12 h-1.5 bg-gray-900 rounded-full opacity-10"></div>
@@ -687,6 +725,38 @@ function ProfileContent() {
           </div>
         </div>
       )}
+
+      <AnalyzingModal
+        isOpen={analyzingModalOpen}
+        onClose={() => setAnalyzingModalOpen(false)}
+        status={analyzingModalStatus}
+        reason={rejectionReason}
+        aiDetection={aiDetection}
+        humanDetection={humanDetection}
+        editingDetection={editingDetection}
+        postId={currentPostId}
+        postStatus={currentPostStatus}
+        onRemoveHumanSuccess={() => refetchPosts()}
+        onSuccess={() => {
+          setAnalyzingModalOpen(false);
+          refetchPosts();
+        }}
+        onChangeImage={() => {
+          setAnalyzingModalOpen(false);
+          setIsEditModalOpen(true);
+        }}
+        setIsImage={() => { }}
+      />
+
+      <EditPostModal
+        isOpen={isEditModalOpen}
+        post={selectedPost}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => {
+          refetchPosts();
+          setIsEditModalOpen(false);
+        }}
+      />
     </div>
   );
 }

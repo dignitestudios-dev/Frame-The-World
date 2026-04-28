@@ -58,6 +58,18 @@ export const getPostInsightsApi = async (postId: string, timeframe: string = "we
   });
   return res.data;
 };
+// POST /posts/:postId/remove-human
+export const removeHumanApi = async (postId: string) => {
+  const res = await API.post(`/posts/${postId}/remove-human`);
+  return res.data;
+};
+
+// POST /posts/:postId/remove-human/:fileId
+export const confirmRemoveHumanApi = async (postId: string, fileId: string) => {
+  const res = await API.post(`/posts/${postId}/remove-human/${fileId}`);
+  return res.data;
+};
+
 // GET /posts/all?longitude=&latitude=&categories=abc&categories=def
 export const getAllPostsApi = async (params: {
   longitude?: number | string;

@@ -186,9 +186,9 @@ const CreateFrameContent = () => {
       setTimeout(() => {
         const createdId = response?.data?._id || response?.data?.id || response?._id || response?.id;
         if (postId && createdId) {
-          router.push(`/framedetails/${createdId}`);
+          router.push(`/frame-detail/${createdId}`);
         } else {
-          router.push("/Profile?tab=frames");
+          router.push(`/Profile?tab=frames&visibility=${category}`);
         }
       }, 250);
     } catch (error) {

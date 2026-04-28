@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Bookmark, EllipsisVertical, MapPin, PlusIcon, Trash2 } from "lucide-react";
+import {  EllipsisVertical, MapPin, PlusIcon, Trash2 } from "lucide-react";
 import Header from "@/components/global/header";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useEffect } from "react";
@@ -35,12 +35,13 @@ const getFirstAddressComponent = (
   types: string[]
 ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
 
-export default function FrameDetailsPage() {
+
+export default function FrameDetailPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { user } = useAuthStore();
-  const params = useParams<{ frameId: string }>();
-  const frameId = params?.frameId;
+  const params = useParams();
+  const frameId = params?.id as string;
   const [open, setOpen] = useState(false);
   const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -102,12 +103,6 @@ export default function FrameDetailsPage() {
     return parts.length > 0 ? parts.join(", ") : "Location not available";
   }, [frame?.city, frame?.country, frame?.state]);
 
-  /**
-   * Determines whether the current user can manage (edit/delete) this frame.
-   *
-   * The API response always includes `createdBy._id`, so we compare that
-   * directly against the logged-in user's id. No extra API call is needed.
-   */
   const canManageFrame = useMemo(() => {
     console.log(user, frameDetails, "chat-issue")
     const userId = user?._id || user?.id;

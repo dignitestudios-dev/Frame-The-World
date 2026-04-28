@@ -63,9 +63,15 @@ export const profileSchema = z.object({
     .max(100, "Company name must be at most 100 characters")
     .regex(/^[^\s].*$/, "Company name cannot start with a whitespace")
     .transform((val) => val.trim()),
-  street: z.string().optional(),
-  city: z.string().optional(),
-  country: z.string().min(1, "Location is required"),
+  address: z
+    .object({
+      street: z.string().max(150).optional(),
+      city: z.string().max(50).optional(),
+      state: z.string().max(50).optional(),
+      country: z.string().min(1, "Location is required").max(100),
+      postalCode: z.string().max(20).optional(),
+    }),
+  fullAddress: z.string().optional(),
   avatarFile: z
     .any()
     .refine((file) => file instanceof File, "Profile picture is required")
@@ -111,6 +117,7 @@ export const accountInformationSchema = z.object({
   country: z.string().min(1, "Location is required"),
   iataNumber: z.string().max(8, "IATA number must be at most 8 digits").regex(/^\d*$/, "IATA number must contain only digits").optional().or(z.literal("")),
   cliaNumber: z.string().max(8, "CLIA number must be at most 8 digits").regex(/^\d*$/, "CLIA number must contain only digits").optional().or(z.literal("")),
+  profilePicture: z.any().optional(),
 });
 
 // Types inferred from schemas

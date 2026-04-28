@@ -228,7 +228,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
 
               {/* Search button */}
               <button
-                onClick={() => executeWithCheck(() => router.push("/search"), { isPendingAllowed: false })}
+                onClick={() => router.push("/search")}
                 className="active:scale-90 transition-transform"
               >
                 <Image
@@ -276,7 +276,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                       if (item.func) item.func();
                       return;
                     }
-                    if (item.label === "Home") {
+                    if (item.label === "Home" || item.label === "Leader Board") {
                       if (item.route) {
                         router.push(item.route);
                         setIsMenuOpen(false);

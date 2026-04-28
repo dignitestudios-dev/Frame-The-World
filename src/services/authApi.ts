@@ -115,6 +115,25 @@ export const getSingleBadgeApi = async (badgeId: string) => {
   return res.data;
 };
 
+// GET /users/:userId - Get another user profile
+export const getUserByIdApi = async (userId: string) => {
+  const res = await API.get(`/users/${userId}`);
+  return res.data;
+};
+
+// POST /reports - Report a user, post, or frame
+export const reportEntityApi = async (data: {
+  entityId: string;
+  entityType: "User" | "Post" | "Frame";
+  reason: string;
+  description?: string;
+  supportingEntityId?: string;
+  supportingEntityType?: "User" | "Post" | "Frame";
+}) => {
+  const res = await API.post("/reports", data);
+  return res.data;
+};
+
 
 // PATCH /users/ - Update user profile (FormData)
 export const updateUserApi = async (formData: FormData) => {
@@ -123,6 +142,12 @@ export const updateUserApi = async (formData: FormData) => {
       "Content-Type": "multipart/form-data",
     },
   });
+  return res.data;
+};
+
+// DELETE /users
+export const deleteUserApi = async () => {
+  const res = await API.delete("/users");
   return res.data;
 };
 
@@ -295,9 +320,11 @@ type SearchCommonParams = {
   latitude?: number;
   longitude?: number;
   categories?: string[];
+  userId?: string;
+  targetUserId?: string;
 };
 
-// GET /posts/all - Search posts by location/categories
+// GET /posts/all - Search posts by location/categories/userId
 export const getSearchPostsApi = async (params: SearchCommonParams & { limit?: number }) => {
   const searchParams = new URLSearchParams();
   searchParams.set("limit", String(params.limit ?? 40));
@@ -310,6 +337,10 @@ export const getSearchPostsApi = async (params: SearchCommonParams & { limit?: n
     searchParams.set("latitude", String(params.latitude));
   }
 
+  if (params.userId) {
+    searchParams.set("targetUserId", params.userId);
+  }
+
   params.categories?.forEach((category) => {
     searchParams.append("categories", category);
   });
@@ -318,7 +349,7 @@ export const getSearchPostsApi = async (params: SearchCommonParams & { limit?: n
   return res.data;
 };
 
-// GET /frames - Search frames by location/categories
+// GET /frames - Search frames by location/categories/targetUserId
 export const getSearchFramesApi = async (params: SearchCommonParams & { limit?: number }) => {
   const searchParams = new URLSearchParams();
 
@@ -334,11 +365,43 @@ export const getSearchFramesApi = async (params: SearchCommonParams & { limit?: 
     searchParams.set("latitude", String(params.latitude));
   }
 
+  if (params.targetUserId) {
+    searchParams.set("targetUserId", params.targetUserId);
+  }
+
   params.categories?.forEach((category) => {
     searchParams.append("categories", category);
   });
 
   const queryString = searchParams.toString();
   const res = await API.get<FramesFeedResponse>(queryString ? `/frames/all?${queryString}` : "/frames/");
+  return res.data;
+};
+
+export type LeaderboardUser = {
+  upvotes?: number;
+  downloads?: number;
+  user: {
+    _id: string;
+    name: string | null;
+    profilePicture?: {
+      location: string;
+    } | null;
+  };
+  rank: number;
+};
+
+export type LeaderboardResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    topUpvotedUsers: LeaderboardUser[];
+    topDownloadedUsers: LeaderboardUser[];
+  };
+};
+
+// GET /posts/leaderboard
+export const getLeaderboardApi = async () => {
+  const res = await API.get<LeaderboardResponse>(`/posts/leaderboard`);
   return res.data;
 };

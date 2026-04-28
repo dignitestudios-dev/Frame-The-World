@@ -32,6 +32,7 @@ import EditPostModal from "@/components/profile/EditPostModal";
 import DeleteConfirmModal from "@/components/profile/DeleteConfirmModal";
 import InsightsModal from "@/components/post/InsightsModal";
 import { useAuthStore } from "@/store/authStore";
+import ReportModal from "@/components/global/ReportModal";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { Toast } from "@/components/ui/toast";
@@ -112,6 +113,7 @@ function PostDetailsContent() {
   const [editingDetection, setEditingDetection] = useState<any>(undefined);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
 
   const [toast, setToast] = useState<ToastState>({
@@ -491,8 +493,14 @@ function PostDetailsContent() {
             </p>
 
             <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-1 min-w-0">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <div 
+                  className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    const authorId = getEntityId(currentPost?.createdBy);
+                    if (authorId) router.push(`/Profile/${authorId}`);
+                  }}
+                >
                   <Image
                     src={authorImage}
                     alt={currentPost?.createdBy?.name || "Author"}
@@ -500,7 +508,13 @@ function PostDetailsContent() {
                     className="object-cover"
                   />
                 </div>
-                <span className="text-md font-bold text-gray-900 truncate">
+                <span 
+                  className="text-md font-bold text-gray-900 truncate cursor-pointer hover:underline underline-offset-2"
+                  onClick={() => {
+                    const authorId = getEntityId(currentPost?.createdBy);
+                    if (authorId) router.push(`/Profile/${authorId}`);
+                  }}
+                >
                   {currentPost?.createdBy?.name || "Unknown user"}
                 </span>
               </div>
@@ -616,7 +630,16 @@ function PostDetailsContent() {
         onClose={() => setIsSaveOpen(false)}
         onDelete={() => setDeletingPostId(currentPostId)}
         showDeleteOption={canDeletePost}
+        onReport={() => setIsReportModalOpen(true)}
+        showReportOption={!canDeletePost}
         post={currentPost}
+      />
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        entityId={currentPostId || ""}
+        entityType="Post"
       />
 
       <DeleteConfirmModal

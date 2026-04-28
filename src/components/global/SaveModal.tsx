@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Hash, Plus, Bookmark, Contact2, Trash, Loader2 } from "lucide-react";
+import { ArrowLeft, Hash, Plus, Bookmark, Contact2, Trash, Loader2, Flag } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { getOwnFramesApi, addPostToFrameApi } from "@/services/frameApi";
@@ -16,6 +16,8 @@ interface SaveModalProps {
   showDeleteOption?: boolean;
   onEdit?: () => void;
   showEditOption?: boolean;
+  onReport?: () => void;
+  showReportOption?: boolean;
   post?: any;
   initialView?: "menu" | "frames" | "storage" | "success_frame" | "success_storage" | "delete";
 }
@@ -27,6 +29,8 @@ const SaveModal = ({
   showDeleteOption = true,
   onEdit,
   showEditOption = false,
+  onReport,
+  showReportOption = false,
   post,
   initialView = "menu",
 }: SaveModalProps) => {
@@ -36,6 +40,7 @@ const SaveModal = ({
   const [view, setView] = useState<ModalState>(initialView);
   const [selectedFrameTitle, setSelectedFrameTitle] = useState("");
   const [selectedFrameId, setSelectedFrameId] = useState("");
+  
   // Fetch real frames
   const { data: ownFramesData, isLoading: isLoadingFrames } = useQuery({
     queryKey: ["ownFrames"],
@@ -140,8 +145,10 @@ const SaveModal = ({
         {/* VIEW: MAIN MENU */}
         {view === "menu" && (
           <div className="pb-8">
-            {renderHeader(!showDeleteOption?"Save To":"Options", false)}
-            <div className="px-4 space-y-2">
+            <div className="relative h-28 flex items-end justify-center pb-6 bg-blue-100">
+              <h2 className="text-[22px] font-semibold text-gray-800">{(!showDeleteOption && !showReportOption) ? "Save To" : "Options"}</h2>
+            </div>
+            <div className="px-4 space-y-2 pt-2">
               <button onClick={() => setView("frames")} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/save-to-frame.png" className="w-6 h-6" alt="" /></div>
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Frames</p><p className="text-xs text-gray-400">Move picture to a frame.</p></div>
@@ -160,12 +167,20 @@ const SaveModal = ({
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/storage.png" className="w-6 h-6" alt="" /></div>
                 <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Save to Personal Storage</p><p className="text-xs text-gray-400">Save before posting.</p></div>
               </button>
-              {showDeleteOption ? (
-                <button onClick={() => { onDelete?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all">
-                  <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><img src="/images/delete.png" className="w-6 h-6" alt="" /></div>
-                  <div className="text-left"><p className="font-bold text-gray-900 leading-tight">Delete Post</p><p className="text-xs text-gray-400">Remove from app permanently.</p></div>
+              
+              {showReportOption && (
+                <button onClick={() => { onReport?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-orange-50 rounded-2xl group transition-all text-orange-600">
+                  <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500"><Flag className="w-6 h-6" /></div>
+                  <div className="text-left"><p className="font-bold text-orange-900 leading-tight">Report Post</p><p className="text-xs text-orange-400">Notify us about inappropriate content.</p></div>
                 </button>
-              ) : null}
+              )}
+
+              {showDeleteOption && (
+                <button onClick={() => { onDelete?.(); onClose(); }} className="flex items-center gap-4 w-full p-4 hover:bg-red-50 rounded-2xl group transition-all text-red-600">
+                  <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-500"><Trash className="w-6 h-6" /></div>
+                  <div className="text-left"><p className="font-bold text-red-900 leading-tight">Delete Post</p><p className="text-xs text-red-400">Remove from app permanently.</p></div>
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -223,16 +238,8 @@ const SaveModal = ({
             <div className="text-center px-8 space-y-2 mt-4 pb-4">
               <h2 className="text-3xl font-bold text-gray-900">Successfully Saved</h2>
               <p className="text-gray-400 text-sm leading-relaxed">
-                {view === "success_frame"
-                  ? "Saved to frame"
-                  : "Saved to frame"}
+                {view === "success_frame" ? "Saved to frame" : "Saved to storage"}
               </p>
-              {/* <button
-                onClick={onClose}
-                className="mt-6 w-full py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors"
-              >
-                Done
-              </button> */}
             </div>
           </div>
         )}

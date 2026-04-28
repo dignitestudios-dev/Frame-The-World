@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { getApiErrorMessage } from "@/lib/apiError";
 import LocationAutocomplete from "@/components/global/LocationAutocomplete";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { useRef } from "react";
 
 export default function AccountInformation() {
   const queryClient = useQueryClient();
@@ -23,6 +25,9 @@ export default function AccountInformation() {
   const [toastType, setToastType] = useState<"success" | "error">("error");
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -55,6 +60,9 @@ export default function AccountInformation() {
         country: u.company?.address?.country || "",
       });
       updateUser(u);
+      if (u.profilePicture?.location) {
+        setPreviewUrl(u.profilePicture.location);
+      }
     }
   }, [profileData, updateUser, reset]);
 
@@ -101,8 +109,21 @@ export default function AccountInformation() {
         city: u.company?.address?.city || "",
         country: u.company?.address?.country || "",
       });
+      if (u.profilePicture?.location) {
+        setPreviewUrl(u.profilePicture.location);
+      }
+      setSelectedFile(null);
     }
     setIsEditing((prev) => !prev);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
   };
 
   const onSubmit = (data: AccountInformationFormData) => {
@@ -119,6 +140,10 @@ export default function AccountInformation() {
     formData.append("company[address][street]", data.street || "");
     formData.append("company[address][city]", data.city || "");
     formData.append("company[address][country]", data.country);
+
+    if (selectedFile) {
+      formData.append("profilePicture", selectedFile);
+    }
 
     const originalIata = profileData?.data?.iata || "";
     const originalClia = profileData?.data?.clia || "";
@@ -163,7 +188,7 @@ export default function AccountInformation() {
       />
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 mx-auto border-b pb-4">
+      <div className="flex justify-between items-center mb-10 mx-auto border-b pb-4">
         <h1 className="text-xl font-black text-gray-900">Account Information</h1>
         <button
           type="button"
@@ -175,6 +200,44 @@ export default function AccountInformation() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mx-auto flex flex-col space-y-6">
+        {/* Profile Picture */}
+        <div className="flex flex-col items-center justify-center mb-8">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#F4F5F7] shadow-md bg-gray-100 relative">
+              {previewUrl ? (
+                <Image
+                  src={previewUrl}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                  <Camera className="w-10 h-10" />
+                </div>
+              )}
+            </div>
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-1 right-1 bg-[#5D92F3] p-2.5 rounded-full text-white shadow-lg hover:scale-110 transition-transform duration-200 border-2 border-white"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+          <p className="mt-3 text-[12px] font-bold text-gray-400">
+            {isEditing ? "Click the icon to update your photo" : "Profile Picture"}
+          </p>
+        </div>
 
         {/* Name */}
         <div className="w-full">
@@ -195,12 +258,18 @@ export default function AccountInformation() {
         </div>
 
         {/* Email - Always Disabled */}
-        <div className="w-full">
+        <div className="w-full relative">
           <Input
             value={profileData?.data?.email || ""}
             disabled
-            className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold text-gray-500 focus:ring-0 opacity-80 cursor-not-allowed"
+            className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold text-gray-500 focus:ring-0 opacity-80 cursor-not-allowed pr-12"
           />
+          {profileData?.data?.isEmailVerified && (
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[#22C55E]">
+              <span className="text-[10px] font-bold">Verified</span>
+              <CheckCircle2 className="w-4 h-4 fill-[#22C55E] text-white" />
+            </div>
+          )}
         </div>
 
         {/* Bio */}
@@ -258,6 +327,8 @@ export default function AccountInformation() {
                   icon={<ArrowRight className="w-5 h-5 stroke-[2.5]" />}
                   onLocationSelect={(address) => {
                     setValue("country", address?.country || "", { shouldValidate: true });
+                    setValue("city", address?.city || "", { shouldValidate: true });
+                    setValue("street", address?.street || "", { shouldValidate: true });
                   }}
                 />
               </div>

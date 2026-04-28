@@ -117,6 +117,7 @@ export const accountInformationSchema = z.object({
   country: z.string().min(1, "Location is required"),
   iataNumber: z.string().max(8, "IATA number must be at most 8 digits").regex(/^\d*$/, "IATA number must contain only digits").optional().or(z.literal("")),
   cliaNumber: z.string().max(8, "CLIA number must be at most 8 digits").regex(/^\d*$/, "CLIA number must contain only digits").optional().or(z.literal("")),
+  profilePicture: z.any().optional(),
 });
 
 // Types inferred from schemas

@@ -186,6 +186,7 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
       <div className="w-9 h-9 rounded-full border-4 border-gray-300 border-t-blue-500 animate-spin" />
     );
   };
+const hasHuman = humanDetection?.hasHuman;
 
   const hasError = checks.some((c) => c.status === "error");
   const allSuccess = checks.every((c) => c.status === "success");
@@ -338,7 +339,7 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-3 mt-4">
-                {postStatus === "needs_human_removal" && !humanRemoved && (
+                {hasHuman && !humanRemoved && (
                   <button
                     onClick={() => handleRemoveHuman()}
                     disabled={isRemovingHuman}

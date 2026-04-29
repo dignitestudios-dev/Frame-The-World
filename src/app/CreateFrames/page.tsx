@@ -92,9 +92,6 @@ const CreateFrameContent = () => {
     }
 
     setFieldErrors({});
-
-    // If user typed a location manually (without selecting Google suggestions),
-    // resolve lat/lng + city/state/country using geocoding at submit time.
     let resolvedLongitude = longitude;
     let resolvedLatitude = latitude;
     let resolvedCity = city;
@@ -305,7 +302,7 @@ const CreateFrameContent = () => {
               type="text"
               placeholder="Enter frame title"
               value={title}
-              maxLength={50}
+              maxLength={100}
               onChange={(e) => {
                 setTitle(e.target.value);
                 setFieldErrors((prev) => ({ ...prev, title: undefined }));
@@ -317,8 +314,8 @@ const CreateFrameContent = () => {
                 {fieldErrors.title ? <p className="mt-2 text-[12px] font-bold text-red-500">{fieldErrors.title}</p> : null}
               </div>
 
-              <p className={`text-xs mt-2 ${title.length >= 50 ? 'text-red-500' : 'text-gray-400'}`}>
-                {title.length}/50
+              <p className={`text-xs mt-2 ${title.length >= 100 ? 'text-red-500' : 'text-gray-400'}`}>
+                {title.length}/100
               </p>
             </div>
           </div>

@@ -22,7 +22,7 @@ function getDeviceId(): string {
 // Create an Axios instance
 export const API = axios.create({
   baseURL: baseURL,
-  timeout: 15000,
+  timeout: 100000,
   headers: headers,
 });
 

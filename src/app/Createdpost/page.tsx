@@ -216,15 +216,15 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
             <textarea
               placeholder="Enter Caption"
               value={formData.caption}
-              maxLength={500}
+              maxLength={150}
               rows={3}
               onChange={(e) =>
                 setFormData({ ...formData, caption: e.target.value })
               }
               className="w-full px-4 py-3 bg-blue-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             />
-            <p className={`text-xs flex justify-end  ${formData.caption.length >= 500 ? 'text-red-500' : 'text-gray-400'}`}>
-              {formData.caption.length}/500
+            <p className={`text-xs flex justify-end  ${formData.caption.length >= 150 ? 'text-red-500' : 'text-gray-400'}`}>
+              {formData.caption.length}/150
             </p>
           </div>
 

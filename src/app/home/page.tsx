@@ -252,19 +252,19 @@ export default function TravelStoryPage() {
                   No frame found
                 </div>
               )
-              : topFrameItems.slice(0, 10).map((frame) => {
-              const coverUrl =
-                isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL;
+              : topFrameItems.slice(0, 5).map((frame) => {
+                const coverUrl =
+                  isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL;
 
-              return (
-                <div
-                  key={frame._id}
-                  onClick={() =>
-                    executeWithCheck(() => router.push(`/framedetails/${frame._id}`), {
-                      isPendingAllowed: false,
-                    })
-                  }
-                  className="
+                return (
+                  <div
+                    key={frame._id}
+                    onClick={() =>
+                      executeWithCheck(() => router.push(`/frame-detail/${frame._id}`), {
+                        isPendingAllowed: false,
+                      })
+                    }
+                    className="
             shrink-0
             snap-start
             min-w-[343px] h-[120px]
@@ -273,31 +273,32 @@ export default function TravelStoryPage() {
             relative overflow-hidden cursor-pointer
             shadow
           "
-                >
-                  <Image
-                    src={coverUrl}
-                    alt={frame.title || "Frame"}
-                    fill
-                    className="object-cover opacity-80"
-                  />
+                  >
+                    <Image
+                      src={coverUrl}
+                      alt={frame.title || "Frame"}
+                      fill
+                      className="object-cover opacity-80"
+                    />
 
-                  {/* Card Content */}
-                  <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                    <span className="text-white text-2xl font-bold">
-                      {frame.totalPosts}+
-                    </span>
-                    <span className="text-sm text-gray-200">
-                      {frame.title || "Untitled Frame"}
-                    </span>
-                  </div>
+                    {/* Card Content */}
+                    <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                      <span className="text-white text-2xl font-bold">
+                        {frame.totalPosts}+
+                      </span>
+                      <span className="text-sm text-gray-200">
+                        {frame.title || "Untitled Frame"}
+                      </span>
+                    </div>
 
-              {/* Bottom Right Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push("/framedetails");
-                }}
-                className="
+                    {/* Bottom Right Button */}
+                    <button
+                      onClick={() =>
+                        executeWithCheck(() => router.push(`/frame-detail/${frame._id}`), {
+                          isPendingAllowed: false,
+                        })
+                      }
+                      className="
               absolute bottom-3 right-3
               bg-transparent backdrop-blur
               rounded-full
@@ -308,12 +309,12 @@ export default function TravelStoryPage() {
               transition
               z-10
             "
-                  >
-                    <ArrowRight className="w-5 h-5 text-white font-bold" />
-                  </button>
-                </div>
-              );
-            })}
+                    >
+                      <ArrowRight className="w-5 h-5 text-white font-bold" />
+                    </button>
+                  </div>
+                );
+              })}
         </section>
 
 

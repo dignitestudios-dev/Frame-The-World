@@ -301,7 +301,7 @@ export default function AccountInformation() {
               <Input
                 placeholder="Company name"
                 disabled={!isEditing}
-                maxLength={150}
+                maxLength={100}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 disabled:opacity-70 disabled:cursor-not-allowed"
                 {...register("companyName", {
                   onChange: (e) => {

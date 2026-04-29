@@ -39,6 +39,32 @@ const TIMEFRAMES = [
     { id: "year", label: "Year" },
 ];
 
+// ─── Default graph data per timeframe ────────────────────────────────────────
+const getDefaultGraphData = (timeframe: string) => {
+    switch (timeframe) {
+        case "24h":
+            return ["00", "02", "04", "06", "08", "10", "12", "14", "16", "18", "20", "22"].map(
+                (date) => ({ date, downloads: 0, upvotes: 0, framed: 0 })
+            );
+        case "week":
+            return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((date) => ({
+                date, downloads: 0, upvotes: 0, framed: 0,
+            }));
+        case "month":
+            return [1, 6, 11, 16, 21, 26, 30].map((day) => ({
+                date: `${day}`, downloads: 0, upvotes: 0, framed: 0,
+            }));
+        case "year":
+            return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(
+                (date) => ({ date, downloads: 0, upvotes: 0, framed: 0 })
+            );
+        default:
+            return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((date) => ({
+                date, downloads: 0, upvotes: 0, framed: 0,
+            }));
+    }
+};
+
 // ─── OwnPostView ─────────────────────────────────────────────────────────────
 export default function OwnPostView({
     currentPost,
@@ -75,6 +101,7 @@ export default function OwnPostView({
 }: any) {
     const router = useRouter();
     const [activeTimeframe, setActiveTimeframe] = useState("24h");
+    const [isInsightsOpen, setIsInsightsOpen] = useState(false); // ← new state
 
     // ── Insights query ──────────────────────────────────────────────────────────
     const { data: insightsData, isLoading: isLoadingInsights } = useInsightsQuery({
@@ -85,19 +112,70 @@ export default function OwnPostView({
 
     const rawData = insightsData?.data || insightsData;
     const summary = rawData?.summary || { downloads: 0, upvotes: 0, framed: 0 };
-    let graphArray: any[] = rawData?.graph || [];
-    if (graphArray.length === 0) {
-        graphArray = [
-            { date: "Mon", downloads: 0, upvotes: 0, framed: 0 },
-            { date: "Tue", downloads: 0, upvotes: 0, framed: 0 },
-            { date: "Wed", downloads: 0, upvotes: 0, framed: 0 },
-            { date: "Thu", downloads: 0, upvotes: 0, framed: 0 },
-            { date: "Fri", downloads: 0, upvotes: 0, framed: 0 },
-            { date: "Sat", downloads: 0, upvotes: 0, framed: 0 },
-            { date: "Sun", downloads: 0, upvotes: 0, framed: 0 },
-        ];
-    }
-    console.log(currentPost, "post-categories")
+    const apiGraph = rawData?.graph || [];
+
+    // Merge API data into fixed default labels with normalization and bucketing
+    const graphArray = getDefaultGraphData(activeTimeframe).map((item) => {
+        const matches = apiGraph.filter((apiItem: any) => {
+            const apiDate = String(apiItem.date).trim();
+            const labelDate = String(item.date).trim();
+
+            if (activeTimeframe === "24h") {
+                const apiHour = parseInt(apiDate.split(":")[0]);
+                const labelHour = parseInt(labelDate);
+                // Bucket two hours into one label (e.g., 00 and 01 map to "00")
+                return apiHour === labelHour || apiHour === labelHour + 1;
+            }
+
+            if (activeTimeframe === "month") {
+                const apiDay = parseInt(apiDate);
+                const labelDay = parseInt(labelDate);
+                // Map days to the nearest lower label bucket (1-5, 6-10, etc.)
+                if (labelDay === 30) return apiDay >= 30;
+                return apiDay >= labelDay && apiDay < labelDay + 5;
+            }
+
+            if (activeTimeframe === "year") {
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                // Handle "YYYY-MM" format (e.g., "2026-04")
+                if (apiDate.includes("-")) {
+                    const parts = apiDate.split("-");
+                    const monthNum = parseInt(parts[parts.length - 1]);
+                    if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
+                        return monthNames[monthNum - 1] === labelDate;
+                    }
+                }
+                return apiDate.toLowerCase().startsWith(labelDate.toLowerCase());
+            }
+
+            if (activeTimeframe === "week") {
+                const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                if (apiDate.includes("-")) {
+                    const dateObj = new Date(apiDate);
+                    if (!isNaN(dateObj.getTime())) {
+                        const dayName = dayNames[dateObj.getUTCDay()];
+                        return dayName === labelDate;
+                    }
+                }
+                return apiDate.toLowerCase().startsWith(labelDate.toLowerCase());
+            }
+
+            return apiDate === labelDate;
+        });
+
+        if (matches.length > 0) {
+            return {
+                ...item,
+                downloads: matches.reduce((sum: number, m: any) => sum + (m.downloads || 0), 0),
+                upvotes: matches.reduce((sum: number, m: any) => sum + (m.upvotes || 0), 0),
+                framed: matches.reduce((sum: number, m: any) => sum + (m.framed || 0), 0),
+            };
+        }
+        return item;
+    });
+
+    console.log(currentPost, "post-categories");
+
     // ── Render ──────────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
@@ -125,9 +203,7 @@ export default function OwnPostView({
                         alt={currentPost?.caption || "Post image"}
                         className="w-full h-full object-cover"
                     />
-                    {/* gradient overlay at bottom */}
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80 rounded-[32px]" />
-                    {/* back button */}
                     <button
                         onClick={onBack}
                         className="absolute top-4 left-4 w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md hover:bg-gray-50 transition"
@@ -171,9 +247,10 @@ export default function OwnPostView({
                             <Download className="w-[22px] h-[24px] text-white" />
                         </button>
 
-                        {/* Analytics */}
+                        {/* Analytics → opens InsightsModal */}
                         <button
                             type="button"
+                            onClick={() => setIsInsightsOpen(true)} // ← wired up
                             className="w-[45px] h-[45px] rounded-[10px] flex items-center justify-center"
                             style={{
                                 background: "linear-gradient(134.74deg, #6CACDF 3.24%, #0000FE 139.86%)",
@@ -257,7 +334,6 @@ export default function OwnPostView({
                                                         stroke: "url(#blueGrad)",
                                                     }}
                                                 />
-                                                {/* SVG gradient trick via filter */}
                                                 <svg width="0" height="0" className="absolute">
                                                     <defs>
                                                         <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -274,8 +350,7 @@ export default function OwnPostView({
                                         <span
                                             className="text-[22px] font-bold leading-[21px] text-center"
                                             style={{
-                                                background:
-                                                    "linear-gradient(134.74deg, #6CACDF 3.24%, #0000FE 139.86%)",
+                                                background: "linear-gradient(134.74deg, #6CACDF 3.24%, #0000FE 139.86%)",
                                                 WebkitBackgroundClip: "text",
                                                 WebkitTextFillColor: "transparent",
                                                 backgroundClip: "text",
@@ -285,10 +360,9 @@ export default function OwnPostView({
                                         </span>
                                     </div>
 
-                                    {/* Divider */}
                                     <div className="w-full border-t border-[#F3F3F3]" />
 
-                                    {/* Up Votes */}
+                                    {/* Upvotes */}
                                     <div className="flex items-center justify-between h-[31.49px]">
                                         <div className="flex items-center gap-[13px]">
                                             <div className="w-[31.49px] h-[31.49px] flex items-center justify-center shrink-0">
@@ -301,8 +375,7 @@ export default function OwnPostView({
                                         <span
                                             className="text-[22px] font-bold leading-[21px] text-center"
                                             style={{
-                                                background:
-                                                    "linear-gradient(134.74deg, #6CACDF 3.24%, #0000FE 139.86%)",
+                                                background: "linear-gradient(134.74deg, #6CACDF 3.24%, #0000FE 139.86%)",
                                                 WebkitBackgroundClip: "text",
                                                 WebkitTextFillColor: "transparent",
                                                 backgroundClip: "text",
@@ -312,10 +385,9 @@ export default function OwnPostView({
                                         </span>
                                     </div>
 
-                                    {/* Divider */}
                                     <div className="w-full border-t border-[#F3F3F3]" />
 
-                                    {/* Added To Frame */}
+                                    {/* Framed */}
                                     <div className="flex items-center justify-between h-[31.49px]">
                                         <div className="flex items-center gap-[13px]">
                                             <div className="w-[31.49px] h-[31.49px] flex items-center justify-center shrink-0">
@@ -328,8 +400,7 @@ export default function OwnPostView({
                                         <span
                                             className="text-[22px] font-bold leading-[21px] text-center"
                                             style={{
-                                                background:
-                                                    "linear-gradient(134.74deg, #6CACDF 3.24%, #0000FE 139.86%)",
+                                                background: "linear-gradient(134.74deg, #6CACDF 3.24%, #0000FE 139.86%)",
                                                 WebkitBackgroundClip: "text",
                                                 WebkitTextFillColor: "transparent",
                                                 backgroundClip: "text",
@@ -341,6 +412,7 @@ export default function OwnPostView({
                                 </div>
                             </div>
 
+                            {/* ── Right: Area Chart ── */}
                             <div className="flex-1 relative overflow-hidden rounded-r-[12px] p-4">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart
@@ -362,16 +434,17 @@ export default function OwnPostView({
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,254,0.06)" />
-                                        <XAxis 
-                                            dataKey="date" 
-                                            axisLine={false} 
-                                            tickLine={false} 
+                                        <XAxis
+                                            dataKey="date"
+                                            axisLine={false}
+                                            tickLine={false}
                                             tick={{ fontSize: 10, fill: '#9CA3AF', fontWeight: 600 }}
                                             dy={10}
+                                            interval={0}
                                         />
-                                        <YAxis 
-                                            axisLine={false} 
-                                            tickLine={false} 
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
                                             tick={{ fontSize: 10, fill: '#9CA3AF', fontWeight: 600 }}
                                         />
                                         <Tooltip
@@ -386,42 +459,9 @@ export default function OwnPostView({
                                             }}
                                             cursor={{ stroke: "rgba(0,0,254,0.15)", strokeWidth: 1 }}
                                         />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="framed"
-                                            name="Framed"
-                                            stroke="#0098feff"
-                                            strokeWidth={2.5}
-                                            fillOpacity={1}
-                                            fill="url(#colorFramed)"
-                                            dot={false}
-                                            activeDot={false}
-                                            isAnimationActive={false}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="upvotes"
-                                            name="Upvotes"
-                                            stroke="#6CACDF"
-                                            strokeWidth={2.5}
-                                            fillOpacity={1}
-                                            fill="url(#colorUpvotes)"
-                                            dot={false}
-                                            activeDot={false}
-                                            isAnimationActive={false}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="downloads"
-                                            name="Downloads"
-                                            stroke="#818CF8"
-                                            strokeWidth={2.5}
-                                            fillOpacity={1}
-                                            fill="url(#colorDownloads)"
-                                            dot={false}
-                                            activeDot={false}
-                                            isAnimationActive={false}
-                                        />
+                                        <Area type="monotone" dataKey="framed" name="Framed" stroke="#0098feff" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFramed)" dot={false} activeDot={false} isAnimationActive={false} />
+                                        <Area type="monotone" dataKey="upvotes" name="Upvotes" stroke="#6CACDF" strokeWidth={2.5} fillOpacity={1} fill="url(#colorUpvotes)" dot={false} activeDot={false} isAnimationActive={false} />
+                                        <Area type="monotone" dataKey="downloads" name="Downloads" stroke="#818CF8" strokeWidth={2.5} fillOpacity={1} fill="url(#colorDownloads)" dot={false} activeDot={false} isAnimationActive={false} />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -452,13 +492,14 @@ export default function OwnPostView({
                 isOpen={analyzingModalOpen}
                 status={analyzingModalStatus}
                 onClose={() => {
-                    setAnalyzingModalOpen(false)
-                    router.push("/Profile")
+                    setAnalyzingModalOpen(false);
+                    router.push("/Profile");
                 }}
                 reason={rejectionReason}
                 aiDetection={aiDetection}
                 humanDetection={humanDetection}
                 editingDetection={editingDetection}
+                postId={currentPostId || undefined}
                 onChangeImage={() => hiddenFileInputRef.current?.click()}
                 setIsImage={() => { }}
             />
@@ -475,14 +516,15 @@ export default function OwnPostView({
                 post={editingPost}
                 isOpen={!!editingPost}
                 onClose={() => {
-                    setEditingPost(null)
-                    router.push("/Profile")
+                    setEditingPost(null);
+                    router.push("/Profile");
                 }}
                 onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });
                     showToast("Post updated successfully!");
                 }}
             />
+
         </div>
     );
 }

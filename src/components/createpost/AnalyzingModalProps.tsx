@@ -228,6 +228,7 @@ const hasHuman = humanDetection?.hasHuman;
         <div className="w-full bg-gradient-to-b rounded-lg from-blue-100 to-blue-50 px-2 py-4 flex items-center">
 
           <button
+            type="button"
             onClick={onClose}
             className="hover:bg-blue-200 rounded-full transition-colors mr-2"
             aria-label="Go back"
@@ -341,7 +342,11 @@ const hasHuman = humanDetection?.hasHuman;
               <div className="flex flex-col gap-3 mt-4">
                 {hasHuman && !humanRemoved && (
                   <button
-                    onClick={() => handleRemoveHuman()}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRemoveHuman();
+                    }}
                     disabled={isRemovingHuman}
                     className="w-full py-3 rounded-full font-medium text-base flex items-center justify-center gap-2
                      bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md disabled:opacity-70"
@@ -359,7 +364,11 @@ const hasHuman = humanDetection?.hasHuman;
 
                 {humanRemoved && (
                   <button
-                    onClick={() => handleConfirmRemoveHuman()}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleConfirmRemoveHuman();
+                    }}
                     disabled={isConfirming}
                     className="w-full py-3 rounded-full font-medium text-base flex items-center justify-center gap-2
                      bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md disabled:opacity-70"
@@ -377,6 +386,7 @@ const hasHuman = humanDetection?.hasHuman;
 
                 {(aiDetection?.isAI || editingDetection?.isEdited || !postId) && !humanRemoved && (
                   <button
+                    type="button"
                     onClick={onChangeImage}
                     className="w-full py-3 rounded-full font-medium text-base
                      bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md"

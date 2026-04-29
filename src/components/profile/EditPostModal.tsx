@@ -165,15 +165,14 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
             {/* Image Preview (Read-only) */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className={`${!isReuploadOnly ? "cursor-not-allowed" : "cursor-pointer hover:border-blue-400"} relative w-full h-48 rounded-2xl overflow-hidden bg-gray-100 group border-2 border-dashed border-transparent transition-all `}
+              className={`${!isReuploadOnly ? "cursor-not-allowed" : "cursor-pointer hover:border-blue-400"} relative w-full h-48 rounded-2xl  bg-gray-100 group border-2 border-dashed border-transparent transition-all `}
             >
               {currentImage ? (
                 <>
-                  <Image
+                  <img
                     src={currentImage}
                     alt="Post"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-[140px] rounded-md object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   {
                     !isReuploadOnly ? <></> : <>

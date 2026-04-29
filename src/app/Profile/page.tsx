@@ -458,7 +458,7 @@ function ProfileContent() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-800 mb-1">
-                        No posts yet
+                        No Posts Yet
                       </p>
                       <p className="text-sm text-gray-400">
                         Create your first post to see it here.
@@ -543,7 +543,7 @@ function ProfileContent() {
                       </div>
                       <div>
                         <p className="font-bold text-gray-800 mb-1">
-                          No frames yet
+                          No Frames Yet
                         </p>
                         <p className="text-sm text-gray-400">
                           Create your first frame to see it here.
@@ -631,7 +631,7 @@ function ProfileContent() {
                         <ImageOff className="w-10 h-10 text-blue-300" />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-800 mb-1">No folders yet</p>
+                        <p className="font-bold text-gray-800 mb-1">No Folders Yet</p>
                         <p className="text-sm text-gray-400">Create your first folder to see it here.</p>
                       </div>
                     </div>

@@ -658,6 +658,7 @@ function PostDetailsContent() {
         aiDetection={aiDetection}
         humanDetection={humanDetection}
         editingDetection={editingDetection}
+        postId={postIdFromUrl || currentPostId || undefined}
         onClose={() => {
           router.push("/Profile")
           setAnalyzingModalOpen(false);

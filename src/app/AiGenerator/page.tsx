@@ -44,7 +44,7 @@ const CaptionGenerator: React.FC = () => {
 
   return (
     <div className="">
-      <Header />
+      <Header title="AI Content Generator" subtitle="Generate amazing captions for your images quickly with the help of AI" />
       <div className="w-[80%] mx-auto min-h-screen p-6">
         {/* Back Button */}
         <button

@@ -213,7 +213,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
               </div>
 
               {/* Level Badge - Hide on tiny screens */}
-              <div className="relative">
+              {/* <div className="relative">
                 <Image
                   src="/images/awarrd.png"
                   alt="Award"
@@ -221,7 +221,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                   height={30}
                   className="rounded-full md:w-[36px] md:h-[36px]"
                 />
-              </div>
+              </div> */}
             </div>
             <div className="flex items-center gap-6" >
 

@@ -187,7 +187,7 @@ export default function CreateProfilePage() {
             <div className="space-y-3">
               <Input
                 placeholder="Enter your company name"
-                maxLength={150}
+                maxLength={100}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
                 {...register("companyName", {
                   onChange: (e) => {

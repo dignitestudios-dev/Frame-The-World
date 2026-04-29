@@ -19,8 +19,8 @@ const walkthroughContent = [
     image: "/images/onboard2.png",
     imageClassName: "object-cover rounded-2xl",
     imageContainerClassName: "relative w-[85%] aspect-[9/16] rounded-3xl p-1 bg-white/20 backdrop-blur-sm shadow-2xl border border-white/30",
-    title: "100% Human-Free, AI-Free",
-    description: "Our AI ensures every picture is original, no humans, no AI-generated images. You can even use the AI tool to remove humans from your own clicks before posting.",
+    title: "Authentic Travel Content",
+    description: "Real, non-AI images only. No people, verified for clean, consistent destination content.",
   },
   {
     image: "/images/onboard3.png",
@@ -94,7 +94,7 @@ export default function AppWalkthrough() {
 
           {/* Text Content */}
           <div key={`text-${currentStep}`} className="animate-in fade-in slide-in-from-bottom-2 duration-500 text-center">
-            <h1 className="text-2xl font-black text-white mb-3 leading-[1.1] tracking-tight whitespace-pre-line">
+            <h1 className={`text-2xl font-black text-white mb-3 leading-[1.1] tracking-tight whitespace-pre-line`}>
               {currentContent.title}
             </h1>
             <p className="text-white/80 text-[13px] leading-relaxed font-medium mb-10 px-4">

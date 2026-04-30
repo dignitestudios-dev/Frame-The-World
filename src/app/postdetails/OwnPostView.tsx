@@ -500,6 +500,7 @@ export default function OwnPostView({
                 humanDetection={humanDetection}
                 editingDetection={editingDetection}
                 postId={currentPostId || undefined}
+                imageUrl={imageUrl}
                 onChangeImage={() => hiddenFileInputRef.current?.click()}
                 setIsImage={() => { }}
             />

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { ArrowLeft, Hash, Plus, Bookmark, Contact2, Trash, Loader2, Flag } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { getOwnFramesApi, addPostToFrameApi } from "@/services/frameApi";
+import { getOwnFramesApi, addPostToFrameApi, getFoldersApi, movePostToFolderApi } from "@/services/frameApi";
 
 type ModalState = "menu" | "frames" | "storage" | "success_frame" | "success_storage" | "delete";
 
@@ -39,7 +39,7 @@ const SaveModal = ({
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<ModalState>(initialView);
   const [selectedFrameTitle, setSelectedFrameTitle] = useState("");
-  const [selectedFrameId, setSelectedFrameId] = useState("");
+  const [selectedId, setSelectedId] = useState("");
   
   // Fetch real frames
   const { data: ownFramesData, isLoading: isLoadingFrames } = useQuery({
@@ -50,18 +50,23 @@ const SaveModal = ({
 
   const ownFrames = ownFramesData?.data?.data || ownFramesData?.data || [];
 
+  // Fetch real folders
+  const { data: foldersData, isLoading: isLoadingFolders } = useQuery({
+    queryKey: ["personalFolders"],
+    queryFn: () => getFoldersApi({ page: 1, limit: 50 }),
+    enabled: isOpen && view === "storage",
+  });
+
+  const personalFolders = foldersData?.data || [];
+
   // Save to Frame Mutation
   const { mutate: saveToFrame, isPending: isSaving } = useMutation({
     mutationFn: async (frame: any) => {
       setSelectedFrameTitle(frame.title || "Frame");
       const frameId = frame._id || frame.id;
-      setSelectedFrameId(frameId)
+      setSelectedId(frameId);
       const postId = post?.id || post?._id || "";
-
-      if (!frameId || !postId) {
-        throw new Error("Missing frameId or postId");
-      }
-
+      if (!frameId || !postId) throw new Error("Missing frameId or postId");
       return addPostToFrameApi(frameId, postId);
     },
     onSuccess: () => {
@@ -70,6 +75,25 @@ const SaveModal = ({
     },
     onError: (error) => {
       console.error("Save to frame failed:", error);
+    }
+  });
+
+  // Move to Storage Mutation
+  const { mutate: moveToStorage, isPending: isMoving } = useMutation({
+    mutationFn: async (folder: any) => {
+      const folderId = folder._id || folder.id;
+      setSelectedId(folderId);
+      const postId = post?.id || post?._id || "";
+      if (!folderId || !postId) throw new Error("Missing folderId or postId");
+      return movePostToFolderApi(folderId, postId);
+    },
+    onSuccess: () => {
+      setView("success_storage");
+      queryClient.invalidateQueries({ queryKey: ["personalFolders"] });
+      queryClient.invalidateQueries({ queryKey: ["ownPosts"] });
+    },
+    onError: (error) => {
+      console.error("Move to storage failed:", error);
     }
   });
 
@@ -87,13 +111,6 @@ const SaveModal = ({
 
   if (!mounted || !isOpen) return null;
 
-  const privateFolders = [
-    { id: 1, title: "Private 1", img: "https://picsum.photos/id/105/100" },
-    { id: 2, title: "Private 2", img: "https://picsum.photos/id/106/100" },
-    { id: 3, title: "Private 3", img: "https://picsum.photos/id/107/100" },
-    { id: 4, title: "Private 4", img: "https://picsum.photos/id/108/100" },
-  ];
-
   const renderHeader = (title: string, showBack = true) => (
     <div className="relative h-28 flex items-end justify-center pb-6 bg-blue-100">
       {showBack && (
@@ -108,7 +125,7 @@ const SaveModal = ({
     </div>
   );
 
-  const ListItem = ({ title, img, locked, onClick, isPending, id }: any) => (
+  const ListItem = ({ title, img, locked, onClick, isPending, id, currentSelectedId }: any) => (
     <button
       onClick={onClick}
       disabled={isPending}
@@ -130,7 +147,7 @@ const SaveModal = ({
         <span className="text-[15px] font-bold text-gray-800 line-clamp-1 text-left">{title}</span>
       </div>
       <div className="flex items-center gap-2">
-        {isPending && selectedFrameId == id && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
+        {isPending && currentSelectedId === id && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
         {locked && <span className="text-xl">🔒</span>}
       </div>
     </button>
@@ -209,6 +226,7 @@ const SaveModal = ({
                     img={f.cover?.location || f.cover}
                     locked={f.isPrivate}
                     isPending={isSaving}
+                    currentSelectedId={selectedId}
                     onClick={() => !isSaving && saveToFrame(f)}
                   />
                 ))
@@ -222,7 +240,28 @@ const SaveModal = ({
           <div className="pb-6">
             {renderHeader("Private Storage Folders")}
             <div className="max-h-[500px] overflow-y-auto">
-              {privateFolders.map(f => <ListItem key={f.id} {...f} onClick={() => setView("success_storage")} />)}
+              {isLoadingFolders ? (
+                <div className="flex flex-col items-center py-10 gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                  <p className="text-xs text-gray-400 font-medium">Loading your folders...</p>
+                </div>
+              ) : personalFolders.length === 0 ? (
+                <div className="flex flex-col items-center py-10 px-10 text-center gap-2">
+                  <p className="font-bold text-gray-800">No folders found</p>
+                </div>
+              ) : (
+                personalFolders.map((f: any) => (
+                  <ListItem 
+                    key={f._id || f.id} 
+                    id={f._id || f.id}
+                    title={f.name} 
+                    img="/images/folder.png"
+                    isPending={isMoving}
+                    currentSelectedId={selectedId}
+                    onClick={() => !isMoving && moveToStorage(f)} 
+                  />
+                ))
+              )}
             </div>
           </div>
         )}
@@ -238,8 +277,14 @@ const SaveModal = ({
             <div className="text-center px-8 space-y-2 mt-4 pb-4">
               <h2 className="text-3xl font-bold text-gray-900">Successfully Saved</h2>
               <p className="text-gray-400 text-sm leading-relaxed">
-                {view === "success_frame" ? "Saved to frame" : "Saved to storage"}
+                {view === "success_frame" ? `Post added to ${selectedFrameTitle}` : "Post moved to personal storage successfully"}
               </p>
+              <button 
+                onClick={onClose}
+                className="mt-4 px-8 py-2 bg-blue-600 text-white rounded-full font-bold shadow-lg hover:bg-blue-700 transition"
+              >
+                Close
+              </button>
             </div>
           </div>
         )}

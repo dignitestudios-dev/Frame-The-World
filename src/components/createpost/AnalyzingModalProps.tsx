@@ -1,8 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import DiscardUploadModal from "./DiscardUploadModal";
-import { removeHumanApi, confirmRemoveHumanApi } from "@/services/postApi";
-import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 type ModalStep = "analyzing" | "result" | "final-error";
@@ -31,6 +30,8 @@ interface AnalyzingModalProps {
   postId?: string;
   postStatus?: string;
   onRemoveHumanSuccess?: () => void;
+  // Current image URL to pass to the Remove Human screen
+  imageUrl?: string;
 }
 
 const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
@@ -49,29 +50,21 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
   postId,
   postStatus,
   onRemoveHumanSuccess,
+  imageUrl,
 }) => {
+  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState<ModalStep>("analyzing");
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
-  const [humanRemoved, setHumanRemoved] = useState(false);
-  const [removedFileId, setRemovedFileId] = useState<string | null>(null);
 
-  const { mutate: handleRemoveHuman, isPending: isRemovingHuman } = useMutation({
-    mutationFn: () => removeHumanApi(postId || ""),
-    onSuccess: (res) => {
-      setHumanRemoved(true);
-      const fileId = res?.data?._id || res?.data?.id;
-      if (fileId) setRemovedFileId(fileId);
-      onRemoveHumanSuccess?.();
-    },
-  });
-
-  const { mutate: handleConfirmRemoveHuman, isPending: isConfirming } = useMutation({
-    mutationFn: () => confirmRemoveHumanApi(postId || "", removedFileId || ""),
-    onSuccess: () => {
-      onSuccess?.();
-    },
-  });
+  const handleGoToRemoveHuman = () => {
+    if (!postId) return;
+    const params = new URLSearchParams({ postId });
+    console.log(imageUrl, "imageUrl");
+    if (imageUrl) params.set("imageUrl", imageUrl);
+    router.push(`/remove-human?${params.toString()}`);
+    onClose?.();
+  };
 
   const [checks, setChecks] = useState<CheckItem[]>([
     { id: 1, label: "Human Detection Check", status: "loading" },
@@ -107,7 +100,7 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
         id: 1,
         label: "Human Detection Check",
         status: humanStatus,
-        message: humanStatus === "error" ? "Humans are not allowed in the frame." : undefined
+        message: humanStatus === "error" ? "System Will Not Let You Upload Picture Contain Humans." : undefined
       },
       {
         id: 2,
@@ -119,7 +112,7 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
         id: 3,
         label: "AI Generated Content Check",
         status: aiStatus,
-        message: aiStatus === "error" ? "The content appears to be AI generated." : undefined
+        message: aiStatus === "error" ? "System Will Not Let You Allow To Upload AI Generated Content." : undefined
       },
     ];
   };
@@ -186,7 +179,7 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
       <div className="w-9 h-9 rounded-full border-4 border-gray-300 border-t-blue-500 animate-spin" />
     );
   };
-const hasHuman = humanDetection?.hasHuman;
+  const hasHuman = humanDetection?.hasHuman;
 
   const hasError = checks.some((c) => c.status === "error");
   const allSuccess = checks.every((c) => c.status === "success");
@@ -340,51 +333,20 @@ const hasHuman = humanDetection?.hasHuman;
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-3 mt-4">
-                {hasHuman && !humanRemoved && (
+                {/* Remove Human — navigates to dedicated AI Tool screen */}
+                {hasHuman && (
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRemoveHuman();
-                    }}
-                    disabled={isRemovingHuman}
+                    onClick={handleGoToRemoveHuman}
+                    disabled={!postId}
                     className="w-full py-3 rounded-full font-medium text-base flex items-center justify-center gap-2
                      bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md disabled:opacity-70"
                   >
-                    {isRemovingHuman ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Removing Human...
-                      </>
-                    ) : (
-                      "Remove Human"
-                    )}
+                    Remove Human
                   </button>
                 )}
 
-                {humanRemoved && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleConfirmRemoveHuman();
-                    }}
-                    disabled={isConfirming}
-                    className="w-full py-3 rounded-full font-medium text-base flex items-center justify-center gap-2
-                     bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md disabled:opacity-70"
-                  >
-                    {isConfirming ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Finalizing...
-                      </>
-                    ) : (
-                      "Continue"
-                    )}
-                  </button>
-                )}
-
-                {(aiDetection?.isAI || editingDetection?.isEdited || !postId) && !humanRemoved && (
+                {(aiDetection?.isAI || editingDetection?.isEdited || !postId) && (
                   <button
                     type="button"
                     onClick={onChangeImage}

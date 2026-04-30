@@ -594,9 +594,9 @@ export default function FrameDetailPage() {
           ) : framePosts.length === 0 ? (
             <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
               <div className="relative h-48 w-48 md:h-56 md:w-56">
-                <Image src="/images/no data found.jpg" alt="No data found" fill className="object-contain" />
+                <Image src="/images/nno-found.png" alt="No data found" fill className="object-contain" />
               </div>
-              <p className="mt-4 text-gray-600 font-medium">No data found</p>
+
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">

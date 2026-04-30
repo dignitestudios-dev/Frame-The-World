@@ -140,8 +140,16 @@ export const deleteFolderApi = async (folderId: string) => {
   return res.data;
 };
 
-// DELETE /folders/:folderId/images/:imageId
+// DELETE /folders/:folderId/images  — body: { imageIds: [imageId] }
 export const deleteFolderImageApi = async (folderId: string, imageId: string) => {
-  const res = await API.delete(`/folders/${folderId}/images/${imageId}`);
+  const res = await API.delete(`/folders/${folderId}/images`, {
+    data: { imageIds: [imageId] },
+  });
+  return res.data;
+};
+
+// POST /folders/:folderId/posts/:postId
+export const movePostToFolderApi = async (folderId: string, postId: string) => {
+  const res = await API.post(`/folders/${folderId}/posts/${postId}`);
   return res.data;
 };

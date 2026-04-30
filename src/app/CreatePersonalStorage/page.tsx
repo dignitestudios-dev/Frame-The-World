@@ -22,6 +22,7 @@ const CreateFolderPage: React.FC<CreateFolderPageProps> = ({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [folderName, setFolderName] = useState('');
+  const [error, setError] = useState('');
   const [toast, setToast] = useState<{
     open: boolean;
     message: string;
@@ -31,6 +32,18 @@ const CreateFolderPage: React.FC<CreateFolderPageProps> = ({
     message: '',
     type: 'success',
   });
+
+  const isValidFolderName = (name: string) => {
+    // 1. Check restricted characters
+    const restrictedRegex = /[\\/:*?"<>|]/;
+    if (restrictedRegex.test(name)) return false;
+
+    // 2. Allow anything except restricted, but must contain at least 1 letter or number
+    const mustHaveAlphaNum = /[a-zA-Z0-9]/;
+    if (!mustHaveAlphaNum.test(name)) return false;
+
+    return true;
+  };
 
   const createFolderMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -64,6 +77,16 @@ const CreateFolderPage: React.FC<CreateFolderPageProps> = ({
   const handleCreate = async () => {
     const name = folderName.trim();
     if (!name) return;
+
+    if (!isValidFolderName(name)) {
+      setToast({
+        open: true,
+        message:
+          'Invalid folder name. Avoid \\ / : * ? " < > | and use at least one letter or number.',
+        type: 'error',
+      });
+      return;
+    }
 
     if (onCreateFolder) {
       onCreateFolder(name);
@@ -130,12 +153,18 @@ const CreateFolderPage: React.FC<CreateFolderPageProps> = ({
               const value = e.target.value;
               if (value.length <= MAX_FOLDER_NAME_LENGTH) {
                 setFolderName(value);
+
+                if (value && !isValidFolderName(value)) {
+                  setError('Invalid characters in folder name');
+                } else {
+                  setError('');
+                }
               }
             }}
             maxLength={MAX_FOLDER_NAME_LENGTH}
             className="w-full px-0 py-3 border-b border-gray-300 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm"
           />
-          
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
 
         {/* Create Folder Button */}

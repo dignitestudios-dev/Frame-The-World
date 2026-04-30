@@ -1,14 +1,17 @@
 "use client";
 import Imagepage from "@/components/createpost/Imagepage";
 import Header from "@/components/global/header";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCategoriesApi } from "@/services/authApi";
 import { createPostApi } from "@/services/postApi";
 import { CategoryChipSkeleton } from "@/components/global/Skeletons";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ContentReleaseModal from "@/components/global/ContentReleaseModal";
 import Link from "next/link";
+import ImportFolderModal from "@/components/createpost/ImportFolderModal";
+import { FolderImageItem } from "@/services/frameApi";
+import { Loader2 } from "lucide-react";
 
 interface UploadFormProps {
   onGenerate?: (data: any) => void;
@@ -19,19 +22,35 @@ interface FormData {
   caption: string;
   agreedToTerms: boolean;
   categories: string[];
+  fileId: string | null;
 }
 
-const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
+const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
   const [formData, setFormData] = useState<FormData>({
     image: null,
     caption: "",
     agreedToTerms: false,
     categories: [],
+    fileId: null,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImage, setIsImage] = useState<boolean>(false);
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Handle initial image from query params (e.g., from personal storage "Make Post")
+  useEffect(() => {
+    const fileId = searchParams.get("fileId");
+    const imageUrl = searchParams.get("imageUrl");
+
+    if (fileId && imageUrl) {
+      setFormData((prev) => ({ ...prev, fileId, image: null }));
+      setImagePreview(decodeURIComponent(imageUrl));
+    }
+  }, [searchParams]);
+
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
@@ -65,25 +84,38 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setFormData({ ...formData, image: file });
+      setFormData({ ...formData, image: file, fileId: null });
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
     }
   };
 
+  const handleImportImage = (image: FolderImageItem) => {
+    setFormData({ ...formData, image: null, fileId: image._id });
+    setImagePreview(image.location);
+  };
+
   const handleRemoveImage = () => {
-    setFormData((prev) => ({ ...prev, image: null }));
+    setFormData((prev) => ({ ...prev, image: null, fileId: null }));
     setImagePreview(null);
     reset();
+    
+    // Clear query params if any
+    if (searchParams.get("fileId") || searchParams.get("imageUrl")) {
+      router.replace("/Createdpost");
+    }
   };
 
   const handleGenerate = () => {
-    if (!formData.image) return;
+    if (!formData.image && !formData.fileId) return;
 
     const data = new FormData();
 
     if (formData.image) {
       data.append("media", formData.image);
+    }
+    if (formData.fileId) {
+      data.append("fileId", formData.fileId);
     }
     data.append("caption", formData.caption);
     formData.categories.forEach((catId, index) => {
@@ -98,7 +130,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
 
   useEffect(() => {
     return () => {
-      if (imagePreview) {
+      if (imagePreview && !imagePreview.startsWith('http')) {
         URL.revokeObjectURL(imagePreview);
       }
     };
@@ -122,6 +154,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
               caption: "",
               agreedToTerms: false,
               categories: [],
+              fileId: null,
             });
             setImagePreview(null);
 
@@ -185,25 +218,46 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
               </div>
             )}
             {!imagePreview && (
-              <label
-                htmlFor="image-upload"
-                className="relative block w-full border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl p-12 text-center cursor-pointer group hover:bg-blue-100 transition-colors"
-              >
-                <div className="text-xs text-gray-500">
-                  <div className="text-blue-600 font-medium mb-1">
-                    Upload Picture
+              <div className="space-y-4">
+                <label
+                  htmlFor="image-upload"
+                  className="relative block w-full border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl p-12 text-center cursor-pointer group hover:bg-blue-100 transition-colors"
+                >
+                  <div className="text-xs text-gray-500">
+                    <div className="text-blue-600 font-medium mb-1">
+                      Upload Picture
+                    </div>
+                    Max Limit 5Mbs, PNG, JPG, JPEG
                   </div>
-                  Max Limit 5Mbs, PNG, JPG, JPEG
+
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept=".png,.jpg,.jpeg"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-[1px] bg-gray-200" />
+                  <span className="text-xs text-gray-400 font-medium">OR</span>
+                  <div className="flex-1 h-[1px] bg-gray-200" />
                 </div>
 
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept=".png,.jpg,.jpeg"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-              </label>
+                <button
+                  type="button"
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="w-full py-4 bg-white border-2 border-blue-100 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all flex items-center justify-center gap-2"
+                >
+                  <img
+                    src="/images/folder.png"
+                    className="w-6 h-6"
+                    alt="folder icon"
+                  />
+                  Import from Folder
+                </button>
+              </div>
             )}
           </div>
 
@@ -283,11 +337,17 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
             onClose={() => setIsReleaseModalOpen(false)}
           />
 
+          <ImportFolderModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImport={handleImportImage}
+          />
+
           {/* Generate Button */}
           <button
             onClick={handleGenerate}
             disabled={
-              !formData.image ||
+              (!formData.image && !formData.fileId) ||
               !formData.agreedToTerms ||
               formData.categories.length === 0 ||
               status === "pending"
@@ -302,4 +362,14 @@ const UploadForm: React.FC<UploadFormProps> = ({ onGenerate }) => {
   );
 };
 
-export default UploadForm;
+export default function UploadForm() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      </div>
+    }>
+      <UploadFormContent />
+    </Suspense>
+  );
+}

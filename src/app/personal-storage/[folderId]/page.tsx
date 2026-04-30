@@ -180,17 +180,35 @@ export default function PersonalStorageFolderImagesPage() {
     return () => URL.revokeObjectURL(previewUrl);
   }, [selectedFile]);
 
+  const [activeImageOptionsId, setActiveImageOptionsId] = useState<string | null>(null);
+
+  const handleMakePost = (image: any) => {
+    const imageUrl = image.location || FALLBACK_IMAGE_URL;
+    router.push(`/Createdpost?fileId=${image._id}&imageUrl=${encodeURIComponent(imageUrl)}`);
+  };
+
+  const openDeleteModal = (image: any) => {
+    setSelectedImage({ _id: image._id, url: image.location || FALLBACK_IMAGE_URL });
+    setIsDeleteImageModalOpen(true);
+    setActiveImageOptionsId(null);
+  };
+
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (!actionsMenuRef.current) return;
       if (!actionsMenuRef.current.contains(event.target as Node)) {
         setIsActionsOpen(false);
       }
+      
+      // Close image options menu if clicked outside
+      if (activeImageOptionsId && !(event.target as HTMLElement).closest('.image-options-container')) {
+        setActiveImageOptionsId(null);
+      }
     };
 
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+  }, [activeImageOptionsId]);
 
   const handleSelectFile = (file: File | undefined) => {
     if (!file) return;
@@ -342,13 +360,13 @@ export default function PersonalStorageFolderImagesPage() {
                 return (
                   <div
                     key={image._id || `${image.filename}-${index}`}
-                    onClick={() => setSelectedImage({ _id: image._id, url: imageUrl })}
-                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl cursor-pointer ${isTall ? "row-span-2" : "row-span-3"}`}
+                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl group ${isTall ? "row-span-2" : "row-span-3"}`}
                   >
                     <img
                       src={imageUrl}
                       alt={image.filename || "Folder image"}
-                      className="absolute inset-0 h-full w-full object-cover"
+                      onClick={() => setSelectedImage({ _id: image._id, url: imageUrl })}
+                      className="absolute inset-0 h-full w-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
                       onError={(event) => {
                         const target = event.currentTarget;
@@ -357,6 +375,44 @@ export default function PersonalStorageFolderImagesPage() {
                         }
                       }}
                     />
+                    
+                    {/* Image Options Button */}
+                    <div className="absolute top-2 right-2 z-10 image-options-container">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveImageOptionsId(activeImageOptionsId === image._id ? null : image._id);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors backdrop-blur-sm"
+                      >
+                        <EllipsisVertical className="w-4 h-4" />
+                      </button>
+                      
+                      {activeImageOptionsId === image._id && (
+                        <div className="absolute right-0 top-9 w-32 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in duration-100 origin-top-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMakePost(image);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <Plus className="w-3.5 h-3.5 text-blue-500" />
+                            Make Post
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDeleteModal(image);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 border-t border-gray-50 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -365,9 +421,9 @@ export default function PersonalStorageFolderImagesPage() {
         )}
       </div>
 
-      {selectedImage ? (
+      {/* {selectedImage ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
           onClick={() => setSelectedImage(null)}
         >
           <button
@@ -397,7 +453,7 @@ export default function PersonalStorageFolderImagesPage() {
             onClick={(event) => event.stopPropagation()}
           />
         </div>
-      ) : null}
+      ) : null} */}
 
       {isUploadModalOpen ? (
         <div

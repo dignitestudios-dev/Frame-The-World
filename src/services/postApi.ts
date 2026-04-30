@@ -86,3 +86,13 @@ export const getAllPostsApi = async (params: {
   const res = await API.get(`/posts/all?${queryParams.toString()}`);
   return res.data;
 };
+
+// POST /ai-caption/generate
+export const generateAiCaptionApi = async (formData: FormData) => {
+  const res = await API.post("/ai-caption/generate", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};

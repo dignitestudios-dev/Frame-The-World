@@ -284,7 +284,7 @@ export default function TravelStoryPage() {
                     {/* Card Content */}
                     <div className="absolute inset-0 p-4 flex flex-col justify-between">
                       <span className="text-white text-2xl font-bold">
-                        {frame.totalPosts}+
+                        {frame.totalPosts > 99 ? `${frame.totalPosts}+` : frame.totalPosts}
                       </span>
                       <span className="text-sm text-gray-200">
                         {frame.title || "Untitled Frame"}
@@ -369,9 +369,9 @@ export default function TravelStoryPage() {
             ) : frameItems.length === 0 ? (
               <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
                 <div className="relative h-48 w-48 md:h-56 md:w-56">
-                  <Image src="/images/no data found.jpg" alt="No data found" fill className="object-contain" />
+                  <Image src="/images/no-found.png" alt="No data found" fill className="object-contain" />
                 </div>
-                <p className="mt-4 text-gray-600 font-medium">No data found</p>
+
               </div>
             ) : (
               <>
@@ -433,7 +433,7 @@ export default function TravelStoryPage() {
                         </div>
 
                         <div className="absolute inset-0 flex pt-34 flex-col items-center text-white bg-[#00000056]">
-                          <div className="text-3xl font-bold">{frame.totalPosts}+</div>
+                          <div className="text-3xl font-bold">{frame.totalPosts > 99 ? `${frame.totalPosts}+` : frame.totalPosts}</div>
                           <div className="text-sm mt-1 px-3 text-center capitalize">{frame.title || "Untitled Frame"}</div>
                         </div>
                       </div>
@@ -473,9 +473,9 @@ export default function TravelStoryPage() {
             ) : isFeedTab && activePosts.length === 0 ? (
               <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
                 <div className="relative h-48 w-48 md:h-56 md:w-56">
-                  <Image src="/images/no data found.jpg" alt="No data found" fill className="object-contain" />
+                  <Image src="/images/no-found.png" alt="No data found" fill className="object-contain" />
                 </div>
-                <p className="mt-4 text-gray-600 font-medium">No data found</p>
+
               </div>
             ) : (
               <>

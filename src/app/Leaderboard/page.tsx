@@ -60,6 +60,15 @@ export default function TravelStoryPage() {
       <Header title="Leaderboard" subtitle="Check out who's at the top of the leaderboard right now" />
       <div className="min-h-screen bg-[#f6f7fb] px-6 pb-20">
         <div className="mx-auto p-6">
+
+          {
+            sortedPodium.length === 0 && (
+              <div className="flex items-center justify-center py-20">
+                <img src="/images/no-found.png" className="w-[250px] h-[250px] " alt="" />
+              </div>
+            )
+          }
+
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
@@ -88,37 +97,40 @@ export default function TravelStoryPage() {
               </div>
 
               {/* ================= SEGMENT ================= */}
-              <div className="mt-8 flex justify-center">
-                <div className="w-[340px] bg-[#eef1fb] rounded-full p-1 flex">
-                  <button
-                    onClick={() => setActiveTab("upvotes")}
-                    className={`flex-1 py-3 rounded-full text-sm font-medium transition-all ${activeTab === "upvotes"
-                      ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white"
-                      : "text-gray-500"
-                      }`}
-                  >
-                    UpVotes
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("framed")}
-                    className={`flex-1 py-3 rounded-full text-sm font-medium transition-all ${activeTab === "framed"
-                      ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white"
-                      : "text-gray-500"
-                      }`}
-                  >
-                    Framed
-                  </button>
-                </div>
-              </div>
-
+              {
+                remainingUsers.length > 0 && (
+                  <div className="mt-8 flex justify-center">
+                    <div className="w-[340px] bg-[#eef1fb] rounded-full p-1 flex">
+                      <button
+                        onClick={() => setActiveTab("upvotes")}
+                        className={`flex-1 py-3 rounded-full text-sm font-medium transition-all ${activeTab === "upvotes"
+                          ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white"
+                          : "text-gray-500"
+                          }`}
+                      >
+                        UpVotes
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("framed")}
+                        className={`flex-1 py-3 rounded-full text-sm font-medium transition-all ${activeTab === "framed"
+                          ? "bg-gradient-to-r from-[#6CACDF] to-[#0000FE] text-white"
+                          : "text-gray-500"
+                          }`}
+                      >
+                        Framed
+                      </button>
+                    </div>
+                  </div>
+                )
+              }
               {/* ================= TOP LIST ================= */}
               <div className="mt-4 max-w-2xl mx-auto p-6 space-y-3">
                 {remainingUsers.map((u) => (
                   <div
                     key={u._id}
                     className={`flex items-center justify-between p-4 rounded-full transition-all ${u.isCurrentUser
-                        ? "gradient-bg text-white shadow-lg shadow-red-200"
-                        : "bg-gray-200 text-black"
+                      ? "gradient-bg text-white shadow-lg shadow-red-200"
+                      : "bg-gray-200 text-black"
                       }`}
                   >
                     <div className="flex items-center gap-4">

@@ -302,7 +302,7 @@ const CreateFrameContent = () => {
               type="text"
               placeholder="Enter frame title"
               value={title}
-              maxLength={100}
+              maxLength={50}
               onChange={(e) => {
                 setTitle(e.target.value);
                 setFieldErrors((prev) => ({ ...prev, title: undefined }));
@@ -315,7 +315,7 @@ const CreateFrameContent = () => {
               </div>
 
               <p className={`text-xs mt-2 ${title.length >= 100 ? 'text-red-500' : 'text-gray-400'}`}>
-                {title.length}/100
+                {title.length}/50
               </p>
             </div>
           </div>

@@ -10,7 +10,8 @@ import { useAccessControl } from "@/providers/AccessControlProvider";
 import { GridCardSkeleton } from "@/components/global/Skeletons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@/lib/apiError";
-import { getFeaturedPostsApi, getFramesApi, getPostsApi } from "@/services/authApi";
+import { getFeaturedPostsApi, getPostsApi } from "@/services/postApi";
+import { getFramesApi } from "@/services/frameApi";
 import { usePostStore } from "@/store/PostStore";
 
 const FEED_PAGE_LIMIT = 10;

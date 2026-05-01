@@ -6,7 +6,8 @@ import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/global/header";
-import { getSearchFramesApi, getSearchPostsApi } from "@/services/authApi";
+import { getSearchPostsApi } from "@/services/postApi";
+import { getSearchFramesApi } from "@/services/frameApi";
 
 type SearchTab = "all" | "images" | "frames";
 

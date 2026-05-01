@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getCategoriesApi, updateUserApi } from "@/services/authApi";
 import { useAuthStore } from "@/store/authStore";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { CategoryChipSkeleton } from "@/components/global/Skeletons";
+import { getCategoriesApi } from "@/services/postApi";
+import { updateUserApi } from "@/services/userApi";
 
 export default function CategoryPreferences() {
   const { user, updateUser } = useAuthStore();

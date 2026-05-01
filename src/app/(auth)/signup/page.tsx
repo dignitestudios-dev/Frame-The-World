@@ -54,22 +54,28 @@ export default function SignupPage() {
   const { mutate: socialLoginMutate, isPending: isSocialPending } = useMutation({
     mutationFn: socialAuthApi,
     onSuccess: (data) => {
-      const user = data.data?.user || data.user;
-      const token = data.data?.token || data.token;
+      const user = data?.data?.user;
+      const token = data?.data?.token;
+    console.log(data,"data---1");
+      if (user && token) {
+        login({ user, token });
+        setToastMessage(data?.message || "Login successful");
+        setToastType("success");
+        setToastOpen(true);
 
-      login({ user, token });
-      setToastMessage(data?.message || "Login successful");
-      setToastType("success");
-      setToastOpen(true);
-
-      setTimeout(() => {
-        if (user?.isProfileCompleted) {
-          router.push("/home");
-        } else {
-          // Social auth users skip email OTP verification
-          router.push("/verify-credentials");
-        }
-      }, 1000);
+        setTimeout(() => {
+          if (user?.isProfileCompleted) {
+            router.push("/home");
+          } else {
+            // Social auth users skip email OTP verification
+            router.push("/verify-credentials");
+          }
+        }, 1000);
+      } else {
+        setToastMessage("Invalid response from server");
+        setToastType("error");
+        setToastOpen(true);
+      }
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -106,7 +112,7 @@ export default function SignupPage() {
   };
 
   const onSubmit = (data: SignupFormData) => {
-    mutate({ email: data.email, password: data.password });
+    mutate({ email: data.email, password: data.password, method: "email" });
   };
 
   return (

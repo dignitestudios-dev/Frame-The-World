@@ -145,7 +145,7 @@ export default function CreateProfilePage() {
             <div>
               <Input
                 placeholder="Enter your name"
-                maxLength={100}
+                maxLength={50}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
                 {...register("fullName", {
                   onChange: (e) => {
@@ -166,12 +166,12 @@ export default function CreateProfilePage() {
             <div className="relative">
               <textarea
                 {...register("bio")}
-                maxLength={250}
+                maxLength={150}
                 placeholder="Tell us about yourself!"
                 className="w-full min-h-[120px] rounded-2xl bg-[#f4f4f4] border-none p-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 resize-none"
               />
               <div className="absolute bottom-4 right-6 text-[10px] font-bold text-gray-400">
-                {watch("bio")?.length || 0}/250
+                {watch("bio")?.length || 0}/150
               </div>
               {errors.bio && <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold">{errors.bio.message}</p>}
             </div>
@@ -187,7 +187,7 @@ export default function CreateProfilePage() {
             <div className="space-y-3">
               <Input
                 placeholder="Enter your company name"
-                maxLength={100}
+                maxLength={50}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0"
                 {...register("companyName", {
                   onChange: (e) => {

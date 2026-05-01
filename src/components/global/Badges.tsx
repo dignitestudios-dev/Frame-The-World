@@ -4,9 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { X, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getBadgesApi } from "@/services/authApi";
+import { getBadgesApi } from "@/services/userApi";
 
-const LOCK_ICON = "/images/badge-lock-icon.png";
+const LOCK_ICON = "/images/badge4.png";
 
 export default function Badges() {
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
@@ -42,10 +42,10 @@ export default function Badges() {
                 <div className="absolute inset-0 bg-gray-100/30 rounded-full blur-xl scale-75"></div>
               ) : null}
               <Image
-                src={badge.isLocked ? LOCK_ICON : badge.icon}
-                alt={badge.name}
+                src={badge.isLocked ? LOCK_ICON : badge?.icon?.location}
+                alt={badge.isLocked ? badge?.name : "Locked badge"}
                 fill
-                className={`object-contain ${badge.isLocked ? "opacity-90 grayscale-[0.5]" : "animate-in zoom-in-75 duration-500"}`}
+                className="object-contain relative z-10"
               />
             </div>
             {!badge.isLocked && (
@@ -83,8 +83,8 @@ export default function Badges() {
             <div className="relative w-40 h-40 md:w-52 md:h-52 mb-8">
               <div className={`absolute inset-0 bg-gradient-to-b from-gray-100 to-transparent rounded-full blur-2xl scale-90 ${selectedBadge.isLocked ? "opacity-20" : "opacity-40"}`}></div>
               <Image
-                src={selectedBadge.isLocked ? LOCK_ICON : selectedBadge.icon}
-                alt={selectedBadge.name}
+                src={selectedBadge?.icon?.location}
+                alt={selectedBadge?.name}
                 fill
                 className={`relative object-contain ${selectedBadge.isLocked ? "" : "animate-in bounce-in duration-700"}`}
               />

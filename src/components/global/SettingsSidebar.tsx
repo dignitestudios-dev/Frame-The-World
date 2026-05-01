@@ -11,6 +11,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
     "Account Information",
     "Category Preferences",
     "Notifications",
+    "Badges",
     `${user?.isPasswordSet ? "Change Password" : "Set Password"} `,
     "Delete Account",
     "App Walkthrough",

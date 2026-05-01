@@ -7,7 +7,7 @@ import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBadgesApi, getSingleBadgeApi, getUserProfileApi } from "@/services/authApi";
+import { getBadgesApi, getSingleBadgeApi, getUserProfileApi } from "@/services/userApi";
 import {
   getOwnPostsApi,
   getPostApi,
@@ -296,43 +296,45 @@ function ProfileContent() {
                     </p>
                   )}
 
-                  <h3 className="text-xl font-bold mb-6 text-gray-900 text-left w-full">
-                    Badges
-                  </h3>
+                  {(isBadgesLoading || hasUnlockedBadges) && (
+                    <>
+                      <h3 className="text-xl font-bold mb-6 text-gray-900 text-left w-full">
+                        Badges
+                      </h3>
 
-                  <div className="grid grid-cols-4 gap-y-6 gap-x-2 min-h-[100px] items-center justify-center">
-                    {isBadgesLoading ? (
-                      <div className="col-span-4 flex justify-center py-4">
-                        <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-                      </div>
-                    ) : (
-                      badgesData?.data?.map((badge: any, i: number) => {
-                        const isLocked = !badge?.isEarned;
-                        return (
-                          <div
-                            key={i}
-                            className="flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105"
-                            onClick={() => setSelectedBadge(badge)}
-                          >
-                            <div className="relative w-12 h-12">
-                              {isLocked && (
-                                <div className="absolute inset-0 bg-gray-100/30 rounded-full blur-md scale-75 z-0"></div>
-                              )}
-                              <Image
-                                src={isLocked ? LOCK_ICON : badge?.icon?.location}
-                                alt={isLocked ? badge?.name : "Locked badge"}
-                                fill
-                                className="object-contain relative z-10"
-                              />
-                            </div>
-                            <p className="text-[9px] font-bold text-gray-400 tracking-tighter text-center line-clamp-1">
-                              {badge?.name}
-                            </p>
+                      <div className="grid grid-cols-4 gap-y-6 gap-x-2 min-h-[100px] items-center justify-center">
+                        {isBadgesLoading ? (
+                          <div className="col-span-4 flex justify-center py-4">
+                            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
+                        ) : (
+                          badgesData?.data
+                            ?.filter((badge: any) => badge?.isEarned)
+                            ?.map((badge: any, i: number) => {
+                              return (
+                                <div
+                                  key={i}
+                                  className="flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105"
+                                  onClick={() => setSelectedBadge(badge)}
+                                >
+                                  <div className="relative w-12 h-12">
+                                    <Image
+                                      src={badge?.icon?.location || LOCK_ICON}
+                                      alt={badge?.name || "Badge"}
+                                      fill
+                                      className="object-contain relative z-10"
+                                    />
+                                  </div>
+                                  <p className="text-[9px] font-bold text-gray-400 tracking-tighter text-center line-clamp-1">
+                                    {badge?.name}
+                                  </p>
+                                </div>
+                              );
+                            })
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </aside>

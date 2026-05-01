@@ -3,7 +3,6 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUserProfileApi, updateUserApi, verifyIdentityApi } from "@/services/authApi";
 import { useAuthStore } from "@/store/authStore";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +15,7 @@ import LocationAutocomplete from "@/components/global/LocationAutocomplete";
 import { ArrowRight, Camera, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { useRef } from "react";
+import { getUserProfileApi, updateUserApi, verifyIdentityApi } from "@/services/userApi";
 
 export default function AccountInformation() {
   const queryClient = useQueryClient();
@@ -204,7 +204,7 @@ export default function AccountInformation() {
         <div className="flex flex-col items-center justify-center mb-8">
           <div className="relative group">
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#F4F5F7] shadow-md bg-gray-100 relative">
-              {previewUrl ? (
+              {previewUrl && previewUrl.trim() !== "" ? (
                 <Image
                   src={previewUrl}
                   alt="Profile"
@@ -276,13 +276,13 @@ export default function AccountInformation() {
         <div className="w-full relative">
           <textarea
             {...register("bio")}
-            maxLength={250}
+            maxLength={150}
             disabled={!isEditing}
             placeholder="Tell us about yourself!"
             className="w-full h-32 rounded-[24px] bg-[#f4f4f4] border-none p-6 text-sm font-semibold text-gray-800 placeholder:text-gray-400 focus:ring-0 focus:outline-none resize-none pt-4 disabled:opacity-70 disabled:cursor-not-allowed"
           />
           <div className="absolute -bottom-5 right-2 text-[10px] font-bold text-gray-400">
-            {bioLength}/250
+            {bioLength}/150
           </div>
           {errors.bio && (
             <p className="text-red-500 text-[10px] ml-4 mt-2 font-bold">{errors.bio.message}</p>
@@ -301,7 +301,7 @@ export default function AccountInformation() {
               <Input
                 placeholder="Company name"
                 disabled={!isEditing}
-                maxLength={100}
+                maxLength={50}
                 className="w-full h-14 rounded-full bg-[#f4f4f4] border-none px-6 text-sm font-semibold placeholder:text-gray-400 focus:ring-0 disabled:opacity-70 disabled:cursor-not-allowed"
                 {...register("companyName", {
                   onChange: (e) => {

@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { verifyCredentialsSchema, VerifyCredentialsFormData } from "@/schemas/Auth";
 import { useMutation } from "@tanstack/react-query";
-import { verifyIdentityApi } from "@/services/authApi";
+import { verifyIdentityApi } from "@/services/userApi";
 import { useAuthStore } from "@/store/authStore";
 import { getApiErrorMessage } from "@/lib/apiError";
 

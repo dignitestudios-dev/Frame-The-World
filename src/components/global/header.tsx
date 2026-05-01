@@ -8,9 +8,11 @@ import { useState, useRef, useEffect } from "react";
 import NotificationModal from "./notification-modal";
 import { Plus } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { logoutApi } from "@/services/authApi";
 import { useAccessControl } from "@/providers/AccessControlProvider";
+import { useNotificationStore } from "@/store/notificationStore";
+import { getNotificationsApi } from "@/services/notificationApi";
 
 export default function Header({ title, subtitle }: { title?: string, subtitle?: string }) {
   const router = useRouter();
@@ -22,6 +24,23 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
   const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal" | null>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
   const { executeWithCheck } = useAccessControl();
+  const { unreadCount, setUnreadCount } = useNotificationStore();
+
+  // Pre-fetch notifications on mount to populate the unread badge
+  const { data: initialNotifData } = useQuery({
+    queryKey: ["notifications-count"],
+    queryFn: () => getNotificationsApi({ page: 1, limit: 15 }),
+    enabled: !!user,
+    staleTime: 30_000,
+    refetchInterval: 120_000, // background refresh every 2 min
+  });
+
+  useEffect(() => {
+    if (initialNotifData?.data && Array.isArray(initialNotifData.data)) {
+      const count = initialNotifData.data.filter((n: any) => n && !n.isRead).length;
+      setUnreadCount(count);
+    }
+  }, [initialNotifData, setUnreadCount]);
 
   const { mutate: logoutMutate } = useMutation({
     mutationFn: logoutApi,
@@ -240,10 +259,10 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                 />
               </button>
 
-              {/* Bell button */}
+              {/* Bell button with unread badge */}
               <button
                 onClick={() => executeWithCheck(() => setIsNotificationOpen(!isNotificationOpen), { isPendingAllowed: false })}
-                className="cursor-pointer active:scale-90 transition-transform"
+                className="cursor-pointer active:scale-90 transition-transform relative"
               >
                 <Image
                   src="/images/notifaction.png"
@@ -252,6 +271,13 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                   width={40}
                   className="md:w-[50px] md:h-[50px]"
                 />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] font-bold shadow-md shadow-red-500/30 border-2 border-white leading-none"
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>

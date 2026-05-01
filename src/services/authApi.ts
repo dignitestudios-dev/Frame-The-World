@@ -1,76 +1,101 @@
 import { API } from "@/lib/axios";
 
-// POST /auth/check-email - { email }
-export const checkEmailApi = async (data: { email: string }) => {
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  isEmailVerified: boolean;
+  profilePicture?: {
+    location: string;
+  } | null;
+  bio?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  iata?: string;
+  clia?: string;
+  isIdentityVerified?: boolean;
+  isProfileCompleted?: boolean;
+  isPasswordSet?: boolean;
+  totalFollowers?: number;
+  totalFollowing?: number;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: User;
+    token: string;
+  };
+}
+
+// ─── Auth API Functions ───────────────────────────────────────────────────────
+
+// POST /auth/check-email
+export const checkEmailApi = async (data: { email: string; method?: string }) => {
   const res = await API.post("/auth/check-email", data);
   return res.data;
 };
 
-// POST /auth/signup - { email, method: "email", password }
-export const signupApi = async (data: { email: string; password: string }) => {
-  const res = await API.post("/auth", {
-    email: data.email,
-    method: "email",
-    password: data.password,
-  });
+// POST /auth/signup
+export const signupApi = async (data: any) => {
+  const res = await API.post<AuthResponse>("/auth", data);
   return res.data;
 };
 
-// POST /auth/signin - { email, method: "email", password }
-export const signinApi = async (data: { email: string; password: string }) => {
-  const res = await API.post("/auth", {
-    email: data.email,
-    method: "email",
-    password: data.password,
-  });
+// POST /auth/signin
+export const signinApi = async (data: any) => {
+  const res = await API.post<AuthResponse>("/auth", data);
   return res.data;
 };
 
-// POST /auth - Social Authentication (Google, Apple)
-export const socialAuthApi = async (data: { method: "google" | "apple"; idToken: string }) => {
-  const res = await API.post("/auth", data);
+// POST /auth/social-auth
+export const socialAuthApi = async (data: { method: string; idToken: string }) => {
+  const res = await API.post<AuthResponse>("/auth", data);
   return res.data;
 };
 
-
-// POST /auth/verify-email - { email, otp }
+// POST /auth/verify-email
 export const verifyEmailApi = async (data: { email: string; otp: string }) => {
   const res = await API.post("/auth/verify-email", data);
   return res.data;
 };
 
-// POST /auth/email-verification-otp (resend) - { email }
+// POST /auth/resend-email-verification-otp
 export const resendEmailVerificationOtpApi = async (data: { email: string }) => {
-  const res = await API.post("/auth/email-verification-otp", data);
+  const res = await API.post("/auth/resend-email-verification-otp", data);
   return res.data;
 };
 
-// POST /auth/forgot - { email }
+// POST /auth/forgot-password
 export const forgotPasswordApi = async (data: { email: string }) => {
-  const res = await API.post("/auth/forgot", data);
+  const res = await API.post("/auth/forgot-password", data);
   return res.data;
 };
 
-// POST /auth/verify-otp - { email, otp }
+// POST /auth/verify-otp
 export const verifyOtpApi = async (data: { email: string; otp: string }) => {
   const res = await API.post("/auth/verify-otp", data);
   return res.data;
 };
 
-// POST /auth/update-password - { resetToken, password }
-export const updatePasswordApi = async (data: { resetToken: string; password: string }) => {
+// POST /auth/update-password
+export const updatePasswordApi = async (data: any) => {
   const res = await API.post("/auth/update-password", data);
   return res.data;
 };
 
-// POST /auth/change-password - { current_password, password } (requires auth token)
-export const changePasswordApi = async (data: { password?: string; newPassword: string }) => {
+// POST /auth/change-password
+export const changePasswordApi = async (data: any) => {
   const res = await API.post("/auth/change-password", data);
   return res.data;
 };
 
-// POST /auth/set-password - { password } (requires auth token)
-export const setPasswordApi = async (data: { password: string }) => {
+// POST /auth/set-password
+export const setPasswordApi = async (data: any) => {
   const res = await API.post("/auth/set-password", data);
   return res.data;
 };
@@ -78,335 +103,5 @@ export const setPasswordApi = async (data: { password: string }) => {
 // POST /auth/logout
 export const logoutApi = async () => {
   const res = await API.post("/auth/logout");
-  return res.data;
-};
-
-// POST /users/verify-identity - { iata } or { clia } (requires auth token)
-export const verifyIdentityApi = async (data: { iata?: string; clia?: string }) => {
-  const res = await API.post("/users/verify-identity", data);
-  return res.data;
-};
-
-// POST /users/complete-profile - FormData (requires auth token)
-export const completeProfileApi = async (formData: FormData) => {
-  const res = await API.post("/users/complete-profile", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return res.data;
-};
-
-// GET /users/own - Get current user profile
-export const getUserProfileApi = async () => {
-  const res = await API.get("/users/own");
-  return res?.data;
-};
-
-// GET /badges - Get Badges profile
-export const getBadgesApi = async () => {
-  const res = await API.get("/badges/own");
-  return res.data;
-};
-
-// GET /badges/:badgeId - Get Single Badge details
-export const getSingleBadgeApi = async (badgeId: string) => {
-  const res = await API.get(`/badges/${badgeId}`);
-  return res.data;
-};
-
-// GET /users/:userId - Get another user profile
-export const getUserByIdApi = async (userId: string) => {
-  const res = await API.get(`/users/${userId}`);
-  return res.data;
-};
-
-// POST /reports - Report a user, post, or frame
-export const reportEntityApi = async (data: {
-  entityId: string;
-  entityType: "User" | "Post" | "Frame";
-  reason: string;
-  description?: string;
-  supportingEntityId?: string;
-  supportingEntityType?: "User" | "Post" | "Frame";
-}) => {
-  const res = await API.post("/reports", data);
-  return res.data;
-};
-
-
-// PATCH /users/ - Update user profile (FormData)
-export const updateUserApi = async (formData: FormData) => {
-  const res = await API.patch("/users/", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return res.data;
-};
-
-// DELETE /users
-export const deleteUserApi = async () => {
-  const res = await API.delete("/users");
-  return res.data;
-};
-
-// GET /categories - { page, limit }
-export const getCategoriesApi = async (params?: { page?: number; limit?: number }) => {
-  const res = await API.get("/categories", { params });
-  return res.data;
-};
-
-export type FeedPost = {
-  _id: string;
-  caption: string | null;
-  media?: {
-    location?: string | null;
-  } | null;
-};
-
-export type FeedPostsResponse = {
-  success: boolean;
-  message: string;
-  data: FeedPost[];
-  pagination: {
-    itemsPerPage: number;
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-  };
-};
-
-// GET /posts - Feed listing with pagination
-export const getPostsApi = async (params: { page: number; limit: number }) => {
-  const res = await API.get<FeedPostsResponse>("/posts", { params });
-  return res.data;
-};
-
-export type FeaturedPost = {
-  _id: string;
-  status?: string;
-  media?: {
-    _id?: string;
-    fileName?: string;
-    key?: string;
-    location?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-  } | null;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export type FeaturedPostsResponse = {
-  success: boolean;
-  message: string;
-  data: FeaturedPost[];
-  pagination: {
-    itemsPerPage: number;
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-  };
-};
-
-// GET /posts/featured - Featured feed listing with pagination
-export const getFeaturedPostsApi = async (params: { page: number; limit: number }) => {
-  const res = await API.get<FeaturedPostsResponse>("/posts/featured", { params });
-  return res.data;
-};
-
-export type FrameFeedItem = {
-  _id: string;
-  title: string;
-  totalPosts: number;
-  country?: string;
-  state?: string;
-  city?: string;
-  geoLocation?: {
-    type?: string;
-    coordinates?: number[];
-  };
-  cover?: {
-    _id?: string;
-    fileName?: string;
-    key?: string;
-    location?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-  } | null;
-  createdBy?: {
-    _id?: string;
-    name?: string;
-    email?: string;
-  }
-};
-
-export type FramesFeedResponse = {
-  success: boolean;
-  message: string;
-  data: FrameFeedItem[];
-  pagination: {
-    itemsPerPage: number;
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-  };
-};
-
-// GET /frames - Frames feed listing with pagination
-export const getFramesApi = async (params: { page: number; limit: number }) => {
-  const res = await API.get<FramesFeedResponse>("/frames", { params });
-  return res.data;
-};
-
-export type FrameDetailsResponse = {
-  success: boolean;
-  message: string;
-  data: FrameFeedItem;
-};
-
-// GET /frames/:frameId - Single frame details
-export const getFrameByIdApi = async (frameId: string) => {
-  const res = await API.get<FrameDetailsResponse>(`/frames/${frameId}`);
-  return res.data;
-};
-
-export type FramePostItem = {
-  _id: string;
-  caption?: string | null;
-  media?: {
-    _id?: string;
-    location?: string | null;
-  } | null;
-};
-
-export type FramePostsResponse = {
-  success: boolean;
-  message: string;
-  data: FramePostItem[];
-  pagination: {
-    itemsPerPage: number;
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-  };
-};
-
-// GET /frames/:frameId/posts - Posts list by frame id
-export const getFramePostsApi = async (
-  frameId: string,
-  params: { page?: number; limit?: number } = { page: 1, limit: 20 }
-) => {
-  const res = await API.get<FramePostsResponse>(`/frames/${frameId}/posts`, { params });
-  return res.data;
-};
-
-export type SearchPostItem = {
-  _id: string;
-  media?: {
-    location?: string | null;
-  } | null;
-};
-
-export type SearchPostsResponse = {
-  success: boolean;
-  message: string;
-  data: SearchPostItem[];
-  pagination?: {
-    itemsPerPage: number;
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-  };
-};
-
-type SearchCommonParams = {
-  latitude?: number;
-  longitude?: number;
-  categories?: string[];
-  userId?: string;
-  targetUserId?: string;
-};
-
-// GET /posts/all - Search posts by location/categories/userId
-export const getSearchPostsApi = async (params: SearchCommonParams & { limit?: number }) => {
-  const searchParams = new URLSearchParams();
-  searchParams.set("limit", String(params.limit ?? 40));
-
-  if (typeof params.longitude === "number") {
-    searchParams.set("longitude", String(params.longitude));
-  }
-
-  if (typeof params.latitude === "number") {
-    searchParams.set("latitude", String(params.latitude));
-  }
-
-  if (params.userId) {
-    searchParams.set("targetUserId", params.userId);
-  }
-
-  params.categories?.forEach((category) => {
-    searchParams.append("categories", category);
-  });
-
-  const res = await API.get<SearchPostsResponse>(`/posts/all?${searchParams.toString()}`);
-  return res.data;
-};
-
-// GET /frames - Search frames by location/categories/targetUserId
-export const getSearchFramesApi = async (params: SearchCommonParams & { limit?: number }) => {
-  const searchParams = new URLSearchParams();
-
-  if (typeof params.limit === "number") {
-    searchParams.set("limit", String(params.limit));
-  }
-
-  if (typeof params.longitude === "number") {
-    searchParams.set("longitude", String(params.longitude));
-  }
-
-  if (typeof params.latitude === "number") {
-    searchParams.set("latitude", String(params.latitude));
-  }
-
-  if (params.targetUserId) {
-    searchParams.set("targetUserId", params.targetUserId);
-  }
-
-  params.categories?.forEach((category) => {
-    searchParams.append("categories", category);
-  });
-
-  const queryString = searchParams.toString();
-  const res = await API.get<FramesFeedResponse>(queryString ? `/frames/all?${queryString}` : "/frames/");
-  return res.data;
-};
-
-export type LeaderboardUser = {
-  upvotes?: number;
-  downloads?: number;
-  user: {
-    _id: string;
-    name: string | null;
-    profilePicture?: {
-      location: string;
-    } | null;
-  };
-  rank: number;
-};
-
-export type LeaderboardResponse = {
-  success: boolean;
-  message: string;
-  data: {
-    topUpvotedUsers: LeaderboardUser[];
-    topDownloadedUsers: LeaderboardUser[];
-  };
-};
-
-// GET /posts/leaderboard
-export const getLeaderboardApi = async () => {
-  const res = await API.get<LeaderboardResponse>(`/posts/leaderboard`);
   return res.data;
 };

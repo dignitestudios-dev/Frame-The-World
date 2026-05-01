@@ -7,7 +7,9 @@ import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useQuery } from "@tanstack/react-query";
-import { getBadgesApi, getSingleBadgeApi, getUserByIdApi, getSearchPostsApi, getSearchFramesApi } from "@/services/authApi";
+import { getUserByIdApi, getBadgesApi, getSingleBadgeApi } from "@/services/userApi";
+import { getSearchPostsApi } from "@/services/postApi";
+import { getSearchFramesApi } from "@/services/frameApi";
 import OwnPostCard from "@/components/profile/OwnPostCard";
 import { usePostStore } from "@/store/PostStore";
 import { ProfileSidebarSkeleton } from "@/components/global/Skeletons";
@@ -225,7 +227,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
                           >
                             <div className="relative w-12 h-12">
                               <Image
-                                src={isLocked ? LOCK_ICON : badge?.icon?.location}
+                                src={isLocked ? LOCK_ICON : (badge?.icon?.location || LOCK_ICON)}
                                 alt={badge?.name}
                                 fill
                                 className="object-contain"
@@ -372,7 +374,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
             ) : (
               <>
                 <div className="relative w-40 h-40 mb-8">
-                  <img src={badgeDetail?.isLocked ? LOCK_ICON : badgeDetail?.icon?.location} alt={badgeDetail?.name} className="object-contain" />
+                  <img src={(badgeDetail?.isLocked || !badgeDetail?.icon?.location) ? LOCK_ICON : badgeDetail?.icon?.location} alt={badgeDetail?.name} className="object-contain" />
                 </div>
                 <h2 className="text-2xl font-black text-gray-900 text-center mb-4">{badgeDetail?.name}</h2>
                 <p className="text-sm font-medium text-gray-500 text-center leading-relaxed">

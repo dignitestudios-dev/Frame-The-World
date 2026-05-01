@@ -9,7 +9,7 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-/Frame The World.postman_collection 22.json
+Frame The World.postman_collection 24.json
 # testing
 /coverage
 

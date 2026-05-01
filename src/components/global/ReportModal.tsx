@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { reportEntityApi } from "@/services/authApi";
+import { reportEntityApi } from "@/services/userApi";
 // import { toast } from "react-hot-toast";
 
 interface ReportModalProps {

@@ -1,54 +1,70 @@
 import { API } from "@/lib/axios";
 
-// POST /frames - FormData { cover, title, longitude, latitude, isPrivate, city, state, country }
-export const createFrameApi = async (formData: FormData) => {
-  const res = await API.post("/frames", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return res.data;
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export type FrameFeedItem = {
+  _id: string;
+  title: string;
+  totalPosts: number;
+  country?: string;
+  state?: string;
+  city?: string;
+  geoLocation?: {
+    type?: string;
+    coordinates?: number[];
+  };
+  cover?: {
+    _id?: string;
+    fileName?: string;
+    key?: string;
+    location?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
+  createdBy?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+  }
 };
 
-// PATCH /frames/:frameId - FormData { cover?, title, longitude, latitude, isPrivate, city, state, country }
-export const updateFrameApi = async (frameId: string, formData: FormData) => {
-  const res = await API.patch(`/frames/${frameId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return res.data;
+export type FramesFeedResponse = {
+  success: boolean;
+  message: string;
+  data: FrameFeedItem[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
 };
 
-// GET /frames/own
-export const getOwnFramesApi = async (params?: { page?: number; limit?: number; visibility?: string }) => {
-  const res = await API.get("/frames/own", { params });
-  return res.data;
+export type FrameDetailsResponse = {
+  success: boolean;
+  message: string;
+  data: FrameFeedItem;
 };
 
-// POST /frames/:frameId/posts
-export const addPostToFrameApi = async (frameId: string, postId: string) => {
-  const res = await API.post(`/frames/${frameId}/posts`, { postIds: [postId] });
-  return res.data;
+export type FramePostItem = {
+  _id: string;
+  caption?: string | null;
+  media?: {
+    _id?: string;
+    location?: string | null;
+  } | null;
 };
 
-
-// DELETE /frames/:frameId
-export const deleteFrameApi = async (frameId: string) => {
-  const res = await API.delete(`/frames/${frameId}`);
-  return res.data;
-};
-
-// DELETE /frames/:frameId/posts/:postId
-export const removePostFromFrameApi = async (frameId: string, postId: string) => {
-  const res = await API.delete(`/frames/${frameId}/posts/${postId}`);
-  return res.data;
-};
-
-// POST /folders - { name }
-export const createFolderApi = async (data: { name: string }) => {
-  const res = await API.post("/folders", data);
-  return res.data;
+export type FramePostsResponse = {
+  success: boolean;
+  message: string;
+  data: FramePostItem[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
 };
 
 export type FolderItem = {
@@ -75,12 +91,6 @@ export type FoldersResponse = {
   };
 };
 
-// GET /folders - { page, limit }
-export const getFoldersApi = async (params: { page: number; limit: number }) => {
-  const res = await API.get<FoldersResponse>("/folders/own", { params });
-  return res.data;
-};
-
 export type FolderImageItem = {
   _id: string;
   filename: string;
@@ -104,6 +114,120 @@ export type FolderImagesResponse = {
     totalItems: number;
     totalPages: number;
   };
+};
+
+// ─── API Functions ────────────────────────────────────────────────────────────
+
+// POST /frames - FormData { cover, title, longitude, latitude, isPrivate, city, state, country }
+export const createFrameApi = async (formData: FormData) => {
+  const res = await API.post("/frames", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
+// GET /frames - Frames feed listing with pagination
+export const getFramesApi = async (params: { page: number; limit: number }) => {
+  const res = await API.get<FramesFeedResponse>("/frames", { params });
+  return res.data;
+};
+
+// GET /frames/:frameId - Single frame details
+export const getFrameByIdApi = async (frameId: string) => {
+  const res = await API.get<FrameDetailsResponse>(`/frames/${frameId}`);
+  return res.data;
+};
+
+// GET /frames/:frameId/posts - Posts list by frame id
+export const getFramePostsApi = async (
+  frameId: string,
+  params: { page?: number; limit?: number } = { page: 1, limit: 20 }
+) => {
+  const res = await API.get<FramePostsResponse>(`/frames/${frameId}/posts`, { params });
+  return res.data;
+};
+
+// GET /frames - Search frames by location/categories/targetUserId
+export const getSearchFramesApi = async (params: {
+  latitude?: number | string;
+  longitude?: number | string;
+  categories?: string[];
+  targetUserId?: string;
+  limit?: number;
+}) => {
+  const searchParams = new URLSearchParams();
+
+  if (typeof params.limit === "number") {
+    searchParams.set("limit", String(params.limit));
+  }
+
+  if (params.longitude) {
+    searchParams.set("longitude", String(params.longitude));
+  }
+
+  if (params.latitude) {
+    searchParams.set("latitude", String(params.latitude));
+  }
+
+  if (params.targetUserId) {
+    searchParams.set("targetUserId", params.targetUserId);
+  }
+
+  params.categories?.forEach((category) => {
+    searchParams.append("categories", category);
+  });
+
+  const queryString = searchParams.toString();
+  const res = await API.get<FramesFeedResponse>(queryString ? `/frames/all?${queryString}` : "/frames/");
+  return res.data;
+};
+
+// PATCH /frames/:frameId - FormData { cover?, title, longitude, latitude, isPrivate, city, state, country }
+export const updateFrameApi = async (frameId: string, formData: FormData) => {
+  const res = await API.patch(`/frames/${frameId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
+// GET /frames/own
+export const getOwnFramesApi = async (params?: { page?: number; limit?: number; visibility?: string }) => {
+  const res = await API.get("/frames/own", { params });
+  return res.data;
+};
+
+// POST /frames/:frameId/posts
+export const addPostToFrameApi = async (frameId: string, postId: string) => {
+  const res = await API.post(`/frames/${frameId}/posts`, { postIds: [postId] });
+  return res.data;
+};
+
+// DELETE /frames/:frameId
+export const deleteFrameApi = async (frameId: string) => {
+  const res = await API.delete(`/frames/${frameId}`);
+  return res.data;
+};
+
+// DELETE /frames/:frameId/posts/:postId
+export const removePostFromFrameApi = async (frameId: string, postId: string) => {
+  const res = await API.delete(`/frames/${frameId}/posts/${postId}`);
+  return res.data;
+};
+
+// POST /folders - { name }
+export const createFolderApi = async (data: { name: string }) => {
+  const res = await API.post("/folders", data);
+  return res.data;
+};
+
+// GET /folders - { page, limit }
+export const getFoldersApi = async (params: { page: number; limit: number }) => {
+  const res = await API.get<FoldersResponse>("/folders/own", { params });
+  return res.data;
 };
 
 // GET /folders/:folderId/images - { page, limit }

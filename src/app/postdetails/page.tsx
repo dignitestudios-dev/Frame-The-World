@@ -25,7 +25,7 @@ import {
   upvotePostApi,
   getPostApi,
   updatePostApi,
-  getAllPostsApi,
+  getSearchPostsApi,
 } from "@/services/postApi";
 import AnalyzingModal from "@/components/createpost/AnalyzingModalProps";
 import EditPostModal from "@/components/profile/EditPostModal";
@@ -155,7 +155,7 @@ function PostDetailsContent() {
   const { data: relatedPostsData, isLoading: isLoadingRelated } = useQuery({
     queryKey: ["related-posts", postToDisplay?._id, postToDisplay?.categories],
     queryFn: () =>
-      getAllPostsApi({
+      getSearchPostsApi({
         categories: postToDisplay?.categories?.map((c: any) => c._id || c.id) || [],
       }),
     enabled: !!postToDisplay,
@@ -163,7 +163,7 @@ function PostDetailsContent() {
     staleTime: 0,
   });
 
-  const relatedPosts = (relatedPostsData?.data?.data || relatedPostsData?.data || []).filter(
+  const relatedPosts = (relatedPostsData?.data || []).filter(
     (p: any) => (p._id || p.id) !== currentPostId
   );
 

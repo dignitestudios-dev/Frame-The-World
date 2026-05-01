@@ -35,7 +35,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   });
- 
+
   const watchedEmail = watch("email");
   const isEmailValid = !!watchedEmail && !errors.email;
 
@@ -67,19 +67,24 @@ export default function LoginPage() {
   const { mutate: signupMutate, isPending: isSignupPending } = useMutation({
     mutationFn: signupApi,
     onSuccess: (data) => {
-      const user = data.data?.user || data.user;
-      const token = data.data?.token || data.token;
+      const user = data?.data?.user;
+      const token = data?.data?.token;
+      if (user) {
+        login({ user, token });
+        setToastMessage(data?.message || "Signup successful");
+        setToastType("success");
+        setToastOpen(true);
 
-      login({ user, token });
-      setToastMessage(data?.message || "Signup successful");
-      setToastType("success");
-      setToastOpen(true);
-
-      setTimeout(() => {
-        useAuthStore.getState().setAuthEmail(user?.email);
-        useAuthStore.getState().setOtpMode("signup");
-        router.push("/otp-verification");
-      }, 200);
+        setTimeout(() => {
+          useAuthStore.getState().setAuthEmail(user?.email);
+          useAuthStore.getState().setOtpMode("signup");
+          router.push("/otp-verification");
+        }, 200);
+      } else {
+        setToastMessage("Invalid response from server");
+        setToastType("error");
+        setToastOpen(true);
+      }
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -91,25 +96,33 @@ export default function LoginPage() {
   const { mutate, isPending } = useMutation({
     mutationFn: signinApi,
     onSuccess: (data) => {
-      const user = data.data?.user || data.user;
-      const token = data.data?.token || data.token;
 
-      login({ user, token });
-      setToastMessage(data?.message || "Login successful");
-      setToastType("success");
-      setToastOpen(true);
+      const user = data?.data?.user;
+      const token = data?.data?.token;
 
-      setTimeout(() => {
-        if (user?.isProfileCompleted) {
-          router.push("/setup-completed");
-        } else if (user?.isEmailVerified) {
-          router.push("/create-profile");
-        } else {
-          useAuthStore.getState().setAuthEmail(user?.email);
-          useAuthStore.getState().setOtpMode("signup");
-          router.push("/otp-verification");
-        }
-      }, 200);
+      if (user) {
+        login({ user, token });
+        setToastMessage(data?.message || "Login successful");
+        setToastType("success");
+        setToastOpen(true);
+
+        setTimeout(() => {
+          if (user?.isProfileCompleted) {
+            router.push("/setup-completed");
+          } else if (user?.isEmailVerified) {
+            router.push("/create-profile");
+          } else {
+            useAuthStore.getState().setAuthEmail(user?.email);
+            useAuthStore.getState().setOtpMode("signup");
+            router.push("/otp-verification");
+          }
+        }, 200);
+      } else {
+        console.log(data, "data---");
+        setToastMessage("Invalid response from server");
+        setToastType("error");
+        setToastOpen(true);
+      }
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -121,21 +134,28 @@ export default function LoginPage() {
   const { mutate: socialLoginMutate, isPending: isSocialPending } = useMutation({
     mutationFn: socialAuthApi,
     onSuccess: (data) => {
-      const user = data.data?.user || data.user;
-      const token = data.data?.token || data.token;
+      console.log(data, "data---");
+      const user = data?.data?.user;
+      const token = data?.data?.token;
 
-      login({ user, token });
-      setToastMessage(data?.message || "Login successful");
-      setToastType("success");
-      setToastOpen(true);
+      if (user) {
+        login({ user, token });
+        setToastMessage(data?.message || "Login successful");
+        setToastType("success");
+        setToastOpen(true);
 
-      setTimeout(() => {
-        if (user?.isProfileCompleted) {
-          router.push("/setup-completed");
-        } else {
-          router.push("/create-profile");
-        }
-      }, 200);
+        setTimeout(() => {
+          if (user?.isProfileCompleted) {
+            router.push("/setup-completed");
+          } else {
+            router.push("/create-profile");
+          }
+        }, 200);
+      } else {
+        setToastMessage("Invalid response from server");
+        setToastType("error");
+        setToastOpen(true);
+      }
     },
     onError: (error) => {
       setToastMessage(getApiErrorMessage(error));
@@ -205,18 +225,18 @@ export default function LoginPage() {
 
     if (step === "email") {
       setEmailValue(data.email);
-      checkEmail({ email: data.email });
+      checkEmail({ email: data.email, method: 'email' });
       return;
     }
 
     if (step === "login") {
-      mutate({ email: data.email, password: data.password });
+      mutate({ email: data.email, password: data.password, method: "email" });
     } else if (step === "signup") {
       if (data.password !== confirmPassword) {
         setConfirmPasswordError("Passwords do not match");
         return;
       }
-      signupMutate({ email: data.email, password: data.password });
+      signupMutate({ email: data.email, password: data.password, method: "email" });
     }
   };
 

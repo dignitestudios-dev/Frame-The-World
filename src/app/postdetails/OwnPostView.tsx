@@ -225,11 +225,24 @@ export default function OwnPostView({
                                 {locationText || "Paris, France"}
                             </span>
                         </div>
-                        <p className="text-[16px] font-normal text-black/70 leading-[22px] tracking-[-0.408px] mt-0.5">
-                            {currentPost?.categories?.length
-                                ? currentPost.categories.map((c: any) => `${c?.name || c}`).join(", ")
-                                : ""}
-                        </p>
+                        <div className="flex flex-wrap gap-2 mt-3" >
+                            {
+                                currentPost?.categories?.length
+                                    ? currentPost.categories.map((cat: any) => (
+                                        <button
+                                            key={cat.id}
+                                            type="button"
+                                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border gradient-bg text-white border-none shadow-md`}
+                                        >
+                                            {cat.name}
+                                        </button>
+                                    )) : (
+                                        <p className="text-[16px] font-normal text-black/70 leading-[22px] tracking-[-0.408px] mt-0.5">
+                                            No categories
+                                        </p>
+                                    )}
+                        </div>
+
                     </div>
 
                     {/* Right: 3 action buttons */}

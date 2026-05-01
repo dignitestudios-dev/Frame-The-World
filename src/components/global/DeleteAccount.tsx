@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Info, Trash2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { deleteUserApi } from "@/services/authApi";
+import { deleteUserApi } from "@/services/userApi";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { getApiErrorMessage } from "@/lib/apiError";

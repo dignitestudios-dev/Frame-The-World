@@ -7,7 +7,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { getGeocode, getLatLng } from "use-places-autocomplete";
 import Header from "@/components/global/header";
 import LocationAutocomplete from "@/components/global/LocationAutocomplete";
-import { getCategoriesApi } from "@/services/authApi";
+import { getCategoriesApi } from "@/services/postApi";
 
 const RECENT_SEARCHES_KEY = "search_recent_locations";
 

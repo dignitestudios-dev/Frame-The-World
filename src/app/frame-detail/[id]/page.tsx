@@ -8,7 +8,7 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import SaveModal from "@/components/global/SaveModal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@/lib/apiError";
-import { getFrameByIdApi, getFramePostsApi } from "@/services/authApi";
+import { getFrameByIdApi, getFramePostsApi } from "@/services/frameApi";
 import { deleteFrameApi, removePostFromFrameApi, updateFrameApi } from "@/services/frameApi";
 import { GridCardSkeleton } from "@/components/global/Skeletons";
 import LocationAutocomplete, { PlaceSelectionDetails } from "@/components/global/LocationAutocomplete";

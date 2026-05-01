@@ -4,7 +4,7 @@ import Image from "next/image";
 import Header from './../../components/global/header';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getLeaderboardApi } from "@/services/authApi";
+import { getLeaderboardApi } from "@/services/postApi";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";

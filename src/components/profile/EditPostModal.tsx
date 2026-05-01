@@ -3,8 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { updatePostApi } from "@/services/postApi";
-import { getCategoriesApi } from "@/services/authApi";
+import { getCategoriesApi, updatePostApi } from "@/services/postApi";
 import Image from "next/image";
 import LocationAutocomplete from "@/components/global/LocationAutocomplete";
 import ContentReleaseModal from "@/components/global/ContentReleaseModal";

@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { changePasswordApi, getUserProfileApi, setPasswordApi } from "@/services/authApi";
+import { changePasswordApi, setPasswordApi } from "@/services/authApi";
+import { getUserProfileApi } from "@/services/userApi";
 import { Toast } from "@/components/ui/toast";
 import { passwordSchema } from "@/schemas/Auth";
 import { useAuthStore } from "@/store/authStore";

@@ -195,10 +195,10 @@ function RemoveHumanContent() {
         </p>
 
         {/* Card */}
-        <div className="w-full max-w-[360px] bg-white rounded-[28px] shadow-xl overflow-hidden border-2 border-dashed border-blue-300">
+        <div className="w-full max-w-[360px] bg-white rounded-[28px] shadow-xl overflow-hidden">
           {/* Card header */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-            <span className="font-semibold text-gray-800 text-sm">Ai Tool</span>         
+          <div className="flex items-center justify-center px-5 py-3 border-b border-gray-100">
+            <span className="font- text-center text-gray-800 text-sm">AI Tool</span>         
           </div>
 
           {/* Image area */}
@@ -217,7 +217,7 @@ function RemoveHumanContent() {
               <img
                 src={displayImage}
                 alt="Post"
-                className="w-full object-cover transition-all duration-700"
+                className="w-full object-cover transition-all duration-700 border-2 border-dashed border-blue-300 rounded-[14px]"
                 style={{ minHeight: 300, maxHeight: 420 }}
               />
             )}

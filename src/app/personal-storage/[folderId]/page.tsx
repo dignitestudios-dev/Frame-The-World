@@ -14,7 +14,8 @@ import { Toast } from "@/components/ui/toast";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Upload, Loader2, X, EllipsisVertical, Trash2 } from "lucide-react";
+import { Plus, Upload, Loader2, X, EllipsisVertical, Trash2, Download } from "lucide-react";
+import { useAccessControl } from "@/providers/AccessControlProvider";
 
 const INITIAL_PAGE = 1;
 const PAGE_LIMIT = 30;
@@ -30,12 +31,19 @@ function isImageUrl(url: string | null | undefined): url is string {
 export default function PersonalStorageFolderImagesPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { executeWithCheck } = useAccessControl();
   const params = useParams<{ folderId: string }>();
   const searchParams = useSearchParams();
   const folderId = params?.folderId;
   const initialFolderName = searchParams.get("name") || "Folder Images";
   const [folderName, setFolderName] = useState(initialFolderName);
   const [selectedImage, setSelectedImage] = useState<{ _id: string; url: string } | null>(null);
+  const [previewImage, setPreviewImage] = useState<{
+    url: string;
+    alt: string;
+    downloadName?: string;
+  } | null>(null);
+  const [isDownloadingPreview, setIsDownloadingPreview] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -184,13 +192,54 @@ export default function PersonalStorageFolderImagesPage() {
 
   const handleMakePost = (image: any) => {
     const imageUrl = image.location || FALLBACK_IMAGE_URL;
-    router.push(`/Createdpost?fileId=${image._id}&imageUrl=${encodeURIComponent(imageUrl)}`);
+    executeWithCheck(() => {
+      router.push(
+        `/Createdpost?fileId=${image._id}&imageUrl=${encodeURIComponent(imageUrl)}`
+      );
+    });
   };
 
   const openDeleteModal = (image: any) => {
     setSelectedImage({ _id: image._id, url: image.location || FALLBACK_IMAGE_URL });
     setIsDeleteImageModalOpen(true);
     setActiveImageOptionsId(null);
+  };
+
+  const handleDownloadPreviewImage = async () => {
+    if (!previewImage || isDownloadingPreview) return;
+
+    setIsDownloadingPreview(true);
+    try {
+      const fileUrl = `${previewImage.url}${
+        previewImage.url.includes("?") ? "&" : "?"
+      }t=${Date.now()}`;
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error("Failed to fetch image");
+
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = previewImage.downloadName || previewImage.alt || "image";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(objectUrl);
+
+      setToast({
+        open: true,
+        message: "Image downloaded successfully.",
+        type: "success",
+      });
+    } catch {
+      setToast({
+        open: true,
+        message: "Failed to download image. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsDownloadingPreview(false);
+    }
   };
 
   useEffect(() => {
@@ -209,6 +258,15 @@ export default function PersonalStorageFolderImagesPage() {
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [activeImageOptionsId]);
+
+  useEffect(() => {
+    if (!previewImage) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPreviewImage(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [previewImage]);
 
   const handleSelectFile = (file: File | undefined) => {
     if (!file) return;
@@ -348,7 +406,7 @@ export default function PersonalStorageFolderImagesPage() {
             <div className="relative h-48 w-48 md:h-56 md:w-56">
               <Image src="/images/no data found.jpg" alt="No data found" fill className="object-contain" />
             </div>
-            <p className="mt-4 text-gray-600 font-medium">No images found in this folder</p>
+            <p className="mt-4 text-gray-600 font-medium">No Images Found In This Folder</p>
           </div>
         ) : (
           <div className="max-w-[1400px] mx-auto">
@@ -365,7 +423,13 @@ export default function PersonalStorageFolderImagesPage() {
                     <img
                       src={imageUrl}
                       alt={image.filename || "Folder image"}
-                      onClick={() => setSelectedImage({ _id: image._id, url: imageUrl })}
+                      onClick={() =>
+                        setPreviewImage({
+                          url: imageUrl,
+                          alt: image.filename || "Folder image",
+                          downloadName: image.filename || undefined,
+                        })
+                      }
                       className="absolute inset-0 h-full w-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
                       onError={(event) => {
@@ -421,39 +485,50 @@ export default function PersonalStorageFolderImagesPage() {
         )}
       </div>
 
-      {/* {selectedImage ? (
+      {previewImage ? (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
+          onClick={() => setPreviewImage(null)}
+          role="presentation"
         >
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              setIsDeleteImageModalOpen(true);
-            }}
-            className="absolute right-20 top-6 h-10 w-10 rounded-full bg-red-500/90 text-white hover:bg-red-600"
-            aria-label="Delete image"
-          >
-            <Trash2 className="mx-auto h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedImage(null)}
-            className="absolute right-6 top-6 h-10 w-10 rounded-full bg-white/20 text-white hover:bg-white/30"
-            aria-label="Close image preview"
-          >
-            <X className="mx-auto h-5 w-5" />
-          </button>
+          <div className="absolute right-4 top-4 z-[110] flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isDownloadingPreview}
+              onClick={(event) => {
+                event.stopPropagation();
+                void handleDownloadPreviewImage();
+              }}
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label="Download image"
+            >
+              {isDownloadingPreview ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <Download className="h-6 w-6" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setPreviewImage(null);
+              }}
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25"
+              aria-label="Close image preview"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
 
           <img
-            src={selectedImage.url}
-            alt="Selected folder image"
-            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain"
+            src={previewImage.url}
+            alt={previewImage.alt}
+            className="max-h-[92vh] max-w-[96vw] rounded-2xl object-contain shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           />
         </div>
-      ) : null} */}
+      ) : null}
 
       {isUploadModalOpen ? (
         <div
@@ -560,9 +635,9 @@ export default function PersonalStorageFolderImagesPage() {
             className="relative w-full max-w-[390px] overflow-hidden rounded-[22px] bg-white shadow-[0_6px_40px_rgba(0,0,0,0.1)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="h-[112px] bg-[linear-gradient(134.74deg,rgba(108,172,223,0.2)_3.24%,rgba(0,0,254,0.2)_139.86%),#fff]" />
+            <div className="h-[112px] bg-blue-100 bg-[linear-gradient(134.74deg,rgba(108,172,223,0.2)_3.24%,rgba(0,0,254,0.2)_139.86%),#fff]" />
 
-            <div className="absolute left-1/2 top-[18px] flex h-[74px] w-[74px] -translate-x-1/2 items-center justify-center rounded-full border border-[#EE3131] bg-[rgba(238,49,49,0.2)]">
+            <div className="absolute left-1/2 top-[18px]  flex h-[74px] w-[74px] -translate-x-1/2 items-center justify-center rounded-full border border-[#EE3131] bg-[rgba(238,49,49,0.2)]">
               <Trash2 className="h-8 w-8 text-[#EE3131]" />
             </div>
 

@@ -353,7 +353,7 @@ const AnalyzingModal: React.FC<AnalyzingModalProps> = ({
                     className="w-full py-3 rounded-full font-medium text-base
                      bg-gradient-to-b from-[#6CACDF] to-[#0000FE] text-white shadow-md"
                   >
-                    Update Image
+                    Upload New Image
                   </button>
                 )}
               </div>

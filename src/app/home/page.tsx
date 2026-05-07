@@ -6,7 +6,6 @@ import Header from "@/components/global/header";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import SaveModal from "@/components/global/SaveModal";
-import { useAccessControl } from "@/providers/AccessControlProvider";
 import { GridCardSkeleton } from "@/components/global/Skeletons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@/lib/apiError";
@@ -34,7 +33,6 @@ export default function TravelStoryPage() {
 
   const isFrames = activeTab === "frames";
   const router = useRouter();
-  const { executeWithCheck } = useAccessControl();
   const { setPostDetails } = usePostStore();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -260,11 +258,7 @@ export default function TravelStoryPage() {
                 return (
                   <div
                     key={frame._id}
-                    onClick={() =>
-                      executeWithCheck(() => router.push(`/frame-detail/${frame._id}`), {
-                        isPendingAllowed: false,
-                      })
-                    }
+                    onClick={() => router.push(`/frame-detail/${frame._id}`)}
                     className="
             shrink-0
             snap-start
@@ -294,11 +288,10 @@ export default function TravelStoryPage() {
 
                     {/* Bottom Right Button */}
                     <button
-                      onClick={() =>
-                        executeWithCheck(() => router.push(`/frame-detail/${frame._id}`), {
-                          isPendingAllowed: false,
-                        })
-                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        router.push(`/frame-detail/${frame._id}`);
+                      }}
                       className="
               absolute bottom-3 right-3
               bg-transparent backdrop-blur

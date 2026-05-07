@@ -1,33 +1,72 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import GuestAccessModal from "../components/global/GuestAccessModal";
 import PendingProfileModal from "../components/global/PendingProfileModal";
+import RestrictedActionModal from "../components/global/RestrictedActionModal";
 import { useAuthStore } from "@/store/authStore";
-import { useRouter } from "next/navigation";
 import { Toast } from "@/components/ui/toast";
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentSubscriptionApi } from "@/services/subscriptionApi";
+import { isRestrictedSubscriber } from "@/lib/subscriptionAccess";
 
 interface AccessControlContextType {
   openGuestModal: () => void;
   closeGuestModal: () => void;
   openPendingModal: () => void;
   closePendingModal: () => void;
-  executeWithCheck: (action: () => void, config?: { isPendingAllowed?: boolean }) => void;
+  openRestrictedModal: () => void;
+  closeRestrictedModal: () => void;
+  executeWithCheck: (
+    action: () => void,
+    config?: { isPendingAllowed?: boolean; skipSubscriptionCheck?: boolean }
+  ) => void;
 }
 
-const AccessControlContext = createContext<AccessControlContextType | undefined>(undefined);
+const AccessControlContext = createContext<AccessControlContextType | undefined>(
+  undefined
+);
 
 export const AccessControlProvider = ({ children }: { children: ReactNode }) => {
-  const router = useRouter();
   const [isGuestOpen, setIsGuestOpen] = useState(false);
   const [isPendingOpen, setIsPendingOpen] = useState(false);
-  const [toast, setToast] = useState<{ open: boolean; message: string; type: "success" | "error" }>({
+  const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
+  const [toast, setToast] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     open: false,
     message: "",
     type: "success",
   });
-  
-  const { isGuest, user } = useAuthStore();
+
+  const { isGuest, user, token, updateUser } = useAuthStore();
+
+  const subscriptionQuery = useQuery({
+    queryKey: ["current-subscription-access"],
+    queryFn: getCurrentSubscriptionApi,
+    enabled: Boolean(token) && !isGuest,
+    staleTime: 60 * 1000,
+  });
+
+  const subscriptionData = subscriptionQuery.data?.data;
+  const isSubscribed =
+    subscriptionData?.isSubscribed ?? user?.isSubscribed ?? false;
+  const isOnTrial = subscriptionData?.isOnTrial ?? user?.isOnTrial ?? false;
+
+  const isSubscriptionRestricted = isRestrictedSubscriber(
+    isSubscribed,
+    isOnTrial
+  );
+
+  useEffect(() => {
+    if (!subscriptionData) return;
+    updateUser({
+      isSubscribed: subscriptionData.isSubscribed,
+      isOnTrial: subscriptionData.isOnTrial,
+    });
+  }, [subscriptionData, updateUser]);
 
   const openGuestModal = () => setIsGuestOpen(true);
   const closeGuestModal = () => setIsGuestOpen(false);
@@ -35,53 +74,60 @@ export const AccessControlProvider = ({ children }: { children: ReactNode }) => 
   const openPendingModal = () => setIsPendingOpen(true);
   const closePendingModal = () => setIsPendingOpen(false);
 
-  const executeWithCheck = (action: () => void, config?: { isPendingAllowed?: boolean }) => {
-    // 1. Check Guest Status
+  const openRestrictedModal = () => setIsRestrictedOpen(true);
+  const closeRestrictedModal = () => setIsRestrictedOpen(false);
+
+  const executeWithCheck = (
+    action: () => void,
+    config?: { isPendingAllowed?: boolean; skipSubscriptionCheck?: boolean }
+  ) => {
     if (isGuest) {
       openGuestModal();
       return;
     }
 
-    // 2. Check "not-provided" Status
-    // if (user?.identityStatus === "not-provided") {
-    //     router.push("/settings");
-    //     setToast({ 
-    //         open: true, 
-    //         message: "Please provide your IATA or CLIA number. Profile verification is required to access all features.", 
-    //         type: "error" 
-    //     });
-    //     return;
-    // }
+    if (
+      !config?.skipSubscriptionCheck &&
+      token &&
+      isSubscriptionRestricted
+    ) {
+      openRestrictedModal();
+      return;
+    }
 
-    // 3. Check Pending Status
     const isPending = user?.identityStatus === "pending";
     if (isPending && !config?.isPendingAllowed) {
       openPendingModal();
       return;
     }
 
-    // 4. Execute approved action
     action();
   };
 
   return (
-    <AccessControlContext.Provider 
-      value={{ 
-        openGuestModal, 
-        closeGuestModal, 
-        openPendingModal, 
-        closePendingModal, 
-        executeWithCheck 
+    <AccessControlContext.Provider
+      value={{
+        openGuestModal,
+        closeGuestModal,
+        openPendingModal,
+        closePendingModal,
+        openRestrictedModal,
+        closeRestrictedModal,
+        executeWithCheck,
       }}
     >
       {children}
       <GuestAccessModal isOpen={isGuestOpen} onClose={closeGuestModal} />
       <PendingProfileModal isOpen={isPendingOpen} onClose={closePendingModal} />
-      <Toast 
-        open={toast.open} 
-        message={toast.message} 
-        type={toast.type} 
-        onClose={() => setToast(prev => ({ ...prev, open: false }))} 
+      <RestrictedActionModal
+        isOpen={isRestrictedOpen}
+        onClose={closeRestrictedModal}
+      />
+      <Toast
+        open={toast.open}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast((prev) => ({ ...prev, open: false }))}
       />
     </AccessControlContext.Provider>
   );
@@ -95,5 +141,4 @@ export const useAccessControl = () => {
   return context;
 };
 
-// Maintain backward compatibility for now if needed
 export const useGuestModal = useAccessControl;

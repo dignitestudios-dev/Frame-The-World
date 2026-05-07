@@ -7,6 +7,7 @@ import { createFrameApi } from '@/services/frameApi';
 import { getApiErrorMessage } from '@/lib/apiError';
 import { getGeocode, getLatLng } from "use-places-autocomplete";
 import { Toast } from '@/components/ui/toast';
+import { useAccessControl } from '@/providers/AccessControlProvider';
 
 
 
@@ -22,6 +23,7 @@ const getFirstAddressComponent = (
 
 const CreateFrameContent = () => {
   const router = useRouter();
+  const { executeWithCheck } = useAccessControl();
   const searchParams = useSearchParams();
   const postId = searchParams.get('postId');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -92,6 +94,13 @@ const CreateFrameContent = () => {
     }
 
     setFieldErrors({});
+
+    executeWithCheck(() => {
+      void submitFrame();
+    });
+  };
+
+  const submitFrame = async () => {
     let resolvedLongitude = longitude;
     let resolvedLatitude = latitude;
     let resolvedCity = city;

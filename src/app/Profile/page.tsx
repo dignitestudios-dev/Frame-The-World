@@ -192,60 +192,23 @@ function ProfileContent() {
           ) : (
             <aside className="relative lg:sticky lg:top-20 bg-[#f1f3f6] rounded-[30px] p-8 overflow-hidden shadow-sm h-fit">
               <div className="absolute top-0 left-0 w-full h-56 pointer-events-none">
-                <svg
-                  className="w-full h-full"
-                  viewBox="0 0 400 200"
-                  preserveAspectRatio="none"
-                >
-                  <defs>
-                    <radialGradient id="peakGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-                  <circle cx="80" cy="50" r="60" fill="url(#peakGlow)" />
-                  <circle cx="310" cy="80" r="50" fill="url(#peakGlow)" />
-                  <path
-                    d="M -10 130 L 30 130 L 80 50 L 140 160 L 190 110 L 250 110 L 310 80 L 350 140 L 410 140"
-                    fill="none"
-                    stroke="#4f46e5"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="opacity-40"
-                  />
-                  {[
-                    { x: 30, y: 130 },
-                    { x: 80, y: 50 },
-                    { x: 140, y: 160 },
-                    { x: 190, y: 110 },
-                    { x: 250, y: 110 },
-                    { x: 310, y: 80 },
-                    { x: 350, y: 140 },
-                  ].map((dot, i) => (
-                    <circle
-                      key={i}
-                      cx={dot.x}
-                      cy={dot.y}
-                      r="4.5"
-                      fill="#3b82f6"
-                    />
-                  ))}
-                </svg>
+              
               </div>
               <div className="relative z-10 flex flex-col items-center">
-                <div className="relative w-36 h-36 flex items-center justify-center">
+                <div className="relative h-36 w-36 shrink-0">
                   <div className="absolute inset-0 rounded-[55px] bg-gradient-to-b from-blue-400 to-blue-600 shadow-[0_10px_20px_rgba(59,130,246,0.3)]" />
-                  <div className="relative w-[92%] h-[92%] rounded-[50px] bg-[#f1f3f6] p-1 flex items-center justify-center">
-                    <div className="relative w-full h-full rounded-[45px] overflow-hidden">
+                  <div className="absolute inset-[5px] rounded-[50px] bg-[#f1f3f6] p-1">
+                    <div className="relative h-full w-full overflow-hidden rounded-[45px]">
                       <img
                         src={
                           user?.profilePicture?.location ||
-                          user?.profilePicture.location ||
+                          (typeof user?.profilePicture === "string"
+                            ? user.profilePicture
+                            : null) ||
                           "/images/person.png"
                         }
                         alt={user?.name || "User"}
-                        className="object-cover"
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   </div>
@@ -510,7 +473,7 @@ function ProfileContent() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
                   {isFramesLoading ? (
                     Array.from({ length: 8 }).map((_, i) => (
                       <div key={i} className="flex flex-col items-center">
@@ -558,7 +521,12 @@ function ProfileContent() {
                         frame.cover?.location ||
                         frame.cover?.location ||
                         `/images/${(i % 4) + 1}.jpg`;
-                      const frameName = frame.title || "Frame Name";
+                      const frameName = frame.title || "Untitled Frame";
+                      const postCount =
+                        frame.totalPosts ??
+                        frame.postsCount ??
+                        frame.posts?.length ??
+                        0;
                       const id = frame.id || frame._id;
 
                       return (
@@ -567,27 +535,52 @@ function ProfileContent() {
                           className="flex flex-col items-center"
                         >
                           <div
-                            className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px] cursor-pointer"
+                            className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[220px] h-[220px] cursor-pointer"
                             onClick={() => id && router.push(`/frame-detail/${id}`)}
                           >
                             <img
                               src={image1}
                               alt={frameName}
-                              width={200}
-                              height={200}
-                              className="object-cover"
+                              className="absolute inset-0 h-full w-full object-cover"
+                              loading="lazy"
+                              onError={(event) => {
+                                const target = event.currentTarget;
+                                target.src = "/images/1.jpg";
+                              }}
                             />
-                            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
-                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-white">
-                              <div
-                                className="text-3xl text-center font-bold pt-20"
-                              >
-                                {frame?.totalPosts
-                                  ? `${frame?.totalPosts}+`
-                                  : ""}
-                                <div className="text-[16px] font-semibold text-white line-clamp-1 truncate max-w-[180px]">
-                                  {frameName}
-                                </div>
+                            <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
+                              <img
+                                src={image1}
+                                alt={`${frameName} inner`}
+                                className="absolute inset-0 h-full w-full object-cover opacity-90"
+                                loading="lazy"
+                                onError={(event) => {
+                                  const target = event.currentTarget;
+                                  target.src = "/images/1.jpg";
+                                }}
+                              />
+                            </div>
+                            <div className="absolute inset-0 rounded-[49.26px] shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)]" />
+                            <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                              <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
+                                <img
+                                  src={image1}
+                                  alt={`${frameName} preview`}
+                                  className="absolute inset-0 h-full w-full object-cover opacity-80"
+                                  loading="lazy"
+                                  onError={(event) => {
+                                    const target = event.currentTarget;
+                                    target.src = "/images/1.jpg";
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-[#00000056] pointer-events-none">
+                              <div className="text-3xl font-bold">
+                                {postCount > 99 ? `${postCount}+` : postCount}
+                              </div>
+                              <div className="mt-1 max-w-[180px] px-3 text-center text-sm font-semibold capitalize line-clamp-2">
+                                {frameName}
                               </div>
                             </div>
                           </div>

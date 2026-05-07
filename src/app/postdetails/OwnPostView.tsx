@@ -238,7 +238,7 @@ export default function OwnPostView({
                                         </button>
                                     )) : (
                                         <p className="text-[16px] font-normal text-black/70 leading-[22px] tracking-[-0.408px] mt-0.5">
-                                            No categories
+
                                         </p>
                                     )}
                         </div>

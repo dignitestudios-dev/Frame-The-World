@@ -140,16 +140,18 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   return (
     <>
       <div
-        className="fixed inset-0 z-[99] flex items-start justify-center bg-black/40 backdrop-blur-md p-4"
+        className="fixed inset-0 z-[99] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6"
         onClick={() => { setIsDiscardModalOpen(true) }}
       >
         <div
-          className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300"
+          className={`w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300 ${
+            isReuploadOnly ? "max-w-2xl" : "max-w-lg"
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 flex items-center justify-between border-b border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 sm:px-8 py-5 flex items-center justify-between border-b border-gray-100">
+            <h2 className={`font-bold text-gray-900 ${isReuploadOnly ? "text-xl sm:text-2xl" : "text-lg"}`}>
               {isReuploadOnly ? "Update Rejected Post" : "Edit Post"}
             </h2>
             <button
@@ -160,18 +162,28 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
             </button>
           </div>
 
-          <div className="p-6 flex flex-col gap-5 max-h-[80vh] overflow-y-auto">
+          <div className={`flex flex-col gap-5 overflow-y-auto ${isReuploadOnly ? "max-h-[85vh] p-6 sm:p-8" : "max-h-[80vh] p-6"}`}>
             {/* Image Preview (Read-only) */}
             <div
-              onClick={() => fileInputRef.current?.click()}
-              className={`${!isReuploadOnly ? "cursor-not-allowed" : "cursor-pointer hover:border-blue-400"} relative w-full h-48 rounded-2xl  bg-gray-100 group border-2 border-dashed border-transparent transition-all `}
+              onClick={() => isReuploadOnly && fileInputRef.current?.click()}
+              className={`${
+                !isReuploadOnly
+                  ? "cursor-not-allowed border-transparent"
+                  : "cursor-pointer border-dashed border-blue-200 hover:border-blue-400"
+              } relative w-full rounded-2xl bg-gray-100 group border-2 transition-all ${
+                isReuploadOnly ? "min-h-[280px] sm:min-h-[320px]" : "h-48"
+              }`}
             >
               {currentImage ? (
                 <>
                   <img
                     src={currentImage}
                     alt="Post"
-                    className="w-full h-[140px] rounded-md object-cover group-hover:scale-105 transition-transform duration-500"
+                    className={`w-full rounded-xl object-cover transition-transform duration-500 ${
+                      isReuploadOnly
+                        ? "h-full min-h-[280px] sm:min-h-[320px] group-hover:scale-[1.02]"
+                        : "h-[140px] group-hover:scale-105"
+                    }`}
                   />
                   {
                     !isReuploadOnly ? <></> : <>
@@ -185,9 +197,11 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
 
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400">
-                  <ImageIcon className="w-10 h-10" />
-                  <span className="text-sm">Click to upload image</span>
+                <div className={`flex flex-col items-center justify-center gap-2 text-gray-400 ${isReuploadOnly ? "min-h-[280px] sm:min-h-[320px]" : "h-full"}`}>
+                  <ImageIcon className={isReuploadOnly ? "w-12 h-12" : "w-10 h-10"} />
+                  <span className={isReuploadOnly ? "text-base font-medium" : "text-sm"}>
+                    Click to upload image
+                  </span>
                 </div>
               )}
             </div>
@@ -296,12 +310,20 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
               onClose={() => setIsReleaseModalOpen(false)}
             />
 
+            {isReuploadOnly && (
+              <p className="text-center text-sm text-gray-500 sm:text-base">
+                Upload a new image without humans or AI edits, then submit for verification again.
+              </p>
+            )}
+
             {/* Actions */}
-            <div className="flex gap-3 pt-1">
+            <div className={`flex gap-3 ${isReuploadOnly ? "pt-2" : "pt-1"}`}>
               <button
                 onClick={handleSubmit}
-                disabled={isPending}
-                className="flex-1 w-full py-3 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={isPending || (isReuploadOnly && !newImage)}
+                className={`flex-1 w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                  isReuploadOnly ? "py-3.5 text-base sm:text-lg" : "py-3"
+                }`}
               >
                 {isPending ? (
                   <>

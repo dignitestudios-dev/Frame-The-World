@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFolderApi } from '@/services/frameApi';
 import { Toast } from '@/components/ui/toast';
 import { getApiErrorMessage } from '@/lib/apiError';
+import { useAccessControl } from '@/providers/AccessControlProvider';
 
 interface CreateFolderPageProps {
   onCreateFolder?: (folderName: string) => void;
@@ -21,6 +22,7 @@ const CreateFolderPage: React.FC<CreateFolderPageProps> = ({
 }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { executeWithCheck } = useAccessControl();
   const [folderName, setFolderName] = useState('');
   const [error, setError] = useState('');
   const [toast, setToast] = useState<{
@@ -93,7 +95,9 @@ const CreateFolderPage: React.FC<CreateFolderPageProps> = ({
       return;
     }
 
-    await createFolderMutation.mutateAsync(name);
+    executeWithCheck(() => {
+      void createFolderMutation.mutateAsync(name);
+    });
   };
 
   return (

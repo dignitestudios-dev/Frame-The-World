@@ -2,15 +2,19 @@
 
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 
-const backgroundImages = [
+const firstColumnImages = [
   { image: "/images/1.jpg", name: "Image 1" },
   { image: "/images/2.jpg", name: "Image 2" },
   { image: "/images/3.jpg", name: "Image 3" },
   { image: "/images/4.jpg", name: "Image 4" },
 ];
 
-// Duplicate images to create seamless scrolling
-const allImages = [...backgroundImages, ...backgroundImages, ...backgroundImages];
+const secondColumnImages = [
+  { image: "/images/5.jpg", name: "Image 5" },
+  { image: "/images/6.jpg", name: "Image 6" },
+  { image: "/images/7.jpg", name: "Image 7" },
+  { image: "/images/8.jpg", name: "Image 8" },
+];
 
 export default function AuthLayout({
   children,
@@ -20,11 +24,11 @@ export default function AuthLayout({
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-white">
       {/* Background Image Grid */}
-      <div className="absolute inset-0 z-0 grid grid-cols-6 gap-3">
+      <div className="absolute inset-0 z-0 grid grid-cols-5 gap-2">
         {/* Column 1 */}
         <div className="h-full w-full">
           <InfiniteMovingCards
-            items={allImages}
+            items={firstColumnImages}
             direction="bottom"
             speed="super-slow"
             pauseOnHover={false}
@@ -35,7 +39,7 @@ export default function AuthLayout({
         {/* Column 2 */}
         <div className="h-full w-full">
           <InfiniteMovingCards
-            items={[...allImages.slice(1), ...allImages.slice(0, 1)]}
+            items={secondColumnImages}
             direction="top"
             speed="super-slow"
             pauseOnHover={false}
@@ -46,7 +50,7 @@ export default function AuthLayout({
         {/* Column 3 */}
         <div className="h-full w-full">
           <InfiniteMovingCards
-            items={[...allImages.slice(2), ...allImages.slice(0, 2)]}
+            items={firstColumnImages}
             direction="bottom"
             speed="super-slow"
             pauseOnHover={false}
@@ -57,7 +61,7 @@ export default function AuthLayout({
         {/* Column 4 */}
         <div className="h-full w-full">
           <InfiniteMovingCards
-            items={allImages}
+            items={secondColumnImages}
             direction="top"
             speed="super-slow"
             pauseOnHover={false}
@@ -68,19 +72,8 @@ export default function AuthLayout({
         {/* Column 5 */}
         <div className="h-full w-full">
           <InfiniteMovingCards
-            items={[...allImages.slice(1), ...allImages.slice(0, 1)]}
+            items={firstColumnImages}
             direction="bottom"
-            speed="super-slow"
-            pauseOnHover={false}
-            orientation="vertical"
-            className="h-full w-full"
-          />
-        </div>
-        {/* Column 6 */}
-        <div className="h-full w-full">
-          <InfiniteMovingCards
-            items={[...allImages.slice(2), ...allImages.slice(0, 2)]}
-            direction="top"
             speed="super-slow"
             pauseOnHover={false}
             orientation="vertical"

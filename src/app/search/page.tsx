@@ -12,9 +12,13 @@ import { getCategoriesApi } from "@/services/postApi";
 const RECENT_SEARCHES_KEY = "search_recent_locations";
 
 type Category = {
-  _id: string;
+  _id?: string;
+  id?: string;
   name: string;
 };
+
+const getCategoryId = (category: Category): string =>
+  category._id || category.id || "";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -25,8 +29,8 @@ export default function SearchPage() {
   } | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [draftFilters, setDraftFilters] = useState<string[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [draftCategoryIds, setDraftCategoryIds] = useState<string[]>([]);
   const {
     data: categoriesPages,
     isLoading: isCategoriesLoading,
@@ -44,10 +48,14 @@ export default function SearchPage() {
     },
   });
 
-  const categoryNames: string[] =
+  const categories: Category[] =
     categoriesPages?.pages?.flatMap((page: any) =>
-      Array.isArray(page?.data) ? (page.data as Category[]).map((category) => category.name) : []
+      Array.isArray(page?.data) ? (page.data as Category[]) : []
     ) ?? [];
+
+  const getCategoryNameById = (categoryId: string) =>
+    categories.find((category) => getCategoryId(category) === categoryId)?.name ??
+    "Category";
 
   useEffect(() => {
     const storedRecentSearches = localStorage.getItem(RECENT_SEARCHES_KEY);
@@ -81,17 +89,18 @@ export default function SearchPage() {
     setSearchQuery("");
   };
 
-  const toggleDraftFilter = (filterName: string) => {
-    setDraftFilters((previousFilters) => {
-      if (previousFilters.includes(filterName)) {
-        return previousFilters.filter((item) => item !== filterName);
+  const toggleDraftCategory = (categoryId: string) => {
+    if (!categoryId) return;
+    setDraftCategoryIds((previousIds) => {
+      if (previousIds.includes(categoryId)) {
+        return previousIds.filter((id) => id !== categoryId);
       }
-      return [...previousFilters, filterName];
+      return [...previousIds, categoryId];
     });
   };
 
   const openFilterModal = () => {
-    setDraftFilters(selectedFilters);
+    setDraftCategoryIds(selectedCategoryIds);
     setIsFilterOpen(true);
   };
 
@@ -100,11 +109,11 @@ export default function SearchPage() {
   };
 
   const handleClearFilters = () => {
-    setDraftFilters([]);
+    setDraftCategoryIds([]);
   };
 
   const handleApplyFilters = () => {
-    setSelectedFilters(draftFilters);
+    setSelectedCategoryIds(draftCategoryIds);
     setIsFilterOpen(false);
   };
 
@@ -120,7 +129,7 @@ export default function SearchPage() {
 
   const handleSearch = async (query?: string) => {
     const normalizedQuery = (query ?? searchQuery).trim();
-    const hasCategories = selectedFilters.length > 0;
+    const hasCategories = selectedCategoryIds.length > 0;
     let coordinates =
       typeof selectedCoordinates?.latitude === "number" &&
       typeof selectedCoordinates?.longitude === "number"
@@ -161,8 +170,8 @@ export default function SearchPage() {
       searchParams.set("longitude", String(coordinates.longitude));
     }
 
-    selectedFilters.forEach((category) => {
-      searchParams.append("categories", category);
+    selectedCategoryIds.forEach((categoryId) => {
+      searchParams.append("categories", categoryId);
     });
 
     router.push(`/search/results?${searchParams.toString()}`);
@@ -227,16 +236,16 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {selectedFilters.length > 0 && (
+        {selectedCategoryIds.length > 0 && (
           <div className="mb-6 rounded-2xl border border-gray-200 bg-[#FAFAFA] p-3">
             <p className="mb-2 text-sm font-semibold text-gray-700">Selected Categories</p>
             <div className="flex flex-wrap gap-2">
-              {selectedFilters.map((filterName) => (
+              {selectedCategoryIds.map((categoryId) => (
                 <span
-                  key={filterName}
+                  key={categoryId}
                   className="rounded-full bg-gradient-to-br from-[#6CACDF] to-[#0000FE] px-3 py-1 text-xs font-semibold text-white"
                 >
-                  {filterName}
+                  {getCategoryNameById(categoryId)}
                 </span>
               ))}
             </div>
@@ -284,24 +293,26 @@ export default function SearchPage() {
                 <div className="rounded-2xl bg-[#FAFAFA] p-3">
                   {isCategoriesLoading ? (
                     <p className="text-sm text-gray-600">Loading categories...</p>
-                  ) : categoryNames.length === 0 ? (
+                  ) : categories.length === 0 ? (
                     <p className="text-sm text-gray-600">No item found</p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      {categoryNames.map((categoryName) => {
-                        const isSelected = draftFilters.includes(categoryName);
+                      {categories.map((category) => {
+                        const categoryId = getCategoryId(category);
+                        if (!categoryId) return null;
+                        const isSelected = draftCategoryIds.includes(categoryId);
                         return (
                           <button
-                            key={categoryName}
+                            key={categoryId}
                             type="button"
-                            onClick={() => toggleDraftFilter(categoryName)}
+                            onClick={() => toggleDraftCategory(categoryId)}
                             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                               isSelected
                                 ? "bg-gradient-to-br from-[#6CACDF] to-[#0000FE] text-white"
                                 : "bg-[rgba(232,232,232,0.6)] text-[#575757]"
                             }`}
                           >
-                            {categoryName}
+                            {category.name}
                           </button>
                         );
                       })}

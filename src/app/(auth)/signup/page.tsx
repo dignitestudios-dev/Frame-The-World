@@ -202,7 +202,7 @@ export default function SignupPage() {
           <div className="text-sm font-medium text-[#000000] mb-6 mt-6 text-center">
             I accept the{" "}
             <Link
-              href="https://www.frametheworld.org/terms-condition"
+              href="https://www.frametheworld.org/terms-of-service"
               target="_blank"
               className="gradient-text bg-clip-text text-transparent font-bold hover:underline"
             >

@@ -86,7 +86,7 @@ const GuestAccessModal = ({ isOpen, onClose }: GuestAccessModalProps) => {
             <div className="mt-6 text-[11px] text-gray-400">
               By continuing, you agree to our{" "}
               <a 
-                href="https://www.frametheworld.org/terms-condition" 
+                href="https://www.frametheworld.org/terms-of-service" 
                 target="_blank" 
                 className="text-blue-500 hover:underline font-medium"
               >

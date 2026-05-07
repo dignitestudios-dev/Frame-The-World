@@ -34,6 +34,31 @@ const isImageUrl = (url: string | null | undefined): url is string => {
   return /\.(jpg|jpeg|png|webp|gif|bmp|svg|jfif)$/i.test(url);
 };
 
+function SearchEmptyState({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="flex min-h-[320px] flex-col items-center justify-center px-4 py-12 text-center">
+      <div className="relative h-48 w-48 md:h-56 md:w-56">
+        <Image
+          src="/images/no data found.jpg"
+          alt=""
+          fill
+          className="object-contain"
+        />
+      </div>
+      <p className="mt-4 text-base font-medium text-gray-600">{title}</p>
+      {description ? (
+        <p className="mt-1 max-w-sm text-sm text-gray-400">{description}</p>
+      ) : null}
+    </div>
+  );
+}
+
 function SearchResultsContent() {
   const router = useRouter();
   const queryParams = useSearchParams();
@@ -73,12 +98,11 @@ function SearchResultsContent() {
     isLoading: isFramesLoading,
     isError: isFramesError,
   } = useQuery({
-    queryKey: ["search-frames", latitudeParam, longitudeParam, categories.join(",")],
+    queryKey: ["search-frames", latitudeParam, longitudeParam],
     queryFn: () =>
       getSearchFramesApi({
         latitude: hasLocationFilters ? latitude : undefined,
         longitude: hasLocationFilters ? longitude : undefined,
-        categories: hasCategories ? sanitizedCategories : undefined,
       }),
     enabled: shouldFetchFilteredResults,
   });
@@ -117,7 +141,7 @@ function SearchResultsContent() {
           <div
             key={item.id}
             onClick={() => router.push(`/postdetails?id=${item.id}`)}
-            className={`relative overflow-hidden rounded-[28px] shadow-[0_8px_24px_rgba(0,0,0,0.28)] ${isSmall ? "aspect-square" : "aspect-[3/4]"
+            className={`relative overflow-hidden rounded-[28px] ${isSmall ? "aspect-square" : "aspect-[3/4]"
               } cursor-pointer`}
           >
             <Image
@@ -140,7 +164,7 @@ function SearchResultsContent() {
         <div
           key={item.id}
           onClick={() => router.push(`/frame-detail/${item.id}`)}
-          className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] aspect-square"
+          className="relative overflow-hidden cursor-pointer rounded-[49.26px] aspect-square"
         >
           <img src={item.image} alt={item.title} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
 
@@ -242,7 +266,10 @@ function SearchResultsContent() {
                   {isPostsLoading ? (
                     <p className="text-sm text-gray-600">Loading images...</p>
                   ) : imageItems.length === 0 ? (
-                    <p className="text-sm text-gray-600">No images found</p>
+                    <SearchEmptyState
+                      title="No Images Found"
+                      description="Try a different location or category to find more posts."
+                    />
                   ) : (
                     renderImageGrid(imageItems)
                   )}
@@ -264,7 +291,10 @@ function SearchResultsContent() {
                   {isFramesLoading ? (
                     <p className="text-sm text-gray-600">Loading frames...</p>
                   ) : frameItems.length === 0 ? (
-                    <p className="text-sm text-gray-600">No frames found</p>
+                    <SearchEmptyState
+                      title="No Frames Found"
+                      description="Try searching with a different location."
+                    />
                   ) : (
                     renderFrameGrid(frameItems)
                   )}
@@ -277,14 +307,20 @@ function SearchResultsContent() {
                 isFramesLoading ? (
                   <p className="text-sm text-gray-600">Loading frames...</p>
                 ) : frameItems.length === 0 ? (
-                  <p className="text-sm text-gray-600">No frames found</p>
+                  <SearchEmptyState
+                    title="No Frames Found"
+                    description="Try searching with a different location."
+                  />
                 ) : (
                   renderFrameGrid(filteredItems as FrameResultItem[])
                 )
               ) : isPostsLoading ? (
                 <p className="text-sm text-gray-600">Loading images...</p>
               ) : imageItems.length === 0 ? (
-                <p className="text-sm text-gray-600">No images found</p>
+                <SearchEmptyState
+                  title="No Images Found"
+                  description="Try a different location or category to find more posts."
+                />
               ) : (
                 renderImageGrid(filteredItems as ImageResultItem[])
               )}

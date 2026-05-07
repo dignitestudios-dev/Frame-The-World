@@ -106,7 +106,6 @@ export default function FrameDetailPage() {
   }, [frame?.city, frame?.country, frame?.state]);
 
   const canManageFrame = useMemo(() => {
-    console.log(user, frameDetails, "chat-issue")
     const userId = user?._id || user?.id;
     if (!userId || !frameDetails) return false;
 
@@ -319,8 +318,11 @@ export default function FrameDetailPage() {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={() => deleteFrameMutation.mutate()}
+        variant="card"
         title="Delete Frame"
         description="Are you sure you want to delete this frame? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
         isLoading={deleteFrameMutation.isPending}
       />
 
@@ -328,8 +330,11 @@ export default function FrameDetailPage() {
         isOpen={isRemovePostModalOpen}
         onClose={() => setIsRemovePostModalOpen(false)}
         onConfirm={() => postToRemove && removePostMutation.mutate(postToRemove)}
+        variant="card"
         title="Remove Post"
         description="Are you sure you want to remove this post from this frame?"
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
         isLoading={removePostMutation.isPending}
       />
 
@@ -569,7 +574,7 @@ export default function FrameDetailPage() {
                 className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-orange-600 shadow-sm transition-all active:scale-90"
                 title="Report Frame"
               >
-                <Flag className="w-5 h-5" />
+                <EllipsisVertical className="text-blue-500" size={20} />
               </button>
             )}
           </div>
@@ -592,11 +597,16 @@ export default function FrameDetailPage() {
               {getApiErrorMessage(framePostsError)}
             </div>
           ) : framePosts.length === 0 ? (
-            <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
+            <div className="flex min-h-[420px] flex-col items-center justify-center px-4 text-center">
               <div className="relative h-48 w-48 md:h-56 md:w-56">
-                <Image src="/images/nno-found.png" alt="No data found" fill className="object-contain" />
+                <Image
+                  src="/images/no data found.jpg"
+                  alt=""
+                  fill
+                  className="object-contain"
+                />
               </div>
-
+              <p className="mt-4 text-base font-medium text-gray-600">No image found</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">

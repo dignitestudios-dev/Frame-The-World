@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Bell, CheckCheck, AlertCircle, RefreshCw } from "lucide-react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -90,10 +90,10 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onRead, isMarking }: NotificationItemProps) {
-  const { _id, title, description, isRead, createdAt, sender } = notification;
-  const avatarSrc =
-    sender?.profilePicture?.location ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(sender?.name || "N")}&background=5D92F3&color=fff&size=80`;
+  const { _id, title, description, isRead, createdAt, metadata } = notification;
+  const iconUrl = metadata?.icon?.trim() || null;
+  const [imageError, setImageError] = useState(false);
+  const showMetadataImage = Boolean(iconUrl) && !imageError;
 
   return (
     <button
@@ -105,16 +105,23 @@ function NotificationItem({ notification, onRead, isMarking }: NotificationItemP
           : "bg-white hover:bg-gray-50/60 cursor-default"
         }`}
     >
-      {/* Avatar */}
+      {/* Thumbnail — metadata.icon or default bell */}
       <div className="relative shrink-0 mt-0.5">
         <div
           className={`w-11 h-11 rounded-full overflow-hidden border-2 ${!isRead ? "border-[#5D92F3]" : "border-gray-200"}`}
         >
-          <img
-            src={avatarSrc}
-            alt={sender?.name || "Notification"}
-            className="w-full h-full object-cover"
-          />
+          {showMetadataImage ? (
+            <img
+              src={iconUrl!}
+              alt=""
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#5D92F3] to-[#3B54F0]">
+              <Bell className="h-5 w-5 text-white" fill="white" />
+            </div>
+          )}
         </div>
         {/* Unread dot */}
         {!isRead && (

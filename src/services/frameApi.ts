@@ -212,9 +212,11 @@ export const deleteFrameApi = async (frameId: string) => {
   return res.data;
 };
 
-// DELETE /frames/:frameId/posts/:postId
+// DELETE /frames/:frameId/posts — post id in request body
 export const removePostFromFrameApi = async (frameId: string, postId: string) => {
-  const res = await API.delete(`/frames/${frameId}/posts/${postId}`);
+  const res = await API.delete(`/frames/${frameId}/posts`, {
+    data: { postIds: [postId] },
+  });
   return res.data;
 };
 

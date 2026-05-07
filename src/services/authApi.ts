@@ -19,6 +19,8 @@ export interface User {
   isIdentityVerified?: boolean;
   isProfileCompleted?: boolean;
   isPasswordSet?: boolean;
+  isSubscribed?: boolean;
+  isOnTrial?: boolean;
   totalFollowers?: number;
   totalFollowing?: number;
 }
@@ -66,13 +68,13 @@ export const verifyEmailApi = async (data: { email: string; otp: string }) => {
 
 // POST /auth/resend-email-verification-otp
 export const resendEmailVerificationOtpApi = async (data: { email: string }) => {
-  const res = await API.post("/auth/resend-email-verification-otp", data);
+  const res = await API.post("/auth/email-verification-otp", data);
   return res.data;
 };
 
 // POST /auth/forgot-password
 export const forgotPasswordApi = async (data: { email: string }) => {
-  const res = await API.post("/auth/forgot-password", data);
+  const res = await API.post("/auth/forgot", data);
   return res.data;
 };
 

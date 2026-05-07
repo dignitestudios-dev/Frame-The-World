@@ -143,37 +143,23 @@ function OtherProfileContent({ userId }: { userId: string }) {
                 <OtherUserOptions userId={userId} />
               </div>
 
-              <div className="absolute top-0 left-0 w-full h-56 pointer-events-none">
-                <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
-                  <defs>
-                    <radialGradient id="peakGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-                  <circle cx="80" cy="50" r="60" fill="url(#peakGlow)" />
-                  <circle cx="310" cy="80" r="50" fill="url(#peakGlow)" />
-                  <path
-                    d="M -10 130 L 30 130 L 80 50 L 140 160 L 190 110 L 250 110 L 310 80 L 350 140 L 410 140"
-                    fill="none"
-                    stroke="#4f46e5"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="opacity-40"
-                  />
-                </svg>
-              </div>
+          
 
               <div className="relative z-10 flex flex-col items-center">
-                <div className="relative w-36 h-36 flex items-center justify-center">
+                <div className="relative h-36 w-36 shrink-0">
                   <div className="absolute inset-0 rounded-[55px] bg-gradient-to-b from-blue-400 to-blue-600 shadow-[0_10px_20px_rgba(59,130,246,0.3)]" />
-                  <div className="relative w-[92%] h-[92%] rounded-[50px] bg-[#f1f3f6] p-1 flex items-center justify-center">
-                    <div className="relative w-full h-full rounded-[45px] overflow-hidden">
+                  <div className="absolute inset-[5px] rounded-[50px] bg-[#f1f3f6] p-1">
+                    <div className="relative h-full w-full overflow-hidden rounded-[45px]">
                       <img
-                        src={targetUser?.profilePicture?.location || "/images/person.png"}
+                        src={
+                          targetUser?.profilePicture?.location ||
+                          (typeof targetUser?.profilePicture === "string"
+                            ? targetUser.profilePicture
+                            : null) ||
+                          "/images/person.png"
+                        }
                         alt={targetUser?.name || "User"}
-                        className="object-cover"
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   </div>
@@ -333,7 +319,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
                           </div>
 
                           {/* Report Frame Button */}
-                          <button
+                     {/*     <button
                             onClick={(e) => {
                               e.stopPropagation();
                               if (id) {
@@ -351,6 +337,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
                           >
                             <Flag className="w-4 h-4" />
                           </button>
+                          */}
                         </div>
                       );
                     })}

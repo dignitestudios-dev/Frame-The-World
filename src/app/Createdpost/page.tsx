@@ -9,7 +9,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ContentReleaseModal from "@/components/global/ContentReleaseModal";
 import Link from "next/link";
 import ImportFolderModal from "@/components/createpost/ImportFolderModal";
+import TrialLimitModal from "@/components/global/TrialLimitModal";
 import { FolderImageItem } from "@/services/frameApi";
+import { isTrialLimitError, getApiErrorMessage } from "@/lib/apiError";
+import { useAccessControl } from "@/providers/AccessControlProvider";
 import { Loader2 } from "lucide-react";
 
 interface UploadFormProps {
@@ -36,8 +39,11 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
   const [isImage, setIsImage] = useState<boolean>(false);
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isTrialLimitModalOpen, setIsTrialLimitModalOpen] = useState(false);
+  const [trialLimitMessage, setTrialLimitMessage] = useState<string | undefined>();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { executeWithCheck } = useAccessControl();
 
   // Handle initial image from query params (e.g., from personal storage "Make Post")
   useEffect(() => {
@@ -76,6 +82,12 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
       // Success handling is done inside the AnalyzingModal via the onSuccess prop
     },
     onError: (err) => {
+      if (isTrialLimitError(err)) {
+        setTrialLimitMessage(getApiErrorMessage(err));
+        setIsTrialLimitModalOpen(true);
+        reset();
+        return;
+      }
       console.error("Error creating post:", err);
     },
   });
@@ -124,7 +136,7 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
     const values = Object.fromEntries(data.entries());
     console.log(values, "form-->data--->");
     // setIsImage(true);
-    mutate(data);
+    executeWithCheck(() => mutate(data));
   };
 
   useEffect(() => {
@@ -136,6 +148,14 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
   }, [imagePreview]);
   return (
     <div className="min-h-screen">
+      <TrialLimitModal
+        isOpen={isTrialLimitModalOpen}
+        onClose={() => {
+          setIsTrialLimitModalOpen(false);
+          setTrialLimitMessage(undefined);
+        }}
+        description={trialLimitMessage}
+      />
       <Header title={"Create Post"} subtitle={""} />
       {isImage ? (
         <Imagepage
@@ -326,7 +346,7 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
               />
               <span className="ml-3 text-sm text-gray-600">
                 By uploading any images, you are granting a license to Frame The World LLC, as set forth in the
-                <Link href="https://www.frametheworld.org/terms-condition" className="underline text-blue-600 hover:text-blue-800 transition-colors"> Terms of Service</Link>
+                <Link href="https://www.frametheworld.org/terms-of-service" className="underline text-blue-600 hover:text-blue-800 transition-colors"> Terms of Service</Link>
               </span>
             </label>
           </div>

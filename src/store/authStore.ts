@@ -13,6 +13,7 @@ interface User {
   company?: any;
   isProfileCompleted?: boolean;
   isSubscribed?: boolean;
+  isOnTrial?: boolean;
   isEmailVerified?: boolean;
   categoryPreference?: any[];
   badges?: any[];

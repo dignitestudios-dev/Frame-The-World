@@ -34,7 +34,8 @@ import InsightsModal from "@/components/post/InsightsModal";
 import { useAuthStore } from "@/store/authStore";
 import ReportModal from "@/components/global/ReportModal";
 import { useAccessControl } from "@/providers/AccessControlProvider";
-import { getApiErrorMessage } from "@/lib/apiError";
+import { getApiErrorMessage, isTrialLimitError } from "@/lib/apiError";
+import TrialLimitModal from "@/components/global/TrialLimitModal";
 import { Toast } from "@/components/ui/toast";
 import { useQuery as useInsightsQuery } from "@tanstack/react-query";
 import { getPostInsightsApi } from "@/services/postApi";
@@ -98,8 +99,15 @@ function PostDetailsContent() {
   // This ref prevents API refetch from overwriting local upvote state
   // after the user has manually toggled the upvote button.
   const hasInteracted = useRef(false);
+  const hasDownloadInteracted = useRef(false);
   // Always-current upvote count — avoids stale closure reads in onMutate
   const upvoteCountRef = useRef<number>(getSafeCount(postDetails?.upvotes || postDetails?.upvoteCount));
+  const downloadCountRef = useRef<number>(getSafeCount(postDetails?.downloads));
+
+  useEffect(() => {
+    hasInteracted.current = false;
+    hasDownloadInteracted.current = false;
+  }, [postIdFromUrl]);
 
   // Modals state
   const [analyzingModalOpen, setAnalyzingModalOpen] = useState(false);
@@ -114,6 +122,8 @@ function PostDetailsContent() {
   const [editingPost, setEditingPost] = useState<any>(null);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isTrialLimitModalOpen, setIsTrialLimitModalOpen] = useState(false);
+  const [trialLimitMessage, setTrialLimitMessage] = useState<string | undefined>();
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
 
   const [toast, setToast] = useState<ToastState>({
@@ -125,6 +135,26 @@ function PostDetailsContent() {
   const showToast = (message: string, type: ToastState["type"] = "success") => {
     setToast({ open: true, message, type });
   };
+
+  const handleTrialOrGenericError = (error: unknown) => {
+    if (isTrialLimitError(error)) {
+      setTrialLimitMessage(getApiErrorMessage(error));
+      setIsTrialLimitModalOpen(true);
+      return;
+    }
+    showToast(getApiErrorMessage(error), "error");
+  };
+
+  const trialLimitModal = (
+    <TrialLimitModal
+      isOpen={isTrialLimitModalOpen}
+      onClose={() => {
+        setIsTrialLimitModalOpen(false);
+        setTrialLimitMessage(undefined);
+      }}
+      description={trialLimitMessage}
+    />
+  );
 
   const { data: fetchedPostData, isLoading: isFetchingPost, error: fetchError } = useQuery({
     queryKey: ["post", postIdFromUrl],
@@ -201,6 +231,54 @@ function PostDetailsContent() {
     queryClient.invalidateQueries({ queryKey: ["featured-feed"] });
   };
 
+  const patchInsightsDownloads = (downloads: number) => {
+    if (!currentPostId) return;
+    queryClient.setQueriesData(
+      { queryKey: ["postInsights", currentPostId] },
+      (old: unknown) => {
+        if (!old || typeof old !== "object") return old;
+        const root = old as Record<string, unknown>;
+        const dataLayer = root.data as Record<string, unknown> | undefined;
+        const summary =
+          (dataLayer?.summary as Record<string, unknown> | undefined) ??
+          (root.summary as Record<string, unknown> | undefined);
+        if (!summary) return old;
+        const nextSummary = { ...summary, downloads };
+        if (dataLayer?.summary) {
+          return { ...root, data: { ...dataLayer, summary: nextSummary } };
+        }
+        return { ...root, summary: nextSummary };
+      }
+    );
+  };
+
+  const applyDownloadCount = (downloads: number) => {
+    hasDownloadInteracted.current = true;
+    downloadCountRef.current = downloads;
+    syncPost((prev) => (prev ? { ...prev, downloads } : prev));
+    patchInsightsDownloads(downloads);
+
+    if (!postIdFromUrl) return;
+
+    queryClient.setQueryData(["post", postIdFromUrl], (old: any) => {
+      if (!old) return old;
+      const post = old?.data?.data ?? old?.data ?? old;
+      if (old?.data?.data) {
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: { ...post, downloads },
+          },
+        };
+      }
+      if (old?.data) {
+        return { ...old, data: { ...post, downloads } };
+      }
+      return { ...post, downloads };
+    });
+  };
+
   const { mutate: upvotePost, isPending: isUpvoting } = useMutation({
     mutationFn: ({ postId, upvote }: { postId: string; upvote: boolean }) =>
       upvotePostApi(postId, { upvote }),
@@ -258,11 +336,31 @@ function PostDetailsContent() {
 
   useEffect(() => {
     if (postToDisplay && !isUpvoting) {
-      if (!hasInteracted.current) {
-        // Only sync from API when user hasn't interacted (voted/unvoted)
+      if (!hasInteracted.current && !hasDownloadInteracted.current) {
         setCurrentPost(postToDisplay);
         setHasUpvoted(Boolean(postToDisplay?.isUpvoted ?? postToDisplay?.upvoted));
         upvoteCountRef.current = getSafeCount(postToDisplay?.upvotes || postToDisplay?.upvoteCount);
+        downloadCountRef.current = getSafeCount(postToDisplay?.downloads);
+      } else if (!hasInteracted.current) {
+        setCurrentPost((prev: any) =>
+          prev
+            ? { ...postToDisplay, downloads: downloadCountRef.current }
+            : postToDisplay
+        );
+        setHasUpvoted(Boolean(postToDisplay?.isUpvoted ?? postToDisplay?.upvoted));
+        upvoteCountRef.current = getSafeCount(postToDisplay?.upvotes || postToDisplay?.upvoteCount);
+      } else if (!hasDownloadInteracted.current) {
+        setCurrentPost((prev: any) =>
+          prev
+            ? {
+                ...postToDisplay,
+                upvotes: upvoteCountRef.current,
+                isUpvoted: hasUpvoted,
+                upvoted: hasUpvoted,
+              }
+            : postToDisplay
+        );
+        downloadCountRef.current = getSafeCount(postToDisplay?.downloads);
       }
 
       if (!isFetchingPost) {
@@ -316,8 +414,21 @@ function PostDetailsContent() {
   const { mutate: downloadPost, isPending: isDownloading } = useMutation({
     mutationFn: (postId: string) => downloadPostApi(postId),
     onSuccess: async (response) => {
+      const updatedPost = response?.data ?? response;
+      const apiCount = getReturnedCount(
+        updatedPost?.downloads,
+        updatedPost?.data?.downloads,
+        response?.downloads,
+      );
+      const newCount =
+        apiCount !== null ? apiCount : downloadCountRef.current + 1;
+      applyDownloadCount(newCount);
+      invalidatePostLists();
+      queryClient.invalidateQueries({ queryKey: ["postInsights", currentPostId] });
+
       try {
-        const fileUrl = response?.data?.filePath;
+        let fileUrl = response?.data?.filePath;
+        fileUrl = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}t=${new Date().getTime()}`;
         const fileName = response?.data?.fileName;
 
         if (!fileUrl) throw new Error("File URL missing");
@@ -342,7 +453,7 @@ function PostDetailsContent() {
       }
     },
     onError: (error) => {
-      showToast(getApiErrorMessage(error), "error");
+      handleTrialOrGenericError(error);
     },
   });
 
@@ -401,14 +512,20 @@ function PostDetailsContent() {
   // --- Own Post View (owner layout) ---
   if (canDeletePost) {
     return (
-      <OwnPostView
+      <>
+        {trialLimitModal}
+        <OwnPostView
         currentPost={currentPost}
         currentPostId={currentPostId}
         imageUrl={imageUrl}
         locationText={locationText}
         isDownloading={isDownloading}
         onBack={() => router.back()}
-        onDownload={() => currentPostId && downloadPost(currentPostId)}
+        onDownload={() =>
+          executeWithCheck(() => {
+            if (currentPostId) downloadPost(currentPostId);
+          })
+        }
         onSave={() => setIsSaveOpen(true)}
         onDeleteClick={() => setDeletingPostId(currentPostId)}
         toast={toast}
@@ -435,12 +552,14 @@ function PostDetailsContent() {
         isUpdatingImage={isUpdatingImage}
         getSafeCount={getSafeCount}
       />
+      </>
     );
   }
 
   // --- Other User's Post View ---
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
+      {trialLimitModal}
       <Header
         title="Today's Travel Story"
         subtitle={`${relatedPosts?.length}+ new memories for you`}
@@ -472,7 +591,7 @@ function PostDetailsContent() {
 
           <div className="px-2">
             <div className="flex items-center justify-between mb-1 gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-[20px] mb-7 font-bold text-gray-900">
                 {currentPost?.caption || "Untitled post"}
               </h2>
               <div className="flex items-center gap-1 text-gray-800 shrink-0">
@@ -481,16 +600,16 @@ function PostDetailsContent() {
               </div>
             </div>
 
-            <p className="text-sm flex gap-2 text-gray-400 mb-6">
+            <div className="mb-6 flex flex-wrap gap-2">
               {currentPost?.categories?.map((category: any) => (
                 <span
                   key={category?.id}
-                  className="px-4 py-1.5 rounded-full text-xs font-bold gradient-bg text-white border-none shadow-md"
+                  className="rounded-full border-none px-4 py-1.5 text-xs font-bold text-white shadow-md gradient-bg"
                 >
                   {category?.name}
                 </span>
               ))}
-            </p>
+            </div>
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 min-w-0">

@@ -53,8 +53,11 @@ export default function DeleteAccount() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={() => deleteMutation.mutate()}
+        variant="card"
         title="Delete Account?"
         description="Are you sure you want to delete your account? This action cannot be undone and you will lose all your data."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
         isLoading={deleteMutation.isPending}
       />
 

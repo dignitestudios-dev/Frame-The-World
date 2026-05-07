@@ -1,0 +1,241 @@
+[33mcommit 67cd2932849bf2ab7cfb1908620f1e2ba6c42831[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/sprint3-zack[m[33m, [m[1;32msprint3-zack[m[33m, [m[1;32msprint-3-jimmy[m[33m)[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri May 1 15:46:39 2026 +0500
+
+    sprint3-zack
+
+[33mcommit 8e577610421708c2b963fa936be6d379ca243143[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Thu Apr 30 19:09:20 2026 +0500
+
+    update:sprint 3 Ai generation , personal storage post remove , add , import images
+
+[33mcommit 9af3c35c5eb782d283073d43937c0511f6f30cc8[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Wed Apr 29 17:13:00 2026 +0500
+
+    UAT-Bugs
+
+[33mcommit 7d9d3598449a5cfd46ce8046b39a196bdb83ad15[m[33m ([m[1;31morigin/sprint-3-jimmy[m[33m)[m
+Merge: 5b02d6f b551822
+Author: jimmysantos68 <215165448+jimmysantos68@users.noreply.github.com>
+Date:   Tue Apr 28 17:57:05 2026 +0500
+
+    Merge branch 'main' of https://github.com/dignitestudios-dev/Frame-The-World into sprint-3-jimmy
+
+[33mcommit 5b02d6f52fc4963c72e0854f02272ffb310e7d45[m
+Merge: eb6b748 b2f35c5
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 28 15:48:02 2026 +0500
+
+    Merge branch 'sprint-3-jimmy' of https://github.com/dignitestudios-dev/Frame-The-World into sprint3-zack
+
+[33mcommit b551822bdb5666a84bcbd089327599fd847067fa[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 28 17:55:15 2026 +0500
+
+    push for main
+
+[33mcommit ea10a13ca211d46aa69af8177e19481858ecb9fb[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 28 17:01:05 2026 +0500
+
+    update
+
+[33mcommit 2e51285cc2d9312753c87698490f79262ab0d2c7[m[33m ([m[1;31morigin/dev[m[33m)[m
+Merge: eb6b748 b2f35c5
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 28 15:48:02 2026 +0500
+
+    Merge branch 'sprint-3-jimmy' of https://github.com/dignitestudios-dev/Frame-The-World into sprint3-zack
+
+[33mcommit eb6b748c06c13c13c10f1303860e76ee8f7c7363[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 28 15:47:43 2026 +0500
+
+    update:pull from sprint3-jimmy
+
+[33mcommit b2f35c5102b9329add79051c39813340ac8548f4[m
+Merge: 9c3d60a 056ab12
+Author: jimmysantos68 <215165448+jimmysantos68@users.noreply.github.com>
+Date:   Tue Apr 28 14:45:22 2026 +0500
+
+    Merge branch 'main' of https://github.com/dignitestudios-dev/Frame-The-World into sprint-3-jimmy
+
+[33mcommit 9c3d60a47a4802924b0e6fc52b0c28172905d030[m
+Author: jimmysantos68 <215165448+jimmysantos68@users.noreply.github.com>
+Date:   Tue Apr 28 14:34:34 2026 +0500
+
+    personal storage
+
+[33mcommit 056ab1207b15c63cc0b4403a850fe9687eebc2ad[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 28 11:33:44 2026 +0500
+
+    update:account infromation fixed
+
+[33mcommit 5217ae2663be6cdcf0b1cb99615a1b744da62300[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Mon Apr 27 18:41:21 2026 +0500
+
+    update:push for main
+
+[33mcommit 2a38400ee2970464b341a34d8cd55393a2f1fa1b[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Mon Apr 27 17:58:09 2026 +0500
+
+    update:auth new flow done, human removal
+
+[33mcommit f10fd939129f5c7fc89f6527419c0964207a84e2[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Mon Apr 27 13:46:55 2026 +0500
+
+    update:pull from main
+
+[33mcommit 68f7a02e1ed29c3c2bd002bb95695418b4540435[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 18:06:52 2026 +0500
+
+    update:push for main
+
+[33mcommit 4beab9d66e04292a05c1d03f33051247fc25a21a[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:40:55 2026 +0500
+
+    fixes
+
+[33mcommit c83f30db71435c01a38622518c5106205c0d4128[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:40:24 2026 +0500
+
+    fix: remove extra page.tsx from frame-detail
+
+[33mcommit 9cadae05351e57e966c83e9769d092d7f4e22fb3[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:35:44 2026 +0500
+
+    update:push for main
+
+[33mcommit d71813adbe30cb5c7d6868727ba111d1e7ab1c88[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:32:15 2026 +0500
+
+    update:testing
+
+[33mcommit c4e71453ae748befe55256b0f1f686f467cfd65c[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:32:03 2026 +0500
+
+    update:testing
+
+[33mcommit b4e707ebcd40587ce52b265223a133a19a74d4ec[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:25:37 2026 +0500
+
+    update:q/a fixation
+
+[33mcommit a390195040095cec320419d19b278977a2f09dd8[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:22:24 2026 +0500
+
+    update:q/a fixation
+
+[33mcommit 56e44ecbeda6b3884fba9ae7bd68beb746bf35d8[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 15:01:29 2026 +0500
+
+    update:q/a fixations
+
+[33mcommit 7596d8a6fd3cb7998b853c82b7563dbe296a59fa[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 14:51:26 2026 +0500
+
+    update:push for main
+
+[33mcommit 31639a20fc9aead82611dc6181bd84c34a5a88d2[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 14:12:58 2026 +0500
+
+    push for main
+
+[33mcommit 33e735369236e9c7703d944d6fbcaadff046dbb1[m[33m ([m[1;32mmain[m[33m)[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 12:50:16 2026 +0500
+
+    update:push for main
+
+[33mcommit 1c17964297a574c52db5bef0932ad6406017064a[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Fri Apr 24 10:31:04 2026 +0500
+
+    pull from main
+
+[33mcommit 776951b9afab203a7a97b68fc9c6ef780c83fdc9[m
+Merge: c0ca126 d1fe17e
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Thu Apr 23 19:11:53 2026 +0500
+
+    Merge branch 'main' of https://github.com/dignitestudios-dev/Frame-The-World
+
+[33mcommit c0ca126760b774d5e2ef83827600b1a3fbb1e979[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Thu Apr 23 19:11:37 2026 +0500
+
+    update:q/a fixations
+
+[33mcommit d1fe17e459e3881af44ffa47c0daecf19a1fa0ee[m
+Merge: 586e97e 6ba2549
+Author: jimmysantos68 <215165448+jimmysantos68@users.noreply.github.com>
+Date:   Thu Apr 23 16:56:17 2026 +0500
+
+    Merge branch 'main' of https://github.com/dignitestudios-dev/Frame-The-World
+
+[33mcommit 586e97e7867f82d62aaabfb49a35579cb081def2[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 21 18:52:29 2026 +0500
+
+    update
+
+[33mcommit 6ba2549c10d9fb53b574f686c792a1184e918a96[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Wed Apr 22 15:19:03 2026 +0500
+
+    update:Q/A Fixations
+
+[33mcommit 8fd69c6f4141f9b8062f6a9818eedaa0a941afdf[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Wed Apr 22 12:55:54 2026 +0500
+
+    update:Q/A fixes
+
+[33mcommit 8209dbeb8e42675846976bba7a330ecc7caee91f[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Wed Apr 22 12:07:27 2026 +0500
+
+    update:push for main
+
+[33mcommit 73c2dfc6a54285ac96c9dad06ece232602eef79d[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Wed Apr 22 11:55:03 2026 +0500
+
+    update:push for main
+
+[33mcommit 726d0ee927ff58c6b7a365cd521b6ccc94e6a506[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Wed Apr 22 10:50:17 2026 +0500
+
+    update:push for main
+
+[33mcommit 35b10804e090d5a70fcfe208cbfab077aa35bf1d[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Wed Apr 22 10:37:36 2026 +0500
+
+    pull from main
+
+[33mcommit f90a03b4de2a67928e15a769558d58ab5b037b8b[m
+Author: zackcole <183650880+zackcole@users.noreply.github.com>
+Date:   Tue Apr 21 18:52:29 2026 +0500
+
+    update
+
+[33mcom

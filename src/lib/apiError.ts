@@ -53,3 +53,19 @@ export function getApiErrorMessage(error: unknown): string {
 
   return "Something went wrong. Please try again.";
 }
+
+export const TRIAL_POST_LIMIT_MESSAGE =
+  "Trial limit reached. You cannot create more than 3 posts on a trial.";
+
+export const TRIAL_DOWNLOAD_LIMIT_MESSAGE =
+  "Trial limit reached. You cannot download more than 3 posts on a trial.";
+
+/** Post create or download trial limit errors from the API */
+export function isTrialLimitError(error: unknown): boolean {
+  const message = getApiErrorMessage(error).toLowerCase();
+  return (
+    message.includes("trial limit") ||
+    message.includes("more than 3 posts on a trial") ||
+    message.includes("download more than 3 posts")
+  );
+}

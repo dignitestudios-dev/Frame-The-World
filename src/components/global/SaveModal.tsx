@@ -6,6 +6,7 @@ import { ArrowLeft, Hash, Plus, Bookmark, Contact2, Trash, Loader2, Flag } from 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { getOwnFramesApi, addPostToFrameApi, getFoldersApi, movePostToFolderApi } from "@/services/frameApi";
+import { useAccessControl } from "@/providers/AccessControlProvider";
 
 type ModalState = "menu" | "frames" | "storage" | "success_frame" | "success_storage" | "delete";
 
@@ -36,6 +37,7 @@ const SaveModal = ({
 }: SaveModalProps) => {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { executeWithCheck } = useAccessControl();
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<ModalState>(initialView);
   const [selectedFrameTitle, setSelectedFrameTitle] = useState("");
@@ -173,7 +175,9 @@ const SaveModal = ({
               <button
                 onClick={() => {
                   const postId = post?.id || post?._id;
-                  router.push(`/CreateFrames${postId ? `?postId=${postId}` : ""}`);
+                  executeWithCheck(() => {
+                    router.push(`/CreateFrames${postId ? `?postId=${postId}` : ""}`);
+                  });
                 }}
                 className="flex items-center gap-4 w-full p-4 hover:bg-gray-50 rounded-2xl group transition-all"
               >

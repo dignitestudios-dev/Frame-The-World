@@ -8,6 +8,9 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { generateAiCaptionApi } from "@/services/postApi";
 import { Toast } from "@/components/ui/toast";
+import { useAccessControl } from "@/providers/AccessControlProvider";
+
+const MAX_IMAGES = 5;
 
 const CaptionGenerator: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -15,6 +18,7 @@ const CaptionGenerator: React.FC = () => {
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [toast, setToast] = useState({ open: false, message: "", type: "success" as "success" | "error" });
   const router = useRouter();
+  const { executeWithCheck } = useAccessControl();
 
   const { mutate: handleGenerate, isPending } = useMutation({
     mutationFn: (formData: FormData) => generateAiCaptionApi(formData),
@@ -41,19 +45,41 @@ const CaptionGenerator: React.FC = () => {
     }
   });
 
+  const showImageLimitToast = () => {
+    setToast({
+      open: true,
+      message: `You can upload a maximum of ${MAX_IMAGES} images only.`,
+      type: "error",
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     const fileArray = Array.from(files);
-    const totalFiles = [...selectedFiles, ...fileArray];
+    const remainingSlots = MAX_IMAGES - selectedFiles.length;
 
-    if (totalFiles.length > 4) {
-      setToast({ open: true, message: "Maximum 4 images allowed", type: "error" });
+    if (remainingSlots <= 0) {
+      showImageLimitToast();
+      e.target.value = "";
       return;
     }
 
-    setSelectedFiles(totalFiles);
+    if (fileArray.length > remainingSlots) {
+      showImageLimitToast();
+      setSelectedFiles((prev) => [...prev, ...fileArray.slice(0, remainingSlots)]);
+    } else {
+      setSelectedFiles((prev) => [...prev, ...fileArray]);
+    }
+
+    e.target.value = "";
+  };
+
+  const handleAddImageClick = () => {
+    if (selectedFiles.length >= MAX_IMAGES) {
+      showImageLimitToast();
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -63,13 +89,14 @@ const CaptionGenerator: React.FC = () => {
 
   const onGenerate = () => {
     if (selectedFiles.length === 0) return;
-    
-    const formData = new FormData();
-    selectedFiles.forEach((file) => {
-      formData.append("images", file); // Ensure "images" matches backend expectations
+
+    executeWithCheck(() => {
+      const formData = new FormData();
+      selectedFiles.forEach((file) => {
+        formData.append("images", file);
+      });
+      handleGenerate(formData);
     });
-    
-    handleGenerate(formData);
   };
 
   const handleCopy = () => {
@@ -117,7 +144,7 @@ const CaptionGenerator: React.FC = () => {
                 />
               </div>
               <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-                Upload up to 4 pictures and our AI will analyze them to create relevant captions and hashtags for you.
+                Instantly creates full Instagram and Facebook captions with tone and hashtags, turning a simple idea into a ready-to-post caption in seconds.
               </p>
             </div>
 
@@ -148,25 +175,23 @@ const CaptionGenerator: React.FC = () => {
                   </div>
                 ))}
 
-                {selectedFiles.length < 4 && (
-                  <>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="fileInput"
-                    />
-                    <label
-                      htmlFor="fileInput"
-                      className="w-24 h-24 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/30 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group"
-                    >
-                      <span className="text-2xl text-blue-400 group-hover:scale-110 transition-transform">+</span>
-                      <span className="text-[10px] font-bold text-blue-400 uppercase mt-1">Add Image</span>
-                    </label>
-                  </>
-                )}
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="fileInput"
+                  disabled={selectedFiles.length >= MAX_IMAGES}
+                />
+                <label
+                  htmlFor={selectedFiles.length < MAX_IMAGES ? "fileInput" : undefined}
+                  onClick={handleAddImageClick}
+                  className="w-24 h-24 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/30 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group"
+                >
+                  <span className="text-2xl text-blue-400 group-hover:scale-110 transition-transform">+</span>
+                  <span className="text-[10px] font-bold text-blue-400 uppercase mt-1">Add Image</span>
+                </label>
               </div>
             </div>
 

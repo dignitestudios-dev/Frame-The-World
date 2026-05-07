@@ -10,6 +10,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   const menuItems = [
     "Account Information",
     "Category Preferences",
+    "Subscription",
     "Notifications",
     "Badges",
     `${user?.isPasswordSet ? "Change Password" : "Set Password"} `,
@@ -20,7 +21,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
   ];
   const handleTabClick = (item: string) => {
     if (item === "Terms of Services") {
-      window.open("https://www.frametheworld.org/terms-condition", "_blank");
+      window.open("https://www.frametheworld.org/terms-of-service", "_blank");
       return;
     }
     if (item === "Privacy Policy") {
@@ -33,6 +34,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
     const isAllowedForPending = [
       "Category Preferences",
       "Account Information",
+      "Subscription",
       "Terms of Services",
       "Privacy Policy",
       "Change Password",
@@ -40,9 +42,15 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
       "App Walkthrough"
     ].includes(item);
 
-    executeWithCheck(() => {
-      setActiveTab(item);
-    }, { isPendingAllowed: isAllowedForPending });
+    executeWithCheck(
+      () => {
+        setActiveTab(item);
+      },
+      {
+        isPendingAllowed: isAllowedForPending,
+        skipSubscriptionCheck: item === "Subscription",
+      }
+    );
   };
 
   return (

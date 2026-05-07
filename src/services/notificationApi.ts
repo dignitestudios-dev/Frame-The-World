@@ -2,6 +2,13 @@ import { API } from "@/lib/axios";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export interface NotificationMetadata {
+  resource?: string | null;
+  icon?: string | null;
+  resourceType?: string | null;
+  notificationType?: string | null;
+}
+
 export interface Notification {
   _id: string;
   title: string;
@@ -9,7 +16,7 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
   updatedAt?: string;
-  // Optional sender / reference fields the API may return
+  metadata?: NotificationMetadata | null;
   sender?: {
     _id?: string;
     name?: string;
@@ -44,6 +51,27 @@ export const getNotificationsApi = async (params?: {
 }): Promise<NotificationsResponse> => {
   const res = await API.get<NotificationsResponse>("/notifications", { params });
   return res.data;
+};
+
+/** Count unread across all notification pages (for header badge). */
+export const getUnreadNotificationsCountApi = async (): Promise<number> => {
+  const limit = 50;
+  let page = 1;
+  let unreadCount = 0;
+
+  while (true) {
+    const res = await getNotificationsApi({ page, limit });
+    const items = Array.isArray(res?.data) ? res.data : [];
+    unreadCount += items.filter((n) => n && !n.isRead).length;
+
+    const pagination = res.pagination;
+    if (!pagination || pagination.currentPage >= pagination.totalPages) {
+      break;
+    }
+    page = pagination.currentPage + 1;
+  }
+
+  return unreadCount;
 };
 
 // PATCH /notifications/:notificationId/read — mark a single notification as read

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, BarChart3, Globe, Lock, Pin, Sparkles, Settings, LogOut, ChevronRight, FileText, Frame, FolderPlus, CloudCog } from "lucide-react";
+import { Home, BarChart3, Globe, Lock, Pin, Sparkles, Settings, LogOut, LogIn, ChevronRight, FileText, Frame, FolderPlus, CloudCog } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationModal from "./notification-modal";
 import { Plus } from "lucide-react";
@@ -12,11 +12,23 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { logoutApi } from "@/services/authApi";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 import { useNotificationStore } from "@/store/notificationStore";
-import { getNotificationsApi } from "@/services/notificationApi";
+import { getUnreadNotificationsCountApi } from "@/services/notificationApi";
+import type { LucideIcon } from "lucide-react";
+
+type SidebarMenuItem = {
+  icon: LucideIcon;
+  label: string;
+  hasArrow: boolean;
+  route?: string;
+  func?: () => void;
+  title?: string;
+  subtitle?: string;
+  isDestructive?: boolean;
+};
 
 export default function Header({ title, subtitle }: { title?: string, subtitle?: string }) {
   const router = useRouter();
-  const { logout, user } = useAuthStore();
+  const { logout, user, isGuest } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -26,21 +38,19 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
   const { executeWithCheck } = useAccessControl();
   const { unreadCount, setUnreadCount } = useNotificationStore();
 
-  // Pre-fetch notifications on mount to populate the unread badge
-  const { data: initialNotifData } = useQuery({
+  const { data: totalUnread } = useQuery({
     queryKey: ["notifications-count"],
-    queryFn: () => getNotificationsApi({ page: 1, limit: 15 }),
+    queryFn: getUnreadNotificationsCountApi,
     enabled: !!user,
     staleTime: 30_000,
-    refetchInterval: 120_000, // background refresh every 2 min
+    refetchInterval: 120_000,
   });
 
   useEffect(() => {
-    if (initialNotifData?.data && Array.isArray(initialNotifData.data)) {
-      const count = initialNotifData.data.filter((n: any) => n && !n.isRead).length;
-      setUnreadCount(count);
+    if (typeof totalUnread === "number") {
+      setUnreadCount(totalUnread);
     }
-  }, [initialNotifData, setUnreadCount]);
+  }, [totalUnread, setUnreadCount]);
 
   const { mutate: logoutMutate } = useMutation({
     mutationFn: logoutApi,
@@ -93,24 +103,43 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
     };
   }, [isNotificationOpen]);
 
-  const sidebarItems = [
+  const guestAccessibleRoutes = ["/home", "/leaderboard"];
+
+  const sidebarMenuBase: SidebarMenuItem[] = [
     { icon: Home, label: "Home", hasArrow: false, route: "/home", title: "Create Post", subtitle: "Shared with everyone.", },
-    { icon: BarChart3, label: "Leader Board", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
+    { icon: FileText, label: "My Posts", hasArrow: false, route: "/Profile?tab=posts", title: "Create Post", subtitle: "Shared with everyone." },
+    { icon: BarChart3, label: "Leaderboard", hasArrow: false, route: "/Leaderboard", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Globe, label: "Public frames", hasArrow: true, route: "/Profile?tab=frames&visibility=public", func: () => setIsFrameType("public"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Lock, label: "Private frames", hasArrow: true, route: "/Profile?tab=frames&visibility=private", func: () => setIsFrameType("private"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Pin, label: "Personal Storage", hasArrow: true, route: "/Profile?tab=space", func: () => setIsFrameType("personal"), title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Sparkles, label: "AI Content generator", hasArrow: false, route: "/AiGenerator", title: "Create Post", subtitle: "Shared with everyone.", },
     { icon: Settings, label: "Settings", hasArrow: false, title: "Create Post", subtitle: "Shared with everyone.", route: "/settings" },
-    {
-      icon: LogOut,
-      label: "Logout",
-      hasArrow: false,
-      isDestructive: true,
-      title: "Create Post",
-      subtitle: "Shared with everyone.",
-      func: handleLogout
-    },
   ];
+
+  const sidebarItems: SidebarMenuItem[] = isGuest
+    ? [
+        ...sidebarMenuBase,
+        {
+          icon: LogIn,
+          label: "Login",
+          hasArrow: false,
+          route: "/login",
+          title: "Create Post",
+          subtitle: "Shared with everyone.",
+        },
+      ]
+    : [
+        ...sidebarMenuBase,
+        {
+          icon: LogOut,
+          label: "Logout",
+          hasArrow: false,
+          isDestructive: true,
+          title: "Create Post",
+          subtitle: "Shared with everyone.",
+          func: handleLogout,
+        },
+      ];
 
 
   const contentCards = [
@@ -171,7 +200,6 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
 
   const headerTitle = activeItem?.label || "Dashboard";
   const headerSubtitle = activeItem?.subtitle || "";
-  console.log(user, "user---response")
   return (
     <>
       {/* Backdrop Overlay */}
@@ -273,9 +301,11 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                 />
                 {unreadCount > 0 && (
                   <span
-                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] font-bold shadow-md shadow-red-500/30 border-2 border-white leading-none"
+                    className={`absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-red-500 to-rose-600 px-1 text-white font-bold leading-none shadow-md shadow-red-500/30 ${
+                      unreadCount > 99 ? "text-[8px]" : unreadCount > 9 ? "text-[9px]" : "text-[10px]"
+                    }`}
                   >
-                    {unreadCount > 9 ? "9+" : unreadCount}
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
               </button>
@@ -302,11 +332,19 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                       if (item.func) item.func();
                       return;
                     }
-                    if (item.label === "Home" || item.label === "Leader Board") {
+                    if (item.label === "Login") {
                       if (item.route) {
                         router.push(item.route);
                         setIsMenuOpen(false);
                       }
+                      return;
+                    }
+                    if (
+                      item.route &&
+                      guestAccessibleRoutes.includes(item.route.toLowerCase())
+                    ) {
+                      router.push(item.route);
+                      setIsMenuOpen(false);
                       return;
                     }
                     executeWithCheck(() => {
@@ -346,7 +384,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
             <div className="flex-1 flex flex-col items-center justify-center bg-white md:rounded-br-3xl overflow-hidden min-h-[300px]">
               <div className="w-full p-4 md:p-7 flex flex-col h-full">
                 {/* Top Action Cards */}
-                <div className="flex flex-col sm:flex-row gap-3 md:gap-6 mb-6">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-6 mb-6 hidden">
                   <div className="flex flex-col sm:flex-row gap-3 flex-1">
                     {contentCards.map((card, index) => {
                       return (
@@ -376,7 +414,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                   </div>
 
                   {/* Profile Picture (visible on Desktop/Tablet) */}
-                  <div className="hidden md:flex shrink-0 items-center justify-center">
+                  <div className="hidden">
                     <Image
                       src={user?.profilePicture?.location || user?.profilePicture || "/images/person.png"}
                       alt="User"
@@ -433,7 +471,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                       </button>
                     </div>
                   ) : (
-                    <div className="flex-1 flex items-center justify-center min-h-[200px]">
+                    <div className="flex-1 flex items-center justify-center min-h-[200px] mt-[2.4em]">
                       <div className="relative w-full max-w-full px-6">
                         <Image
                           src="/images/menuimage.png"

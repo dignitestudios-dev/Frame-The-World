@@ -37,12 +37,22 @@ export default function LoginPage() {
   });
 
   const watchedEmail = watch("email");
+  const watchedPassword = watch("password");
   const isEmailValid = !!watchedEmail && !errors.email;
 
   const [step, setStep] = useState<"email" | "login" | "signup">("email");
   const [emailValue, setEmailValue] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  // Reset to email step if user clears/edits email after API check
+  const handleEmailChange = () => {
+    if (step !== "email") {
+      setStep("email");
+      setConfirmPassword("");
+      setConfirmPasswordError("");
+    }
+  };
 
   const { mutate: checkEmail, isPending: isCheckingEmail } = useMutation({
     mutationFn: checkEmailApi,
@@ -107,14 +117,16 @@ export default function LoginPage() {
         setToastOpen(true);
 
         setTimeout(() => {
-          if (user?.isProfileCompleted) {
-            router.push("/setup-completed");
-          } else if (user?.isEmailVerified) {
-            router.push("/create-profile");
-          } else {
+          if (!user?.isEmailVerified) {
             useAuthStore.getState().setAuthEmail(user?.email);
             useAuthStore.getState().setOtpMode("signup");
             router.push("/otp-verification");
+          } else if (!user?.isProfileCompleted) {
+            router.push("/create-profile");
+          } else if (!user?.isSubscribed) {
+            router.push("/subscription");
+          } else {
+            router.push("/setup-completed");
           }
         }, 200);
       } else {
@@ -145,10 +157,12 @@ export default function LoginPage() {
         setToastOpen(true);
 
         setTimeout(() => {
-          if (user?.isProfileCompleted) {
-            router.push("/setup-completed");
-          } else {
+          if (!user?.isProfileCompleted) {
             router.push("/create-profile");
+          } else if (!user?.isSubscribed) {
+            router.push("/subscription");
+          } else {
+            router.push("/setup-completed");
           }
         }, 200);
       } else {
@@ -373,7 +387,7 @@ export default function LoginPage() {
             <span>
               I accept the{" "}
               <Link
-                href="https://www.frametheworld.org/terms-condition"
+                href="https://www.frametheworld.org/terms-of-service"
                 target="_blank"
                 className="gradient-text bg-clip-text text-transparent font-bold hover:underline"
               >

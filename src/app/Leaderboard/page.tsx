@@ -57,7 +57,7 @@ export default function TravelStoryPage() {
 
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-      <Header title="Leaderboard" subtitle="Check out who's at the top of the leaderboard right now" />
+      <Header title="Leaderboard." subtitle="Check out who's at the top of the leaderboard right now" />
       <div className="min-h-screen bg-[#f6f7fb] px-6 pb-20">
         <div className="mx-auto p-6">
 

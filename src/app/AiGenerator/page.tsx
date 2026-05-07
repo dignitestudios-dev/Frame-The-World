@@ -117,7 +117,7 @@ const CaptionGenerator: React.FC = () => {
                 />
               </div>
               <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-                Upload up to 4 pictures and our AI will analyze them to create relevant captions and hashtags for you.
+                Instantly creates full Instagram and Facebook captions with tone and hashtags, turning a simple idea into a ready-to-post caption in seconds.
               </p>
             </div>
 

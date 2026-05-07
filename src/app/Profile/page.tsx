@@ -510,7 +510,7 @@ function ProfileContent() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
                   {isFramesLoading ? (
                     Array.from({ length: 8 }).map((_, i) => (
                       <div key={i} className="flex flex-col items-center">
@@ -567,27 +567,49 @@ function ProfileContent() {
                           className="flex flex-col items-center"
                         >
                           <div
-                            className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[200px] h-[200px] cursor-pointer"
+                            className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[220px] h-[220px] cursor-pointer"
                             onClick={() => id && router.push(`/frame-detail/${id}`)}
                           >
                             <img
                               src={image1}
                               alt={frameName}
-                              width={200}
-                              height={200}
-                              className="object-cover"
+                              className="absolute inset-0 h-full w-full object-cover"
+                              loading="lazy"
+                              onError={(event) => {
+                                const target = event.currentTarget;
+                                target.src = "/images/1.jpg";
+                              }}
                             />
-                            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] rounded-[49.26px]" />
-                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-white">
-                              <div
-                                className="text-3xl text-center font-bold pt-20"
-                              >
-                                {frame?.totalPosts
-                                  ? `${frame?.totalPosts}+`
-                                  : ""}
-                                <div className="text-[16px] font-semibold text-white line-clamp-1 truncate max-w-[180px]">
-                                  {frameName}
-                                </div>
+                            <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
+                              <img
+                                src={image1}
+                                alt={`${frameName} inner`}
+                                className="absolute inset-0 h-full w-full object-cover opacity-90"
+                                loading="lazy"
+                                onError={(event) => {
+                                  const target = event.currentTarget;
+                                  target.src = "/images/1.jpg";
+                                }}
+                              />
+                            </div>
+                            <div className="absolute inset-0 rounded-[49.26px] shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)]" />
+                            <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                              <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
+                                <img
+                                  src={image1}
+                                  alt={`${frameName} preview`}
+                                  className="absolute inset-0 h-full w-full object-cover opacity-80"
+                                  loading="lazy"
+                                  onError={(event) => {
+                                    const target = event.currentTarget;
+                                    target.src = "/images/1.jpg";
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <div className="absolute inset-0 flex items-end justify-center text-white bg-[#00000056] pb-5">
+                              <div className="text-sm px-3 text-center capitalize line-clamp-1 max-w-[180px] font-semibold">
+                                {frameName}
                               </div>
                             </div>
                           </div>

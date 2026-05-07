@@ -21,7 +21,7 @@ const walkthroughContent = [
     imageWidth: 800,
     imageHeight: 800,
     title: "Authentic Travel Content",
-    description: "Real, non-AI images only. No people, verified for clean, consistent destination content.",
+    description: "Real, non-AI images only. No people. Verified for clean, consistent destination content.",
   },
   {
     image: "/images/onboard3.png",

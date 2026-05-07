@@ -20,7 +20,7 @@ const walkthroughContent = [
     imageClassName: "object-cover rounded-2xl",
     imageContainerClassName: "relative w-[85%] aspect-[9/16] rounded-3xl p-1 bg-white/20 backdrop-blur-sm shadow-2xl border border-white/30",
     title: "Authentic Travel Content",
-    description: "Real, non-AI images only. No people, verified for clean, consistent destination content.",
+    description: "Real, non-AI images only. No people. Verified for clean, consistent destination content.",
   },
   {
     image: "/images/onboard3.png",

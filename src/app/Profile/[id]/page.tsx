@@ -66,14 +66,10 @@ function OtherProfileContent({ userId }: { userId: string }) {
     queryKey: ["getUserById", userId],
     queryFn: () => getUserByIdApi(userId),
     enabled: !!userId,
+    retry: false,
   });
 
   const targetUser = targetUserData?.data || targetUserData;
-
-  // Badges (Using getUserBadges logic but might need target user specific badges if API supports it)
-  // For now, assuming badges are public or fetched via a common API if userId is provided
-  // Postman shows /badges?page=1&limit=10, which might be public.
-  // Actually, I'll use targetUser.badges if they are included in profile, otherwise stick to own badges for UI placeholder
   const badges = targetUser?.badges || [];
 
   const { data: badgeDetailData, isLoading: isBadgeDetailLoading } = useQuery({
@@ -112,14 +108,20 @@ function OtherProfileContent({ userId }: { userId: string }) {
 
   if (isUserError) {
     return (
+      <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
+      <Header
+        title={`${targetUser?.name || "User"}'s Profile`}
+        subtitle={`Exploring the world through ${targetUser?.name || "their"} lens.`}
+      />
       <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
-        <ImageOff className="w-16 h-16 text-gray-300 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">User Not Found</h2>
-        <p className="text-gray-500 mb-6">The profile you are looking for does not exist or is unavailable.</p>
+        <img  src="/images/not-found-without-text.png" className="w-64 h-64 mb-4" alt="User Not Found" />
+        <p className="text-gray-900 mb-6 font-bold">You are not allowed to view this user profile.</p>
         <button onClick={() => router.back()} className="px-6 py-2 bg-blue-500 text-white rounded-full font-bold">
           Go Back
         </button>
       </div>
+      </div>
+
     );
   }
 

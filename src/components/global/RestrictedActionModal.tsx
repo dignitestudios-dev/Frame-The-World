@@ -57,12 +57,12 @@ export default function RestrictedActionModal({
           style={{ background: HEADER_GRADIENT }}
         >
           <div
-            className="flex h-[91px] w-[91px] items-center justify-center rounded-full"
+            className="flex mb-4 h-[91px] w-[91px] items-center justify-center rounded-full"
             style={{ background: ICON_GRADIENT }}
             aria-hidden
           >
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-full"
+              className="flex h-12 w-12  items-center justify-center rounded-full"
               style={{ background: PRIMARY_BUTTON_GRADIENT }}
             >
               <Lock className="h-7 w-7 text-white" strokeWidth={2.5} />

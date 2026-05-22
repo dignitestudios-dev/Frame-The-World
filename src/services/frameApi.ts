@@ -156,11 +156,16 @@ export const getSearchFramesApi = async (params: {
   categories?: string[];
   targetUserId?: string;
   limit?: number;
+  page?: number;
 }) => {
   const searchParams = new URLSearchParams();
 
   if (typeof params.limit === "number") {
     searchParams.set("limit", String(params.limit));
+  }
+
+  if (params.page) {
+    searchParams.set("page", String(params.page));
   }
 
   if (params.longitude) {
@@ -242,9 +247,11 @@ export const getFolderImagesApi = async (
 };
 
 // POST /folders/:folderId/upload - FormData { image }
-export const uploadImageToFolderApi = async (folderId: string, file: File) => {
+export const uploadImageToFolderApi = async (folderId: string, files: File[]) => {
   const formData = new FormData();
-  formData.append("image", file);
+  files.forEach((file) => {
+    formData.append("images", file);
+  });
 
   const res = await API.post(`/folders/${folderId}/upload`, formData, {
     headers: {

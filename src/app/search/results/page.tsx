@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
-import { useMemo, useState, Suspense } from "react";
+import { useMemo, useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import Header from "@/components/global/header";
 import { getSearchPostsApi } from "@/services/postApi";
 import { getSearchFramesApi } from "@/services/frameApi";
@@ -33,6 +33,43 @@ const isImageUrl = (url: string | null | undefined): url is string => {
   if (!url) return false;
   return /\.(jpg|jpeg|png|webp|gif|bmp|svg|jfif)$/i.test(url);
 };
+
+function InfiniteScrollTrigger({
+  onLoadMore,
+  hasMore,
+  isLoading,
+}: {
+  onLoadMore: () => void;
+  hasMore: boolean;
+  isLoading: boolean;
+}) {
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, onLoadMore]);
+
+  if (!hasMore) return null;
+
+  return (
+    <div ref={observerRef} className="py-6 flex justify-center w-full">
+      {isLoading && <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>}
+    </div>
+  );
+}
 
 function SearchEmptyState({
   title,
@@ -78,55 +115,84 @@ function SearchResultsContent() {
   const shouldFetchFilteredResults = hasLocationFilters || hasCategories;
 
   const {
-    data: postsResponse,
+    data: postsData,
     isLoading: isPostsLoading,
     isError: isPostsError,
-  } = useQuery({
+    fetchNextPage: fetchNextPosts,
+    hasNextPage: hasNextPosts,
+    isFetchingNextPage: isFetchingNextPosts,
+  } = useInfiniteQuery({
     queryKey: ["search-posts", latitudeParam, longitudeParam, categories.join(",")],
-    queryFn: () =>
+    queryFn: ({ pageParam = 1 }) =>
       getSearchPostsApi({
         limit: 40,
+        page: pageParam,
         latitude: hasLocationFilters ? latitude : undefined,
         longitude: hasLocationFilters ? longitude : undefined,
         categories: hasCategories ? sanitizedCategories : undefined,
       }),
+    getNextPageParam: (lastPage) => {
+      const { currentPage, totalPages } = lastPage?.pagination || {};
+      if (typeof currentPage === "number" && typeof totalPages === "number") {
+        return currentPage < totalPages ? currentPage + 1 : undefined;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     enabled: shouldFetchFilteredResults,
   });
 
   const {
-    data: framesResponse,
+    data: framesData,
     isLoading: isFramesLoading,
     isError: isFramesError,
-  } = useQuery({
+    fetchNextPage: fetchNextFrames,
+    hasNextPage: hasNextFrames,
+    isFetchingNextPage: isFetchingNextFrames,
+  } = useInfiniteQuery({
     queryKey: ["search-frames", latitudeParam, longitudeParam],
-    queryFn: () =>
+    queryFn: ({ pageParam = 1 }) =>
       getSearchFramesApi({
+        limit: 40,
+        page: pageParam,
         latitude: hasLocationFilters ? latitude : undefined,
         longitude: hasLocationFilters ? longitude : undefined,
       }),
+    getNextPageParam: (lastPage) => {
+      const { currentPage, totalPages } = lastPage?.pagination || {};
+      if (typeof currentPage === "number" && typeof totalPages === "number") {
+        return currentPage < totalPages ? currentPage + 1 : undefined;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     enabled: shouldFetchFilteredResults,
   });
 
   const imageItems: ImageResultItem[] = useMemo(() => {
-    if (!Array.isArray(postsResponse?.data)) return [];
-    return postsResponse.data
-      .map((post) => ({
+    if (!postsData?.pages) return [];
+    return postsData.pages.flatMap((page) => {
+      if (!Array.isArray(page.data)) return [];
+      return page.data.map((post: any) => ({
         id: post._id,
         title: "Image",
         image: isImageUrl(post.media?.location) ? post.media?.location : FALLBACK_IMAGE_URL,
-      }))
-      .filter((item) => !!item.id);
-  }, [postsResponse]);
+      })).filter((item: any) => !!item.id);
+    });
+  }, [postsData]);
 
   const frameItems: FrameResultItem[] = useMemo(() => {
-    if (!Array.isArray(framesResponse?.data)) return [];
-    return framesResponse.data.map((frame) => ({
-      id: frame._id,
-      title: frame.title || "Untitled Frame",
-      totalPosts: frame.totalPosts ?? 0,
-      image: isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL,
-    }));
-  }, [framesResponse]);
+    if (!framesData?.pages) return [];
+    return framesData.pages.flatMap((page) => {
+      if (!Array.isArray(page.data)) return [];
+      return page.data.map((frame: any) => ({
+        id: frame._id,
+        title: frame.title || "Untitled Frame",
+        totalPosts: frame.totalPosts ?? 0,
+        image: isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL,
+      }));
+    });
+  }, [framesData]);
 
   const filteredItems = useMemo<(ImageResultItem | FrameResultItem)[]>(() => {
     if (activeTab === "all") return [];
@@ -240,7 +306,10 @@ function SearchResultsContent() {
 
         </div>
 
-        <div className={activeTab === "all" ? "space-y-8" : "h-[68vh] overflow-y-auto pr-1"}>
+        <div 
+          className={activeTab === "all" ? "space-y-8" : "h-[68vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden"} 
+          style={activeTab !== "all" ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : undefined}
+        >
           {!shouldFetchFilteredResults && (
             <div className="py-6 text-center font-medium text-gray-600">
               Please select location or categories to see filtered results.
@@ -262,7 +331,7 @@ function SearchResultsContent() {
                     See All
                   </button>
                 </div>
-                <div className="h-[70vh] overflow-y-auto pr-1">
+                <div className="h-[70vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {isPostsLoading ? (
                     <p className="text-sm text-gray-600">Loading images...</p>
                   ) : imageItems.length === 0 ? (
@@ -271,7 +340,14 @@ function SearchResultsContent() {
                       description="Try a different location or category to find more posts."
                     />
                   ) : (
-                    renderImageGrid(imageItems)
+                    <>
+                      {renderImageGrid(imageItems)}
+                      <InfiniteScrollTrigger
+                        hasMore={!!hasNextPosts}
+                        isLoading={isFetchingNextPosts}
+                        onLoadMore={fetchNextPosts}
+                      />
+                    </>
                   )}
                 </div>
               </section>
@@ -287,7 +363,7 @@ function SearchResultsContent() {
                     See All
                   </button>
                 </div>
-                <div className="h-[70vh] overflow-y-auto pr-1">
+                <div className="h-[70vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {isFramesLoading ? (
                     <p className="text-sm text-gray-600">Loading frames...</p>
                   ) : frameItems.length === 0 ? (
@@ -296,7 +372,14 @@ function SearchResultsContent() {
                       description="Try searching with a different location."
                     />
                   ) : (
-                    renderFrameGrid(frameItems)
+                    <>
+                      {renderFrameGrid(frameItems)}
+                      <InfiniteScrollTrigger
+                        hasMore={!!hasNextFrames}
+                        isLoading={isFetchingNextFrames}
+                        onLoadMore={fetchNextFrames}
+                      />
+                    </>
                   )}
                 </div>
               </section>
@@ -312,7 +395,14 @@ function SearchResultsContent() {
                     description="Try searching with a different location."
                   />
                 ) : (
-                  renderFrameGrid(filteredItems as FrameResultItem[])
+                  <>
+                    {renderFrameGrid(filteredItems as FrameResultItem[])}
+                    <InfiniteScrollTrigger
+                      hasMore={!!hasNextFrames}
+                      isLoading={isFetchingNextFrames}
+                      onLoadMore={fetchNextFrames}
+                    />
+                  </>
                 )
               ) : isPostsLoading ? (
                 <p className="text-sm text-gray-600">Loading images...</p>
@@ -322,7 +412,14 @@ function SearchResultsContent() {
                   description="Try a different location or category to find more posts."
                 />
               ) : (
-                renderImageGrid(filteredItems as ImageResultItem[])
+                <>
+                  {renderImageGrid(filteredItems as ImageResultItem[])}
+                  <InfiniteScrollTrigger
+                    hasMore={!!hasNextPosts}
+                    isLoading={isFetchingNextPosts}
+                    onLoadMore={fetchNextPosts}
+                  />
+                </>
               )}
             </>
           ) : null}

@@ -183,9 +183,13 @@ export const confirmRemoveHumanApi = async (postId: string, fileId: string) => {
 };
 
 // GET /posts/all - Search posts by location/categories/userId
-export const getSearchPostsApi = async (params: SearchCommonParams & { limit?: number }) => {
+export const getSearchPostsApi = async (params: SearchCommonParams & { limit?: number; page?: number }) => {
   const searchParams = new URLSearchParams();
   searchParams.set("limit", String(params.limit ?? 40));
+
+  if (params.page) {
+    searchParams.set("page", String(params.page));
+  }
 
   if (params.longitude) {
     searchParams.set("longitude", String(params.longitude));

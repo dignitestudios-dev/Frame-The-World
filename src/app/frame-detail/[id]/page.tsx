@@ -506,7 +506,15 @@ export default function FrameDetailPage() {
               </svg>
             </button>
 
-            <div className="flex items-center gap-2">
+            <div 
+              className={`flex items-center gap-2 ${!isLoading && !isError && (frameDetails?.geoLocation?.coordinates?.length ?? 0) >= 2 ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
+              onClick={() => {
+                if (!isLoading && !isError && (frameDetails?.geoLocation?.coordinates?.length ?? 0) >= 2) {
+                  const [lng, lat] = frameDetails?.geoLocation?.coordinates || [];
+                  router.push(`/search/results?latitude=${lat}&longitude=${lng}`);
+                }
+              }}
+            >
               <MapPin className="h-8 w-8 text-blue-600" />
               <div className="flex flex-col">
                 {isLoading ? (

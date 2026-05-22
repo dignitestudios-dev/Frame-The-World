@@ -243,7 +243,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
             <div className="flex items-center gap-2">
               <div
                 className="flex cursor-pointer items-center gap-2"
-                onClick={() => executeWithCheck(() => router.push("/Profile"), { isPendingAllowed: true })}
+                onClick={() => router.push("/Profile")}
               >
                 <div className="relative">
                   <Image
@@ -289,7 +289,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
 
               {/* Bell button with unread badge */}
               <button
-                onClick={() => executeWithCheck(() => setIsNotificationOpen(!isNotificationOpen), { isPendingAllowed: false })}
+                onClick={() =>  setIsNotificationOpen(!isNotificationOpen)}
                 className="cursor-pointer active:scale-90 transition-transform relative"
               >
                 <Image
@@ -347,13 +347,11 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                       setIsMenuOpen(false);
                       return;
                     }
-                    executeWithCheck(() => {
                       if (item.route) {
                         router.push(item.route);
                         setIsMenuOpen(false);
                       }
                       if (item.func) item.func();
-                    }, { isPendingAllowed: item.label === "Settings" || item.label === "Home" });
                   };
 
                   return (

@@ -13,6 +13,7 @@ import OnboardingPage from "../(auth)/onboarding/page";
 import AppWalkthrough from "@/components/global/AppWalkthrough";
 import Badges from "@/components/global/Badges";
 import CategoryPreferences from "@/components/global/CategoryPreferences";
+import BlockedUsers from "@/components/global/BlockedUsers";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("Account Information");
@@ -48,6 +49,8 @@ export default function SettingsPage() {
               <Subscription />
             ) : activeTab === "Notifications" ? (
               <Notifications />
+            ) : activeTab === "Blocked Users" ? (
+              <BlockedUsers />
             ) : activeTab === "App Walkthrough" ? (
               <AppWalkthrough />
             ) : activeTab === "Delete Account" ? (

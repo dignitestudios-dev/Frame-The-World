@@ -51,9 +51,14 @@ export default function PersonalStorageFolderImagesPage() {
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [renameFolderName, setRenameFolderName] = useState(initialFolderName);
   const [renameError, setRenameError] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedFilePreviewUrl, setSelectedFilePreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<{file: File, url: string}[]>([]);
   const [fileError, setFileError] = useState("");
+  
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedForDownload, setSelectedForDownload] = useState<any[]>([]);
+  const [isDownloadingMultiple, setIsDownloadingMultiple] = useState(false);
+
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<{
     open: boolean;
@@ -75,19 +80,19 @@ export default function PersonalStorageFolderImagesPage() {
 
   const uploadImageMutation = useMutation({
     mutationFn: async () => {
-      if (!folderId || !selectedFile) {
-        throw new Error("Please select an image to upload.");
+      if (!folderId || selectedFiles.length === 0) {
+        throw new Error("Please select at least one image to upload.");
       }
-      return uploadImageToFolderApi(folderId, selectedFile);
+      return uploadImageToFolderApi(folderId, selectedFiles);
     },
     onSuccess: () => {
       setToast({
         open: true,
-        message: "Image uploaded successfully",
+        message: "Images uploaded successfully",
         type: "success",
       });
       setIsUploadModalOpen(false);
-      setSelectedFile(null);
+      setSelectedFiles([]);
       setFileError("");
       queryClient.invalidateQueries({
         queryKey: ["folder-images", folderId, INITIAL_PAGE, PAGE_LIMIT],
@@ -177,16 +182,14 @@ export default function PersonalStorageFolderImagesPage() {
   });
 
   useEffect(() => {
-    if (!selectedFile) {
-      setSelectedFilePreviewUrl(null);
-      return;
-    }
+    const urls = selectedFiles.map(file => ({
+      file,
+      url: URL.createObjectURL(file)
+    }));
+    setPreviewUrls(urls);
 
-    const previewUrl = URL.createObjectURL(selectedFile);
-    setSelectedFilePreviewUrl(previewUrl);
-
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [selectedFile]);
+    return () => urls.forEach(u => URL.revokeObjectURL(u.url));
+  }, [selectedFiles]);
 
   const [activeImageOptionsId, setActiveImageOptionsId] = useState<string | null>(null);
 
@@ -242,6 +245,63 @@ export default function PersonalStorageFolderImagesPage() {
     }
   };
 
+  const handleDownloadSelectedImages = async () => {
+    if (selectedForDownload.length === 0 || isDownloadingMultiple) return;
+    setIsDownloadingMultiple(true);
+
+    let downloadedCount = 0;
+    try {
+      setToast({
+        open: true,
+        message: "Starting downloads...",
+        type: "success",
+      });
+
+      for (const image of selectedForDownload) {
+        let fileUrl = image.location;
+        if (!fileUrl) continue;
+        
+        fileUrl = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}t=${new Date().getTime()}`;
+        const fileName = image.filename || "download";
+
+        const responseBlob = await fetch(fileUrl);
+        if (!responseBlob.ok) continue;
+        
+        const blob = await responseBlob.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = fileName;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        downloadedCount++;
+        // Small delay to prevent browser from blocking multiple downloads
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      setToast({
+        open: true,
+        message: `Successfully downloaded ${downloadedCount} images.`,
+        type: "success",
+      });
+      setIsSelectMode(false);
+      setSelectedForDownload([]);
+    } catch (error) {
+      setToast({
+        open: true,
+        message: "Failed to download some images.",
+        type: "error",
+      });
+    } finally {
+      setIsDownloadingMultiple(false);
+    }
+  };
+
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (!actionsMenuRef.current) return;
@@ -268,8 +328,8 @@ export default function PersonalStorageFolderImagesPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [previewImage]);
 
-  const handleSelectFile = (file: File | undefined) => {
-    if (!file) return;
+  const handleSelectFiles = (files: FileList | null) => {
+    if (!files) return;
 
     const allowedMimeTypes = [
       "image/png",
@@ -281,26 +341,34 @@ export default function PersonalStorageFolderImagesPage() {
       "image/svg+xml",
     ];
 
-    if (!allowedMimeTypes.includes(file.type)) {
-      setSelectedFile(null);
-      setFileError("Only image files are allowed (PNG, JPEG, JPG, WEBP, GIF, BMP, SVG).");
-      return;
+    const newFiles = Array.from(files);
+    
+    // Filter valid files
+    const validFiles = newFiles.filter(file => {
+      if (!allowedMimeTypes.includes(file.type)) return false;
+      if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) return false;
+      return true;
+    });
+
+    if (validFiles.length < newFiles.length) {
+      setFileError("Some files were skipped because they are not valid images or exceed 4MB.");
+    } else {
+      setFileError("");
     }
 
-    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
-      setSelectedFile(null);
-      setFileError("Image size must be 4MB or less.");
-      return;
-    }
-
-    setSelectedFile(file);
-    setFileError("");
+    setSelectedFiles(prev => {
+      const combined = [...prev, ...validFiles];
+      if (combined.length > 20) {
+        setFileError("You can only upload up to 20 images at once.");
+        return combined.slice(0, 20);
+      }
+      return combined;
+    });
   };
 
-  const handleRemoveSelectedFile = () => {
+  const handleRemoveSelectedFile = (fileToRemove: File) => {
     if (uploadImageMutation.isPending) return;
-    setSelectedFile(null);
-    setFileError("");
+    setSelectedFiles(prev => prev.filter(f => f !== fileToRemove));
   };
 
   return (
@@ -334,6 +402,31 @@ export default function PersonalStorageFolderImagesPage() {
           </button>
 
 <div className="flex gap-3">
+          {isSelectMode && selectedForDownload.length > 0 && (
+            <button
+              type="button"
+              onClick={handleDownloadSelectedImages}
+              disabled={isDownloadingMultiple}
+              className="inline-flex items-center gap-2 rounded-[10px] bg-green-500 px-3 py-2 text-sm font-semibold text-white hover:bg-green-600 transition-colors disabled:opacity-60"
+            >
+              {isDownloadingMultiple ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Download ({selectedForDownload.length})
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsSelectMode((prev) => !prev);
+              setSelectedForDownload([]);
+            }}
+            className={`inline-flex items-center gap-2 rounded-[10px] px-3 py-2 text-sm font-semibold text-white transition-colors ${
+              isSelectMode ? "bg-red-500 hover:bg-red-600" : "bg-gray-500 hover:bg-gray-600"
+            }`}
+          >
+            {isSelectMode ? "Cancel" : "Select"}
+          </button>
+
           <button
             type="button"
             onClick={() => setIsUploadModalOpen(true)}
@@ -423,14 +516,24 @@ export default function PersonalStorageFolderImagesPage() {
                     <img
                       src={imageUrl}
                       alt={image.filename || "Folder image"}
-                      onClick={() =>
-                        setPreviewImage({
-                          url: imageUrl,
-                          alt: image.filename || "Folder image",
-                          downloadName: image.filename || undefined,
-                        })
-                      }
-                      className="absolute inset-0 h-full w-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                      onClick={() => {
+                        if (isSelectMode) {
+                          setSelectedForDownload(prev => {
+                            const isSelected = prev.some(img => img._id === image._id);
+                            if (isSelected) return prev.filter(img => img._id !== image._id);
+                            return [...prev, image];
+                          });
+                        } else {
+                          setPreviewImage({
+                            url: imageUrl,
+                            alt: image.filename || "Folder image",
+                            downloadName: image.filename || undefined,
+                          });
+                        }
+                      }}
+                      className={`absolute inset-0 h-full w-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105 ${
+                        isSelectMode && selectedForDownload.some(img => img._id === image._id) ? "border-4 rounded-[28px] border-blue-500 opacity-80" : ""
+                      }`}
                       loading="lazy"
                       onError={(event) => {
                         const target = event.currentTarget;
@@ -558,52 +661,64 @@ export default function PersonalStorageFolderImagesPage() {
               </button>
             </div>
 
-            <label
-              className="mb-3 relative flex h-36 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 text-center text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50 transition-colors"
-              style={
-                selectedFilePreviewUrl
-                  ? {
-                      backgroundImage: `url(${selectedFilePreviewUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }
-                  : undefined
-              }
-            >
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp,image/svg+xml"
-                className="hidden"
-                onChange={(event) => handleSelectFile(event.target.files?.[0])}
-              />
-              {!selectedFilePreviewUrl ? (
+            {selectedFiles.length === 0 ? (
+              <label className="mb-3 relative flex h-36 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 text-center text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp,image/svg+xml"
+                  className="hidden"
+                  multiple={true}
+                  onChange={(event) => handleSelectFiles(event.target.files)}
+                />
                 <span className="relative z-10 px-4 text-gray-600">
-                  Click to select image (PNG, JPEG, WEBP, etc.)
+                  Click to select images (Up to 20)
                 </span>
-              ) : null}
-
-              {selectedFilePreviewUrl ? (
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleRemoveSelectedFile();
-                  }}
-                  disabled={uploadImageMutation.isPending}
-                  className="absolute right-2 top-2 z-20 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/70 disabled:cursor-not-allowed disabled:bg-gray-500"
-                  aria-label="Remove selected image"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-            </label>
+              </label>
+            ) : (
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">{selectedFiles.length}/20 images selected</span>
+                  {selectedFiles.length < 20 && (
+                    <label className="cursor-pointer text-sm font-semibold text-blue-500 hover:text-blue-600">
+                      Add more
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp,image/svg+xml"
+                        className="hidden"
+                        multiple={true}
+                        onChange={(event) => handleSelectFiles(event.target.files)}
+                      />
+                    </label>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 max-h-[240px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {previewUrls.map(({file, url}, i) => (
+                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
+                      <img src={url} alt={`Preview ${i}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveSelectedFile(file);
+                        }}
+                        disabled={uploadImageMutation.isPending}
+                        className="absolute right-1 top-1 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-gray-500"
+                        aria-label="Remove selected image"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {fileError ? <p className="mb-3 text-xs font-semibold text-red-500">{fileError}</p> : null}
 
             <button
               type="button"
-              disabled={!selectedFile || uploadImageMutation.isPending}
+              disabled={selectedFiles.length === 0 || uploadImageMutation.isPending}
               onClick={() => uploadImageMutation.mutate()}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-500 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
@@ -615,7 +730,7 @@ export default function PersonalStorageFolderImagesPage() {
               ) : (
                 <>
                   <Upload className="h-4 w-4" />
-                  Upload Image
+                  Upload Images
                 </>
               )}
             </button>

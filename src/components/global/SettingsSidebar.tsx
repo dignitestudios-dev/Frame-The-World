@@ -13,6 +13,7 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
     "Subscription",
     "Notifications",
     "Badges",
+    "Blocked Users",
     `${user?.isPasswordSet ? "Change Password" : "Set Password"} `,
     "Delete Account",
     "App Walkthrough",
@@ -35,22 +36,14 @@ export default function SettingsSidebar({ activeTab, setActiveTab }: any) {
       "Category Preferences",
       "Account Information",
       "Subscription",
+      "Blocked Users",
       "Terms of Services",
       "Privacy Policy",
       "Change Password",
       "Set Password",
       "App Walkthrough"
     ].includes(item);
-
-    executeWithCheck(
-      () => {
         setActiveTab(item);
-      },
-      {
-        isPendingAllowed: isAllowedForPending,
-        skipSubscriptionCheck: item === "Subscription",
-      }
-    );
   };
 
   return (

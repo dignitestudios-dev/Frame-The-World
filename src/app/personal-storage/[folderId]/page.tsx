@@ -372,13 +372,14 @@ export default function PersonalStorageFolderImagesPage() {
   };
 
   return (
-    <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
+    <>
       <Toast
         open={toast.open}
         message={toast.message}
         type={toast.type}
         onClose={() => setToast((previous) => ({ ...previous, open: false }))}
       />
+      <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
 
       <Header title={folderName} subtitle={`${folderImages.length} images`} />
 
@@ -587,10 +588,11 @@ export default function PersonalStorageFolderImagesPage() {
           </div>
         )}
       </div>
+      </div>
 
       {previewImage ? (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/85 p-4"
           onClick={() => setPreviewImage(null)}
           role="presentation"
         >
@@ -635,7 +637,7 @@ export default function PersonalStorageFolderImagesPage() {
 
       {isUploadModalOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed  inset-0 z-[999] flex items-center justify-center bg-black/60 p-4"
           onClick={() => {
             if (uploadImageMutation.isPending) return;
             setIsUploadModalOpen(false);
@@ -643,7 +645,7 @@ export default function PersonalStorageFolderImagesPage() {
           }}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"
+            className="w-full max-w-2xl rounded-3xl bg-white p-8 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -740,14 +742,14 @@ export default function PersonalStorageFolderImagesPage() {
 
       {isDeleteModalOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4"
           onClick={() => {
             if (deleteFolderMutation.isPending) return;
             setIsDeleteModalOpen(false);
           }}
         >
           <div
-            className="relative w-full max-w-[390px] overflow-hidden rounded-[22px] bg-white shadow-[0_6px_40px_rgba(0,0,0,0.1)]"
+            className="relative w-full max-w-lg overflow-hidden rounded-[22px] bg-white shadow-[0_6px_40px_rgba(0,0,0,0.1)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="h-[112px] bg-blue-100 bg-[linear-gradient(134.74deg,rgba(108,172,223,0.2)_3.24%,rgba(0,0,254,0.2)_139.86%),#fff]" />
@@ -787,14 +789,14 @@ export default function PersonalStorageFolderImagesPage() {
 
       {isDeleteImageModalOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4"
           onClick={() => {
             if (deleteImageMutation.isPending) return;
             setIsDeleteImageModalOpen(false);
           }}
         >
           <div
-            className="relative w-full max-w-[390px] overflow-hidden rounded-[22px] bg-white shadow-[0_6px_40px_rgba(0,0,0,0.1)]"
+            className="relative w-full max-w-lg overflow-hidden rounded-[22px] bg-white shadow-[0_6px_40px_rgba(0,0,0,0.1)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="h-[112px] bg-[linear-gradient(134.74deg,rgba(108,172,223,0.2)_3.24%,rgba(0,0,254,0.2)_139.86%),#fff]" />
@@ -834,7 +836,7 @@ export default function PersonalStorageFolderImagesPage() {
 
       {isRenameModalOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4"
           onClick={() => {
             if (renameFolderMutation.isPending) return;
             setIsRenameModalOpen(false);
@@ -842,7 +844,7 @@ export default function PersonalStorageFolderImagesPage() {
           }}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"
+            className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -899,6 +901,6 @@ export default function PersonalStorageFolderImagesPage() {
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

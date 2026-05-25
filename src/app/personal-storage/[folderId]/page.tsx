@@ -14,7 +14,15 @@ import { Toast } from "@/components/ui/toast";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Upload, Loader2, X, EllipsisVertical, Trash2, Download } from "lucide-react";
+import {
+  Plus,
+  Upload,
+  Loader2,
+  X,
+  EllipsisVertical,
+  Trash2,
+  Download,
+} from "lucide-react";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 
 const INITIAL_PAGE = 1;
@@ -37,7 +45,10 @@ export default function PersonalStorageFolderImagesPage() {
   const folderId = params?.folderId;
   const initialFolderName = searchParams.get("name") || "Folder Images";
   const [folderName, setFolderName] = useState(initialFolderName);
-  const [selectedImage, setSelectedImage] = useState<{ _id: string; url: string } | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{
+    _id: string;
+    url: string;
+  } | null>(null);
   const [previewImage, setPreviewImage] = useState<{
     url: string;
     alt: string;
@@ -52,9 +63,11 @@ export default function PersonalStorageFolderImagesPage() {
   const [renameFolderName, setRenameFolderName] = useState(initialFolderName);
   const [renameError, setRenameError] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<{file: File, url: string}[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<{ file: File; url: string }[]>(
+    [],
+  );
   const [fileError, setFileError] = useState("");
-  
+
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedForDownload, setSelectedForDownload] = useState<any[]>([]);
   const [isDownloadingMultiple, setIsDownloadingMultiple] = useState(false);
@@ -72,11 +85,14 @@ export default function PersonalStorageFolderImagesPage() {
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["folder-images", folderId, INITIAL_PAGE, PAGE_LIMIT],
-    queryFn: () => getFolderImagesApi(folderId, { page: INITIAL_PAGE, limit: PAGE_LIMIT }),
+    queryFn: () =>
+      getFolderImagesApi(folderId, { page: INITIAL_PAGE, limit: PAGE_LIMIT }),
     enabled: Boolean(folderId),
   });
 
-  const folderImages = (data?.data || []).filter((image) => isImageUrl(image?.location));
+  const folderImages = (data?.data || []).filter((image) =>
+    isImageUrl(image?.location),
+  );
 
   const uploadImageMutation = useMutation({
     mutationFn: async () => {
@@ -125,7 +141,9 @@ export default function PersonalStorageFolderImagesPage() {
         type: "success",
       });
       queryClient.invalidateQueries({ queryKey: ["personalFolders"] });
-      router.replace(`/personal-storage/${folderId}?name=${encodeURIComponent(updatedFolderName)}`);
+      router.replace(
+        `/personal-storage/${folderId}?name=${encodeURIComponent(updatedFolderName)}`,
+      );
     },
     onError: (renameErrorResponse) => {
       setToast({
@@ -182,28 +200,33 @@ export default function PersonalStorageFolderImagesPage() {
   });
 
   useEffect(() => {
-    const urls = selectedFiles.map(file => ({
+    const urls = selectedFiles.map((file) => ({
       file,
-      url: URL.createObjectURL(file)
+      url: URL.createObjectURL(file),
     }));
     setPreviewUrls(urls);
 
-    return () => urls.forEach(u => URL.revokeObjectURL(u.url));
+    return () => urls.forEach((u) => URL.revokeObjectURL(u.url));
   }, [selectedFiles]);
 
-  const [activeImageOptionsId, setActiveImageOptionsId] = useState<string | null>(null);
+  const [activeImageOptionsId, setActiveImageOptionsId] = useState<
+    string | null
+  >(null);
 
   const handleMakePost = (image: any) => {
     const imageUrl = image.location || FALLBACK_IMAGE_URL;
     executeWithCheck(() => {
       router.push(
-        `/Createdpost?fileId=${image._id}&imageUrl=${encodeURIComponent(imageUrl)}`
+        `/Createdpost?fileId=${image._id}&imageUrl=${encodeURIComponent(imageUrl)}`,
       );
     });
   };
 
   const openDeleteModal = (image: any) => {
-    setSelectedImage({ _id: image._id, url: image.location || FALLBACK_IMAGE_URL });
+    setSelectedImage({
+      _id: image._id,
+      url: image.location || FALLBACK_IMAGE_URL,
+    });
     setIsDeleteImageModalOpen(true);
     setActiveImageOptionsId(null);
   };
@@ -260,13 +283,13 @@ export default function PersonalStorageFolderImagesPage() {
       for (const image of selectedForDownload) {
         let fileUrl = image.location;
         if (!fileUrl) continue;
-        
+
         fileUrl = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}t=${new Date().getTime()}`;
         const fileName = image.filename || "download";
 
         const responseBlob = await fetch(fileUrl);
         if (!responseBlob.ok) continue;
-        
+
         const blob = await responseBlob.blob();
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -278,12 +301,12 @@ export default function PersonalStorageFolderImagesPage() {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
-        
+
         downloadedCount++;
         // Small delay to prevent browser from blocking multiple downloads
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
-      
+
       setToast({
         open: true,
         message: `Successfully downloaded ${downloadedCount} images.`,
@@ -308,9 +331,12 @@ export default function PersonalStorageFolderImagesPage() {
       if (!actionsMenuRef.current.contains(event.target as Node)) {
         setIsActionsOpen(false);
       }
-      
+
       // Close image options menu if clicked outside
-      if (activeImageOptionsId && !(event.target as HTMLElement).closest('.image-options-container')) {
+      if (
+        activeImageOptionsId &&
+        !(event.target as HTMLElement).closest(".image-options-container")
+      ) {
         setActiveImageOptionsId(null);
       }
     };
@@ -342,21 +368,23 @@ export default function PersonalStorageFolderImagesPage() {
     ];
 
     const newFiles = Array.from(files);
-    
+
     // Filter valid files
-    const validFiles = newFiles.filter(file => {
+    const validFiles = newFiles.filter((file) => {
       if (!allowedMimeTypes.includes(file.type)) return false;
       if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) return false;
       return true;
     });
 
     if (validFiles.length < newFiles.length) {
-      setFileError("Some files were skipped because they are not valid images or exceed 4MB.");
+      setFileError(
+        "Some files were skipped because they are not valid images or exceed 4MB.",
+      );
     } else {
       setFileError("");
     }
 
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       const combined = [...prev, ...validFiles];
       if (combined.length > 20) {
         setFileError("You can only upload up to 20 images at once.");
@@ -368,7 +396,7 @@ export default function PersonalStorageFolderImagesPage() {
 
   const handleRemoveSelectedFile = (fileToRemove: File) => {
     if (uploadImageMutation.isPending) return;
-    setSelectedFiles(prev => prev.filter(f => f !== fileToRemove));
+    setSelectedFiles((prev) => prev.filter((f) => f !== fileToRemove));
   };
 
   return (
@@ -380,214 +408,245 @@ export default function PersonalStorageFolderImagesPage() {
         onClose={() => setToast((previous) => ({ ...previous, open: false }))}
       />
       <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
+        <Header title={folderName} subtitle={`${folderImages.length} images`} />
 
-      <Header title={folderName} subtitle={`${folderImages.length} images`} />
-
-      <div className="px-6 py-4">
-        <div className="mb-6 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-
-<div className="flex gap-3">
-          {isSelectMode && selectedForDownload.length > 0 && (
+        <div className="px-6 py-4">
+          <div className="mb-6 flex items-center justify-between">
             <button
-              type="button"
-              onClick={handleDownloadSelectedImages}
-              disabled={isDownloadingMultiple}
-              className="inline-flex items-center gap-2 rounded-[10px] bg-green-500 px-3 py-2 text-sm font-semibold text-white hover:bg-green-600 transition-colors disabled:opacity-60"
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors"
             >
-              {isDownloadingMultiple ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              Download ({selectedForDownload.length})
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => {
-              setIsSelectMode((prev) => !prev);
-              setSelectedForDownload([]);
-            }}
-            className={`inline-flex items-center gap-2 rounded-[10px] px-3 py-2 text-sm font-semibold text-white transition-colors ${
-              isSelectMode ? "bg-red-500 hover:bg-red-600" : "bg-gray-500 hover:bg-gray-600"
-            }`}
-          >
-            {isSelectMode ? "Cancel" : "Select"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsUploadModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-[10px] bg-blue-500 px-2 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            
-          </button>
-          <div ref={actionsMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setIsActionsOpen((prev) => !prev)}
-              className="inline-flex items-center gap-2 rounded-[10px] bg-blue-500 px-2 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
-            >
-              <EllipsisVertical className="h-4 w-4" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Back
             </button>
 
-            {isActionsOpen ? (
-              <div className="absolute right-0 top-11 z-30 min-w-[170px] rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl">
+            <div className="flex gap-3">
+              {isSelectMode && selectedForDownload.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsActionsOpen(false);
-                    setIsDeleteModalOpen(true);
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+                  onClick={handleDownloadSelectedImages}
+                  disabled={isDownloadingMultiple}
+                  className="inline-flex items-center gap-2 rounded-[10px] bg-green-500 px-3 py-2 text-sm font-semibold text-white hover:bg-green-600 transition-colors disabled:opacity-60"
                 >
-                  Delete Folder
+                  {isDownloadingMultiple ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  Download ({selectedForDownload.length})
                 </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSelectMode((prev) => !prev);
+                  setSelectedForDownload([]);
+                }}
+                className={`inline-flex items-center gap-2 rounded-[10px] px-3 py-2 text-sm font-semibold text-white transition-colors ${
+                  isSelectMode
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-gray-500 hover:bg-gray-600"
+                }`}
+              >
+                {isSelectMode ? "Cancel" : "Select"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsUploadModalOpen(true)}
+                className="inline-flex items-center gap-2 rounded-[10px] bg-blue-500 px-2 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+              <div ref={actionsMenuRef} className="relative">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsActionsOpen(false);
-                    setRenameFolderName(folderName);
-                    setRenameError("");
-                    setIsRenameModalOpen(true);
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  onClick={() => setIsActionsOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-2 rounded-[10px] bg-blue-500 px-2 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
                 >
-                  Rename Folder
+                  <EllipsisVertical className="h-4 w-4" />
                 </button>
-              </div>
-            ) : null}
-          </div>
-          </div>
-          
-        </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <div
-                key={index}
-                className={`${index % 5 === 0 || index % 7 === 0 ? "row-span-2" : "row-span-3"} rounded-[28px] bg-gray-100 animate-pulse`}
-              />
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="py-10 text-center">
-            <p className="text-red-600 font-medium">{getApiErrorMessage(error)}</p>
-            <button
-              onClick={() => refetch()}
-              className="mt-4 px-5 py-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : folderImages.length === 0 ? (
-          <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
-            <div className="relative h-48 w-48 md:h-56 md:w-56">
-              <Image src="/images/no data found.jpg" alt="No data found" fill className="object-contain" />
-            </div>
-            <p className="mt-4 text-gray-600 font-medium">No Images Found In This Folder</p>
-          </div>
-        ) : (
-          <div className="max-w-[1400px] mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">
-              {folderImages.map((image, index) => {
-                const isTall = index % 5 === 0 || index % 7 === 0;
-                const imageUrl = image.location || FALLBACK_IMAGE_URL;
-
-                return (
-                  <div
-                    key={image._id || `${image.filename}-${index}`}
-                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl group ${isTall ? "row-span-2" : "row-span-3"}`}
-                  >
-                    <img
-                      src={imageUrl}
-                      alt={image.filename || "Folder image"}
+                {isActionsOpen ? (
+                  <div className="absolute right-0 top-11 z-30 min-w-[170px] rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl">
+                    <button
+                      type="button"
                       onClick={() => {
-                        if (isSelectMode) {
-                          setSelectedForDownload(prev => {
-                            const isSelected = prev.some(img => img._id === image._id);
-                            if (isSelected) return prev.filter(img => img._id !== image._id);
-                            return [...prev, image];
-                          });
-                        } else {
-                          setPreviewImage({
-                            url: imageUrl,
-                            alt: image.filename || "Folder image",
-                            downloadName: image.filename || undefined,
-                          });
-                        }
+                        setIsActionsOpen(false);
+                        setIsDeleteModalOpen(true);
                       }}
-                      className={`absolute inset-0 h-full w-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105 ${
-                        isSelectMode && selectedForDownload.some(img => img._id === image._id) ? "border-4 rounded-[28px] border-blue-500 opacity-80" : ""
-                      }`}
-                      loading="lazy"
-                      onError={(event) => {
-                        const target = event.currentTarget;
-                        if (target.src !== FALLBACK_IMAGE_URL) {
-                          target.src = FALLBACK_IMAGE_URL;
-                        }
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                      Delete Folder
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionsOpen(false);
+                        setRenameFolderName(folderName);
+                        setRenameError("");
+                        setIsRenameModalOpen(true);
                       }}
-                    />
-                    
-                    {/* Image Options Button */}
-                    <div className="absolute top-2 right-2 z-10 image-options-container">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveImageOptionsId(activeImageOptionsId === image._id ? null : image._id);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors backdrop-blur-sm"
-                      >
-                        <EllipsisVertical className="w-4 h-4" />
-                      </button>
-                      
-                      {activeImageOptionsId === image._id && (
-                        <div className="absolute right-0 top-9 w-32 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in duration-100 origin-top-right">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMakePost(image);
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-blue-500" />
-                            Make Post
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openDeleteModal(image);
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 border-t border-gray-50 flex items-center gap-2"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    >
+                      Rename Folder
+                    </button>
                   </div>
-                );
-              })}
+                ) : null}
+              </div>
             </div>
           </div>
-        )}
-      </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">
+              {Array.from({ length: 10 }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`${index % 5 === 0 || index % 7 === 0 ? "row-span-2" : "row-span-3"} rounded-[28px] bg-gray-100 animate-pulse`}
+                />
+              ))}
+            </div>
+          ) : isError ? (
+            <div className="py-10 text-center">
+              <p className="text-red-600 font-medium">
+                {getApiErrorMessage(error)}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className="mt-4 px-5 py-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : folderImages.length === 0 ? (
+            <div className="min-h-[420px] flex flex-col items-center justify-center text-center">
+              <div className="relative h-48 w-48 md:h-56 md:w-56">
+                <Image
+                  src="/images/no data found.jpg"
+                  alt="No data found"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <p className="mt-4 text-gray-600 font-medium">
+                No Images Found In This Folder
+              </p>
+            </div>
+          ) : (
+            <div className="max-w-[1400px] mx-auto">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">
+                {folderImages.map((image, index) => {
+                  const isTall = index % 5 === 0 || index % 7 === 0;
+                  const imageUrl = image.location || FALLBACK_IMAGE_URL;
+
+                  return (
+                    <div
+                      key={image._id || `${image.filename}-${index}`}
+                      className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl group ${isTall ? "row-span-2" : "row-span-3"}`}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={image.filename || "Folder image"}
+                        onClick={() => {
+                          if (isSelectMode) {
+                            setSelectedForDownload((prev) => {
+                              const isSelected = prev.some(
+                                (img) => img._id === image._id,
+                              );
+                              if (isSelected)
+                                return prev.filter(
+                                  (img) => img._id !== image._id,
+                                );
+                              return [...prev, image];
+                            });
+                          } else {
+                            setPreviewImage({
+                              url: imageUrl,
+                              alt: image.filename || "Folder image",
+                              downloadName: image.filename || undefined,
+                            });
+                          }
+                        }}
+                        className={`absolute inset-0 h-full w-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105 ${
+                          isSelectMode &&
+                          selectedForDownload.some(
+                            (img) => img._id === image._id,
+                          )
+                            ? "border-4 rounded-[28px] border-blue-500 opacity-80"
+                            : ""
+                        }`}
+                        loading="lazy"
+                        onError={(event) => {
+                          const target = event.currentTarget;
+                          if (target.src !== FALLBACK_IMAGE_URL) {
+                            target.src = FALLBACK_IMAGE_URL;
+                          }
+                        }}
+                      />
+
+                      {/* Image Options Button */}
+                      <div className="absolute top-2 right-2 z-10 image-options-container">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveImageOptionsId(
+                              activeImageOptionsId === image._id
+                                ? null
+                                : image._id,
+                            );
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors backdrop-blur-sm"
+                        >
+                          <EllipsisVertical className="w-4 h-4" />
+                        </button>
+
+                        {activeImageOptionsId === image._id && (
+                          <div className="absolute right-0 top-9 w-32 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in duration-100 origin-top-right">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMakePost(image);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Plus className="w-3.5 h-3.5 text-blue-500" />
+                              Make Post
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDeleteModal(image);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 border-t border-gray-50 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {previewImage ? (
@@ -649,7 +708,9 @@ export default function PersonalStorageFolderImagesPage() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">Upload image to folder</h2>
+              <h2 className="text-lg font-bold text-gray-900">
+                Upload image to folder
+              </h2>
               <button
                 type="button"
                 onClick={() => {
@@ -679,7 +740,9 @@ export default function PersonalStorageFolderImagesPage() {
             ) : (
               <div className="mb-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">{selectedFiles.length}/20 images selected</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {selectedFiles.length}/20 images selected
+                  </span>
                   {selectedFiles.length < 20 && (
                     <label className="cursor-pointer text-sm font-semibold text-blue-500 hover:text-blue-600">
                       Add more
@@ -688,15 +751,27 @@ export default function PersonalStorageFolderImagesPage() {
                         accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp,image/svg+xml"
                         className="hidden"
                         multiple={true}
-                        onChange={(event) => handleSelectFiles(event.target.files)}
+                        onChange={(event) =>
+                          handleSelectFiles(event.target.files)
+                        }
                       />
                     </label>
                   )}
                 </div>
-                <div className="grid grid-cols-3 gap-2 max-h-[240px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  {previewUrls.map(({file, url}, i) => (
-                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
-                      <img src={url} alt={`Preview ${i}`} className="w-full h-full object-cover" />
+                <div
+                  className="grid grid-cols-3 gap-2 max-h-[240px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {previewUrls.map(({ file, url }, i) => (
+                    <div
+                      key={i}
+                      className="relative aspect-square rounded-xl overflow-hidden border border-gray-200"
+                    >
+                      <img
+                        src={url}
+                        alt={`Preview ${i}`}
+                        className="w-full h-full object-cover"
+                      />
                       <button
                         type="button"
                         onClick={(e) => {
@@ -716,11 +791,17 @@ export default function PersonalStorageFolderImagesPage() {
               </div>
             )}
 
-            {fileError ? <p className="mb-3 text-xs font-semibold text-red-500">{fileError}</p> : null}
+            {fileError ? (
+              <p className="mb-3 text-xs font-semibold text-red-500">
+                {fileError}
+              </p>
+            ) : null}
 
             <button
               type="button"
-              disabled={selectedFiles.length === 0 || uploadImageMutation.isPending}
+              disabled={
+                selectedFiles.length === 0 || uploadImageMutation.isPending
+              }
               onClick={() => uploadImageMutation.mutate()}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-500 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
@@ -759,7 +840,9 @@ export default function PersonalStorageFolderImagesPage() {
             </div>
 
             <div className="px-6 pb-6 pt-5 text-center">
-              <h2 className="text-[28px] font-black tracking-[-0.02em] text-black">Deleted Folder!</h2>
+              <h2 className="text-[28px] font-black tracking-[-0.02em] text-black">
+                Deleted Folder!
+              </h2>
               <p className="mt-1 text-[16px] leading-6 text-[#838383]">
                 Are you sure you want to delete this storage folder?
               </p>
@@ -771,7 +854,11 @@ export default function PersonalStorageFolderImagesPage() {
                   disabled={deleteFolderMutation.isPending}
                   className="flex h-12 flex-1 items-center justify-center rounded-[12px] bg-[linear-gradient(134.74deg,#6CACDF_3.24%,#0000FE_139.86%)] text-[17px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {deleteFolderMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Delete"}
+                  {deleteFolderMutation.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    "Delete"
+                  )}
                 </button>
                 <button
                   type="button"
@@ -806,7 +893,9 @@ export default function PersonalStorageFolderImagesPage() {
             </div>
 
             <div className="px-6 pb-6 pt-5 text-center">
-              <h2 className="text-[28px] font-black tracking-[-0.02em] text-black">Delete Image?</h2>
+              <h2 className="text-[28px] font-black tracking-[-0.02em] text-black">
+                Delete Image?
+              </h2>
               <p className="mt-1 text-[16px] leading-6 text-[#838383]">
                 Are you sure you want to delete this image from this folder?
               </p>
@@ -818,7 +907,11 @@ export default function PersonalStorageFolderImagesPage() {
                   disabled={deleteImageMutation.isPending}
                   className="flex h-12 flex-1 items-center justify-center rounded-[12px] bg-[linear-gradient(134.74deg,#6CACDF_3.24%,#0000FE_139.86%)] text-[17px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {deleteImageMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Delete"}
+                  {deleteImageMutation.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    "Delete"
+                  )}
                 </button>
                 <button
                   type="button"
@@ -874,7 +967,11 @@ export default function PersonalStorageFolderImagesPage() {
               className="mb-3 h-12 w-full rounded-xl border border-gray-200 px-4 text-sm font-medium text-gray-800 outline-none focus:border-blue-400"
             />
 
-            {renameError ? <p className="mb-2 text-xs font-semibold text-red-500">{renameError}</p> : null}
+            {renameError ? (
+              <p className="mb-2 text-xs font-semibold text-red-500">
+                {renameError}
+              </p>
+            ) : null}
 
             <button
               type="button"

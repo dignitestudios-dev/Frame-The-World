@@ -205,7 +205,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
       {/* Backdrop Overlay */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+          className="fixed inset-0  backdrop-blur-xs z-40"
           onClick={() => setIsMenuOpen(false)}
         />
       )}
@@ -231,9 +231,9 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
               <h1 className="text-lg md:text-xl font-[800] text-gray-900 truncate">
                 {title || headerTitle}
               </h1>
-              <p className="text-[12px] md:text-[14px] text-black xs:block truncate">
+              {/* <p className="text-[12px] md:text-[14px] text-black xs:block truncate">
                 {subtitle || headerSubtitle}
-              </p>
+              </p> */}
             </div>
           </div>
 
@@ -317,12 +317,12 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
       {isMenuOpen && (
         <div
           ref={megaMenuRef}
-          className="fixed md:sticky top-16 md:top-20 left-0 right-0 z-[60] bg-white rounded-b-3xl shadow-2xl border-b border-gray-200 animate-[slideDown_0.3s_ease-out] overflow-y-auto max-h-[90vh] md:max-h-none"
+          className="fixed  top-16 md:top-20 left-0 right-0 z-[60]    rounded-b-3xl animate-[slideDown_0.3s_ease-out] overflow-y-auto max-h-[90vh] md:max-h-none"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex flex-col md:flex-row min-h-auto md:h-[32em]">
+          <div className="flex flex-col md:flex-row min-h-auto  md:h-[32em]">
             {/* Left Sidebar */}
-            <div className="w-full md:w-[20em] bg-gray-50 md:rounded-bl-3xl border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto scrollbar-hidden shrink-0">
+            <div className="w-full md:w-[20em] bg-gray-50 md:rounded-b-3xl border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto scrollbar-hidden shrink-0">
               <div className="p-4 md:p-6 space-y-1 md:space-y-2">
                 {sidebarItems.map((item, index) => {
                   const Icon = item.icon;
@@ -379,9 +379,9 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
             </div>
 
             {/* Right Content Area */}
-            <div className="flex-1 flex flex-col items-center justify-center bg-white md:rounded-br-3xl overflow-hidden min-h-[300px]">
-              <div className="w-full p-4 md:p-7 flex flex-col h-full">
-                {/* Top Action Cards */}
+            <div className="flex-1  flex flex-col items-center justify-center  md:rounded-br-3xl overflow-hidden min-h-[300px]">
+              {/* <div className="w-full p-4 md:p-7 flex flex-col h-full">
+                
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-6 mb-6 hidden">
                   <div className="flex flex-col sm:flex-row gap-3 flex-1">
                     {contentCards.map((card, index) => {
@@ -411,7 +411,6 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                     })}
                   </div>
 
-                  {/* Profile Picture (visible on Desktop/Tablet) */}
                   <div className="hidden">
                     <Image
                       src={user?.profilePicture?.location || user?.profilePicture || "/images/person.png"}
@@ -423,11 +422,10 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                   </div>
                 </div>
 
-                {/* Main Dynamic Content Area */}
                 <div className="flex-1 flex flex-col justify-center">
                   {isFrameType ? (
                     <div className="flex flex-col items-center gap-4 py-4">
-                      {/* Horizontally scrollable frames preview on mobile */}
+                     
                       <div className="w-full overflow-x-auto scrollbar-hidden pb-2">
                         <div className="flex md:justify-center items-center gap-4 md:gap-6 px-4 md:px-0">
                           {frames.map((frame, idx) => (
@@ -482,7 +480,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
                     </div>
                   )}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

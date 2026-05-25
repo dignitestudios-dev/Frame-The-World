@@ -5,7 +5,7 @@ import ChangePassword from "@/components/global/ChangePassword";
 import Header from "@/components/global/header";
 import AccountInformation from "@/components/global/AccountInformation";
 import Subscription from "@/components/global/Subscription";
-import Notifications from "@/components/global/Notificatons";
+
 import DeleteAccount from "@/components/global/DeleteAccount";
 import TermsandConditions from "@/components/global/TermsandConditions";
 import PrivacyPolicy from "@/components/global/PrivacyPolicy";
@@ -24,7 +24,7 @@ export default function SettingsPage() {
     "Account Information": <AccountInformation />,
     "Category Preferences": <CategoryPreferences />,
     "Subscription": <Subscription />,
-    "Notifications": <Notifications />,
+
     "App Walkthrough": <AppWalkthrough />,
     "Delete Account": <DeleteAccount />,
     "Terms of Services": <TermsandConditions />,
@@ -47,8 +47,7 @@ export default function SettingsPage() {
               <CategoryPreferences />
             ) : activeTab === "Subscription" ? (
               <Subscription />
-            ) : activeTab === "Notifications" ? (
-              <Notifications />
+
             ) : activeTab === "Blocked Users" ? (
               <BlockedUsers />
             ) : activeTab === "App Walkthrough" ? (

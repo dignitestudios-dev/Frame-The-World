@@ -170,7 +170,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
                 !isReuploadOnly
                   ? "cursor-not-allowed border-transparent"
                   : "cursor-pointer border-dashed border-blue-200 hover:border-blue-400"
-              } relative w-full rounded-2xl bg-gray-100 group border-2 transition-all ${
+              } relative w-full overflow-hidden  rounded-2xl bg-gray-100 group border-2 transition-all ${
                 isReuploadOnly ? "min-h-[280px] sm:min-h-[320px]" : "h-48"
               }`}
             >
@@ -181,8 +181,8 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
                     alt="Post"
                     className={`w-full rounded-xl object-cover transition-transform duration-500 ${
                       isReuploadOnly
-                        ? "h-full min-h-[280px] sm:min-h-[320px] group-hover:scale-[1.02]"
-                        : "h-[140px] group-hover:scale-105"
+                        ? "h-full  group-hover:scale-[1.02]"
+                        : " group-hover:scale-105"
                     }`}
                   />
                   {

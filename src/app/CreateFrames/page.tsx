@@ -191,8 +191,10 @@ const CreateFrameContent = () => {
       // Toast show hone de, phir redirect
       setTimeout(() => {
         const createdId = response?.data?._id || response?.data?.id || response?._id || response?.id;
-        if (postId && createdId) {
-          router.push(`/frame-detail/${createdId}`);
+        if (createdId) {
+          router.push(
+            `/search?lat=${encodeURIComponent(resolvedLatitude)}&lng=${encodeURIComponent(resolvedLongitude)}&frameId=${createdId}`
+          );
         } else {
           router.push(`/Profile?tab=frames&visibility=${category}`);
         }

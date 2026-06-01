@@ -211,6 +211,11 @@ export const addPostToFrameApi = async (frameId: string, postId: string) => {
   return res.data;
 };
 
+export const addPostsToFrameApi = async (frameId: string, postIds: string[]) => {
+  const res = await API.post(`/frames/${frameId}/posts`, { postIds });
+  return res.data;
+};
+
 // DELETE /frames/:frameId
 export const deleteFrameApi = async (frameId: string) => {
   const res = await API.delete(`/frames/${frameId}`);

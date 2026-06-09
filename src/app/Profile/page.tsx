@@ -213,9 +213,11 @@ function ProfileContent() {
                     </div>
                   </div>
                 </div>
-                <h2 className="mt-6 text-2xl font-bold text-[#1a1a1a] capitalize">
+                <div className="text-center w-full">
+                <h2 className="mt-6 text-2xl text font-bold text-wrap wrap-break-word  text-[#1a1a1a] capitalize">
                   {user?.name || "Anonymous User"}
                 </h2>
+                </div>
                 <p className="text-[13px] text-gray-500 mt-2 px-6 leading-relaxed text-center font-medium">
                   {user?.bio || "No bio available."}
                 </p>

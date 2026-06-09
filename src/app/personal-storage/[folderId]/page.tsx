@@ -27,7 +27,7 @@ import { useAccessControl } from "@/providers/AccessControlProvider";
 
 const INITIAL_PAGE = 1;
 const PAGE_LIMIT = 30;
-const MAX_UPLOAD_FILE_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
+const MAX_UPLOAD_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
 const FALLBACK_IMAGE_URL =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
 
@@ -378,7 +378,7 @@ export default function PersonalStorageFolderImagesPage() {
 
     if (validFiles.length < newFiles.length) {
       setFileError(
-        "Some files were skipped because they are not valid images or exceed 4MB.",
+        "Some files were skipped because they are not valid images or exceed 15MB.",
       );
     } else {
       setFileError("");

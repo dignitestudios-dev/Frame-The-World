@@ -30,6 +30,7 @@ export default function LoginPage() {
     watch,
     trigger,
     getValues,
+    reset,
     formState: { errors, isValid },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -254,6 +255,14 @@ export default function LoginPage() {
     }
   };
 
+  const handleEditEmail = () => {
+    setStep("email");
+    // Clear password field
+    reset({ email: getValues("email"), password: "" });
+    setConfirmPassword("");
+    setConfirmPasswordError("");
+  };
+
   const handleGuestMode = () => {
     setGuest(true);
     router.push("/home");
@@ -280,15 +289,27 @@ export default function LoginPage() {
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {/* Email */}
-          <div className={`${step !== "email" ? "opacity-60 pointer-events-none" : ""}`}>
+          <div className={`relative ${step !== "email" ? "opacity-60" : ""}`}>
             <Input
               id="email"
               type="email"
               placeholder="Enter Your Email"
-              className="w-full"
+              className="w-full pr-10"
               {...register("email")}
               readOnly={step !== "email"}
             />
+            {step !== "email" && (
+              <button
+                type="button"
+                onClick={handleEditEmail}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-md transition-colors"
+                title="Edit email"
+              >
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.email.message}

@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCategoriesApi, updatePostApi } from "@/services/postApi";
+
+const MAX_POST_IMAGE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
 import Image from "next/image";
 import LocationAutocomplete from "@/components/global/LocationAutocomplete";
 import ContentReleaseModal from "@/components/global/ContentReleaseModal";
@@ -40,6 +42,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   const [location, setLocation] = useState<string>("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [newImage, setNewImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string>("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [locationError, setLocationError] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -86,6 +89,13 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > MAX_POST_IMAGE_FILE_SIZE_BYTES) {
+        setImageError("Image exceeds the 15MB upload limit. Please choose a smaller file.");
+        e.target.value = "";
+        setNewImage(null);
+        return;
+      }
+      setImageError("");
       setNewImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -214,6 +224,11 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
               className="hidden"
               disabled={!isReuploadOnly}
             />
+            {imageError && isReuploadOnly && (
+              <p className="mt-2 text-xs font-bold text-red-500">
+                {imageError}
+              </p>
+            )}
             {!isReuploadOnly && (
               <>
                 {/* Location (Editable) */}

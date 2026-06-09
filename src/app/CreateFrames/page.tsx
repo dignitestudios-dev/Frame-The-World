@@ -21,6 +21,8 @@ const getFirstAddressComponent = (
   types: string[]
 ) => types.map((t) => getAddressComponent(components, t)).find(Boolean) || "";
 
+const MAX_IMAGE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+
 const CreateFrameContent = () => {
   const router = useRouter();
   const { executeWithCheck } = useAccessControl();
@@ -80,6 +82,8 @@ const CreateFrameContent = () => {
 
     if (!coverFile) {
       errors.cover = 'Please upload a cover image.';
+    } else if (coverFile.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+      errors.cover = 'Cover image must be 15MB or smaller.';
     }
     if (!title.trim()) {
       errors.title = 'Please enter frame title.';
@@ -283,7 +287,7 @@ const CreateFrameContent = () => {
                   <div className="text-blue-600 font-medium mb-1">
                     Upload Picture
                   </div>
-                  Max Limit 5Mbs, PNG, JPG, JPEG
+                  Max Limit 15Mbs, PNG, JPG, JPEG
                 </div>
 
                 <input
@@ -293,7 +297,17 @@ const CreateFrameContent = () => {
                   accept=".png,.jpg,.jpeg"
                   className="hidden"
                   onChange={(e) => {
-                    setCoverFile(e.target.files?.[0] || null);
+                    const file = e.target.files?.[0] || null;
+                    if (file && file.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        cover: 'Cover image must be 15MB or smaller.',
+                      }));
+                      e.target.value = "";
+                      setCoverFile(null);
+                      return;
+                    }
+                    setCoverFile(file);
                     setFieldErrors((prev) => ({ ...prev, cover: undefined }));
                   }}
                 />

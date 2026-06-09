@@ -72,6 +72,8 @@ const getReturnedCount = (...values: unknown[]): number | null => {
 };
 
 // ─── Timeframes for insights ────────────────────────────────────────────────
+const MAX_REUPLOAD_IMAGE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+
 const TIMEFRAMES = [
   { id: "24h", label: "24h" },
   { id: "week", label: "Week" },
@@ -391,6 +393,11 @@ function PostDetailsContent() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && currentPostId) {
+      if (file.size > MAX_REUPLOAD_IMAGE_FILE_SIZE_BYTES) {
+        showToast("Image must be 15MB or smaller.", "error");
+        e.target.value = "";
+        return;
+      }
       const formData = new FormData();
       formData.append("media", file);
       updateRejectedImage({ postId: currentPostId, formData });

@@ -37,8 +37,10 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImage, setIsImage] = useState<boolean>(false);
+  const MAX_IMAGE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [uploadError, setUploadError] = useState<string>("");
   const [isTrialLimitModalOpen, setIsTrialLimitModalOpen] = useState(false);
   const [trialLimitMessage, setTrialLimitMessage] = useState<string | undefined>();
   const router = useRouter();
@@ -95,6 +97,12 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+        setUploadError("Image exceeds the 15MB upload limit. Please choose a smaller file.");
+        e.target.value = "";
+        return;
+      }
+      setUploadError("");
       setFormData({ ...formData, image: file, fileId: null });
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
@@ -246,7 +254,7 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
                     <div className="text-blue-600 font-medium mb-1">
                       Upload Picture
                     </div>
-                    Max Limit 5Mbs, PNG, JPG, JPEG
+                    Max Limit 15Mbs, PNG, JPG, JPEG
                   </div>
 
                   <input
@@ -264,6 +272,11 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
                   <div className="flex-1 h-[1px] bg-gray-200" />
                 </div>
 
+                {uploadError && (
+                  <p className="text-xs text-red-500 font-semibold text-left px-2">
+                    {uploadError}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsImportModalOpen(true)}

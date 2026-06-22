@@ -170,9 +170,7 @@ export default function VerifyCredentialsPage() {
               </div>
             </div>
             <p className="text-[11px] text-gray-500 leading-relaxed font-medium">
-              CLIA verification is processed manually and will be sent to the admin for approval.
-              Please ensure the information provided is accurate, as incorrect details may lead to
-              rejection.
+           CLIA & IATA verification is processed manually and will be sent to the admin for approval. Please ensure the information provided is accurate, as incorrect details may lead to rejection.
             </p>
           </div>
           {/* Terms and Conditions */}

@@ -10,6 +10,7 @@ const headers = {
   "Content-Type": "application/json",
 };
 
+
 // Helper to generate/retrieve a consistent device ID for web
 function getDeviceId(): string {
   if (typeof window === "undefined") return "web-ssr";

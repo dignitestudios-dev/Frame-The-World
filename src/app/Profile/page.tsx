@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
-import { X, Loader2, ImageOff, Building2, MapPin } from "lucide-react";
+import { X, Loader2, ImageOff, Building2, MapPin, Info } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -185,6 +185,12 @@ function ProfileContent() {
     <div className="min-h-screen bg-white text-[#1a1a1a] font-sans">
       <Header title={"My Travel Profile"} subtitle={"Your public and private travel profile, all here."} />
       <div className="min-h-screen bg-white px-8 py-10 font-sans text-[#1a1a1a]">
+        {user?.identityStatus === "pending" && (
+          <div className="max-w-[1400px] mx-auto mb-6 flex items-center justify-center gap-2 bg-[#FFF9EC] border border-[#FCE6C9] rounded-full py-2.5 px-4 text-[#D97706] text-xs md:text-sm font-semibold shadow-xs">
+            <Info className="w-4 h-4 shrink-0" />
+            <span>Identity verification is pending review</span>
+          </div>
+        )}
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-12">
           {/* ================= LEFT PROFILE CARD ================= */}
           {isBadgesLoading ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/global/header";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -214,12 +215,15 @@ function RemoveHumanContent() {
 
             {/* Main image */}
             {!isLoadingPost && (
-              <img
-                src={displayImage}
-                alt="Post"
-                className="w-full object-cover transition-all duration-700 border-2 border-dashed border-blue-300 rounded-[14px]"
-                style={{ minHeight: 300, maxHeight: 420 }}
-              />
+              <div className="relative w-full h-[380px] border-2 border-dashed border-blue-300 rounded-[14px] overflow-hidden">
+                <Image
+                  src={displayImage}
+                  alt="Post"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  className="object-cover transition-all duration-700"
+                />
+              </div>
             )}
 
             {/* Slash animation — only while processing (first ~1.5 s) */}

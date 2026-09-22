@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { getFoldersApi, getFolderImagesApi, FolderItem, FolderImageItem } from "@/services/frameApi";
 import { Loader2, X, ChevronLeft, Check } from "lucide-react";
@@ -129,10 +130,12 @@ const ImportFolderModal: React.FC<ImportFolderModalProps> = ({
                     >
                       <div className="aspect-square rounded-xl bg-gray-100 overflow-hidden relative">
                         {folder.cover?.location ? (
-                          <img 
+                          <Image 
                             src={folder.cover.location} 
                             alt={folder.name} 
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                            fill
+                            sizes="(max-width: 640px) 50vw, 33vw"
+                            className="object-cover transition-transform duration-300 group-hover:scale-110"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
@@ -188,10 +191,12 @@ const ImportFolderModal: React.FC<ImportFolderModalProps> = ({
                           isSelected ? "border-blue-500 ring-2 ring-blue-500/20" : "border-transparent"
                         }`}
                       >
-                        <img 
+                        <Image 
                           src={image.location} 
-                          alt={image.filename} 
-                          className="w-full h-full object-cover"
+                          alt={image.filename || "Folder image"} 
+                          fill
+                          sizes="(max-width: 640px) 33vw, 25vw"
+                          className="object-cover"
                         />
                         {isSelected && (
                           <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center">

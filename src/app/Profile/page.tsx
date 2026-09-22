@@ -205,7 +205,7 @@ function ProfileContent() {
                   <div className="absolute inset-0 rounded-[55px] bg-gradient-to-b from-blue-400 to-blue-600 shadow-[0_10px_20px_rgba(59,130,246,0.3)]" />
                   <div className="absolute inset-[5px] rounded-[50px] bg-[#f1f3f6] p-1">
                     <div className="relative h-full w-full overflow-hidden rounded-[45px]">
-                      <img
+                      <Image
                         src={
                           user?.profilePicture?.location ||
                           (typeof user?.profilePicture === "string"
@@ -214,7 +214,9 @@ function ProfileContent() {
                           "/images/person.png"
                         }
                         alt={user?.name || "User"}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="144px"
+                        className="object-cover"
                       />
                     </div>
                   </div>
@@ -546,40 +548,31 @@ function ProfileContent() {
                             className="relative overflow-hidden rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[220px] h-[220px] cursor-pointer"
                             onClick={() => id && router.push(`/frame-detail/${id}`)}
                           >
-                            <img
+                            <Image
                               src={image1}
                               alt={frameName}
-                              className="absolute inset-0 h-full w-full object-cover"
-                              loading="lazy"
-                              onError={(event) => {
-                                const target = event.currentTarget;
-                                target.src = "/images/1.jpg";
-                              }}
+                              fill
+                              sizes="220px"
+                              className="object-cover"
                             />
                             <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
-                              <img
+                              <Image
                                 src={image1}
                                 alt={`${frameName} inner`}
-                                className="absolute inset-0 h-full w-full object-cover opacity-90"
-                                loading="lazy"
-                                onError={(event) => {
-                                  const target = event.currentTarget;
-                                  target.src = "/images/1.jpg";
-                                }}
+                                fill
+                                sizes="172px"
+                                className="object-cover opacity-90"
                               />
                             </div>
                             <div className="absolute inset-0 rounded-[49.26px] shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)]" />
                             <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
                               <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
-                                <img
+                                <Image
                                   src={image1}
                                   alt={`${frameName} preview`}
-                                  className="absolute inset-0 h-full w-full object-cover opacity-80"
-                                  loading="lazy"
-                                  onError={(event) => {
-                                    const target = event.currentTarget;
-                                    target.src = "/images/1.jpg";
-                                  }}
+                                  fill
+                                  sizes="170px"
+                                  className="object-cover opacity-80"
                                 />
                               </div>
                             </div>
@@ -707,9 +700,11 @@ function ProfileContent() {
                   <div
                     className={`absolute inset-0 bg-gradient-to-b from-gray-100 to-transparent rounded-full blur-2xl scale-90 ${badgeDetail?.isLocked ? "opacity-20" : "opacity-40"}`}
                   ></div>
-                  <img
-                    src={badgeDetail?.isLocked ? LOCK_ICON : badgeDetail?.icon?.location}
+                  <Image
+                    src={badgeDetail?.isLocked ? LOCK_ICON : badgeDetail?.icon?.location || "/images/badge1.png"}
                     alt={badgeDetail?.name || "Badge"}
+                    fill
+                    sizes="(max-width: 768px) 160px, 208px"
                     className={`relative object-contain ${badgeDetail?.isLocked ? "" : "animate-in bounce-in duration-700"}`}
                   />
                 </div>

@@ -1,4 +1,5 @@
 "use client";
+import Image from 'next/image';
 import Header from '@/components/global/header';
 import React, { useEffect, useRef, useState, Suspense } from 'react';
 import LocationAutocomplete, { PlaceSelectionDetails } from '@/components/global/LocationAutocomplete';
@@ -258,15 +259,16 @@ const CreateFrameContent = () => {
           <div className="mb-4 ">
             {coverPreviewUrl && (
               <div className="mt-4 flex justify-center">
-                <div className=" w-full h-70 group relative">
-                  <img
+                <div className="w-full h-70 group relative rounded-xl overflow-hidden border shadow-sm">
+                  <Image
                     src={coverPreviewUrl}
                     alt="Preview"
-                    className="w-full h-full object-cover rounded-xl border shadow-sm"
+                    fill
+                    className="object-cover"
                   />
 
                   {/* Overlay */}
-                  <div className="absolute inset-0  rounded-xl  flex items-start justify-end  p-2">
+                  <div className="absolute inset-0 rounded-xl flex items-start justify-end p-2 z-10">
                     <button
                       type="button"
                       onClick={() => setCoverFile(null)}
@@ -357,15 +359,18 @@ const CreateFrameContent = () => {
                 }`}
             >
               <div className="flex flex-col items-center gap-3">
-                <img
-                  src={
-                    category === "public"
-                      ? "/images/publicwhite.png"
-                      : "/images/world.png"
-                  }
-                  className="w-[40px] transition-all duration-300 group-hover:opacity-0"
-                  alt=""
-                />
+                <div className="relative w-[40px] h-[40px]">
+                  <Image
+                    src={
+                      category === "public"
+                        ? "/images/publicwhite.png"
+                        : "/images/world.png"
+                    }
+                    fill
+                    alt="public icon"
+                    className="object-contain transition-all duration-300 group-hover:opacity-0"
+                  />
+                </div>
                 <span className="font-medium">Public Frame</span>
               </div>
             </button>
@@ -380,15 +385,19 @@ const CreateFrameContent = () => {
                 }`}
             >
               <div className="flex flex-col items-center gap-3">
-                <img
-                  src={
-                    category === "private"
-                      ? "/images/lockicon.png"
-                      : "/images/lockiconblue.png"
-                  }
-                  className="w-[40px] transition-all duration-300 group-hover:opacity-0"
-                  alt=""
-                />              <span className="font-medium">Private Frame</span>
+                <div className="relative w-[40px] h-[40px]">
+                  <Image
+                    src={
+                      category === "private"
+                        ? "/images/lockicon.png"
+                        : "/images/lockiconblue.png"
+                    }
+                    fill
+                    alt="lock icon"
+                    className="object-contain transition-all duration-300 group-hover:opacity-0"
+                  />
+                </div>
+                <span className="font-medium">Private Frame</span>
               </div>
             </button>
           </div>

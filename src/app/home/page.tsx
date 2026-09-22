@@ -23,6 +23,220 @@ function isImageUrl(url: string | null | undefined): url is string {
   return /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(url);
 }
 
+function SliderFrameCard({
+  frame,
+  onClick,
+}: {
+  frame: any;
+  onClick: () => void;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const coverUrl = isImageUrl(frame.cover?.location)
+    ? frame.cover.location
+    : FRAME_COVER_FALLBACK_URL;
+  const [imgSrc, setImgSrc] = useState(coverUrl);
+
+  useEffect(() => {
+    setImgSrc(
+      isImageUrl(frame.cover?.location)
+        ? frame.cover.location
+        : FRAME_COVER_FALLBACK_URL
+    );
+    setIsLoaded(false);
+  }, [frame.cover?.location]);
+
+  return (
+    <div
+      onClick={onClick}
+      className="shrink-0 snap-start min-w-[343px] h-[120px] rounded-3xl bg-gray-900 relative overflow-hidden cursor-pointer shadow"
+    >
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 animate-pulse z-0" />
+      )}
+      <Image
+        src={imgSrc}
+        alt={frame.title || "Frame"}
+        fill
+        sizes="343px"
+        className={`object-cover transition-opacity duration-500 ease-in-out ${
+          isLoaded ? "opacity-80" : "opacity-0"
+        }`}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          if (imgSrc !== FRAME_COVER_FALLBACK_URL) {
+            setImgSrc(FRAME_COVER_FALLBACK_URL);
+          }
+        }}
+      />
+
+      {/* Card Content */}
+      <div className="absolute inset-0 p-4 flex flex-col justify-between z-10">
+        <span className="text-white text-2xl font-bold">
+          {frame.totalPosts > 99 ? `${frame.totalPosts}+` : frame.totalPosts}
+        </span>
+        <span className="text-sm text-gray-200">
+          {frame.title || "Untitled Frame"}
+        </span>
+      </div>
+
+      {/* Bottom Right Button */}
+      <button
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        className="absolute bottom-3 right-3 bg-transparent backdrop-blur rounded-full w-9 h-9 flex items-center justify-center shadow-lg hover:scale-110 transition z-10"
+      >
+        <ArrowRight className="w-5 h-5 text-white font-bold" />
+      </button>
+    </div>
+  );
+}
+
+function FrameGridCard({
+  frame,
+  onClick,
+}: {
+  frame: any;
+  onClick: () => void;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const coverUrl = isImageUrl(frame.cover?.location)
+    ? frame.cover.location
+    : FRAME_COVER_FALLBACK_URL;
+  const [imgSrc, setImgSrc] = useState(coverUrl);
+
+  useEffect(() => {
+    setImgSrc(
+      isImageUrl(frame.cover?.location)
+        ? frame.cover.location
+        : FRAME_COVER_FALLBACK_URL
+    );
+    setIsLoaded(false);
+  }, [frame.cover?.location]);
+
+  return (
+    <div
+      onClick={onClick}
+      className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px] bg-gray-100"
+    >
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse z-0" />
+      )}
+      <Image
+        src={imgSrc}
+        alt={frame.title || "Frame"}
+        fill
+        sizes="254px"
+        className={`object-cover transition-opacity duration-500 ease-in-out ${
+          isLoaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          if (imgSrc !== FRAME_COVER_FALLBACK_URL) {
+            setImgSrc(FRAME_COVER_FALLBACK_URL);
+          }
+        }}
+      />
+
+      <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
+        <Image
+          src={imgSrc}
+          alt={`${frame.title || "Frame"} inner`}
+          fill
+          sizes="206px"
+          className={`object-cover transition-opacity duration-500 ease-in-out ${
+            isLoaded ? "opacity-90" : "opacity-0"
+          }`}
+          onError={() => {
+            if (imgSrc !== FRAME_COVER_FALLBACK_URL) {
+              setImgSrc(FRAME_COVER_FALLBACK_URL);
+            }
+          }}
+        />
+      </div>
+
+      <div className="absolute inset-0 rounded-[49.26px] shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)] pointer-events-none" />
+
+      <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+        <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
+          <Image
+            src={imgSrc}
+            fill
+            sizes="170px"
+            alt={`${frame.title || "Frame"} preview`}
+            className={`object-cover transition-opacity duration-500 ease-in-out ${
+              isLoaded ? "opacity-80" : "opacity-0"
+            }`}
+            onError={() => {
+              if (imgSrc !== FRAME_COVER_FALLBACK_URL) {
+                setImgSrc(FRAME_COVER_FALLBACK_URL);
+              }
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="absolute inset-0 flex pt-34 flex-col items-center text-white bg-[#00000056] pointer-events-none z-10">
+        <div className="text-3xl font-bold">
+          {frame.totalPosts > 99 ? `${frame.totalPosts}+` : frame.totalPosts}
+        </div>
+        <div className="text-sm mt-1 px-3 text-center capitalize">
+          {frame.title || "Untitled Frame"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PostGridCard({
+  item,
+  index,
+  onClick,
+}: {
+  item: any;
+  index: number;
+  onClick: () => void;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const isTall = index % 5 === 0 || index % 7 === 0;
+  const imageUrl = item?.media?.location || "/images/1.jpg";
+  const [imgSrc, setImgSrc] = useState(imageUrl);
+
+  useEffect(() => {
+    setImgSrc(item?.media?.location || "/images/1.jpg");
+    setIsLoaded(false);
+  }, [item?.media?.location]);
+
+  return (
+    <div
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-[28px] bg-gray-100 shadow-xl hover:shadow-2xl transition duration-300 ${
+        isTall ? "row-span-2" : "row-span-3"
+      }`}
+    >
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+      )}
+      <Image
+        fill
+        src={imgSrc}
+        alt="Travel"
+        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+        className={`object-cover transition-opacity duration-500 ease-in-out ${
+          isLoaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          if (imgSrc !== FALLBACK_IMAGE_URL) {
+            setImgSrc(FALLBACK_IMAGE_URL);
+          }
+        }}
+      />
+    </div>
+  );
+}
+
 export default function TravelStoryPage() {
   const [activeTab, setActiveTab] = useState<"forYou" | "featured" | "frames">("forYou");
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -251,64 +465,13 @@ export default function TravelStoryPage() {
                   No frame found
                 </div>
               )
-              : topFrameItems.slice(0, 5).map((frame) => {
-                const coverUrl =
-                  isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL;
-
-                return (
-                  <div
+              : topFrameItems.slice(0, 5).map((frame) => (
+                  <SliderFrameCard
                     key={frame._id}
+                    frame={frame}
                     onClick={() => router.push(`/frame-detail/${frame._id}`)}
-                    className="
-            shrink-0
-            snap-start
-            min-w-[343px] h-[120px]
-            rounded-3xl
-            bg-gray-900
-            relative overflow-hidden cursor-pointer
-            shadow
-          "
-                  >
-                    <Image
-                      src={coverUrl}
-                      alt={frame.title || "Frame"}
-                      fill
-                      className="object-cover opacity-80"
-                    />
-
-                    {/* Card Content */}
-                    <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                      <span className="text-white text-2xl font-bold">
-                        {frame.totalPosts > 99 ? `${frame.totalPosts}+` : frame.totalPosts}
-                      </span>
-                      <span className="text-sm text-gray-200">
-                        {frame.title || "Untitled Frame"}
-                      </span>
-                    </div>
-
-                    {/* Bottom Right Button */}
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        router.push(`/frame-detail/${frame._id}`);
-                      }}
-                      className="
-              absolute bottom-3 right-3
-              bg-transparent backdrop-blur
-              rounded-full
-              w-9 h-9
-              flex items-center justify-center
-              shadow-lg
-             hover:scale-110
-              transition
-              z-10
-            "
-                    >
-                      <ArrowRight className="w-5 h-5 text-white font-bold" />
-                    </button>
-                  </div>
-                );
-              })}
+                  />
+                ))}
         </section>
 
 
@@ -370,69 +533,13 @@ export default function TravelStoryPage() {
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                  {frameItems.map((frame, i) => {
-                    const coverUrl =
-                      isImageUrl(frame.cover?.location) ? frame.cover?.location : FRAME_COVER_FALLBACK_URL;
-                    return (
-                      <div
-                        key={frame._id}
-                        onClick={() => router.push(`/frame-detail/${frame._id}`)}
-                        className="relative overflow-hidden cursor-pointer rounded-[49.26px] shadow-[0_10px_25px_rgba(0,0,0,0.35)] w-[254px] h-[254px]"
-                      >
-                        <img
-                          src={coverUrl}
-                          alt={frame.title || "Frame"}
-                          className="absolute inset-0 h-full w-full object-cover"
-                          loading="lazy"
-                          onError={(event) => {
-                            const target = event.currentTarget;
-                            if (target.src !== FRAME_COVER_FALLBACK_URL) {
-                              target.src = FRAME_COVER_FALLBACK_URL;
-                            }
-                          }}
-                        />
-
-                        <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
-                          <img
-                            src={coverUrl}
-                            alt={`${frame.title || "Frame"} inner`}
-                            className="absolute inset-0 h-full w-full object-cover opacity-90"
-                            loading="lazy"
-                            onError={(event) => {
-                              const target = event.currentTarget;
-                              if (target.src !== FRAME_COVER_FALLBACK_URL) {
-                                target.src = FRAME_COVER_FALLBACK_URL;
-                              }
-                            }}
-                          />
-                        </div>
-
-                        <div className="absolute inset-0 rounded-[49.26px] shadow-[inset_0_0_0_8px_rgba(0,0,0,0.35)]" />
-
-                        <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                          <div className="relative w-[170px] h-[170px] rounded-[30px] overflow-hidden border border-white/20">
-                            <img
-                              src={coverUrl}
-                              alt={`${frame.title || "Frame"} preview`}
-                              className="absolute inset-0 h-full w-full object-cover opacity-80"
-                              loading="lazy"
-                              onError={(event) => {
-                                const target = event.currentTarget;
-                                if (target.src !== FRAME_COVER_FALLBACK_URL) {
-                                  target.src = FRAME_COVER_FALLBACK_URL;
-                                }
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="absolute inset-0 flex pt-34 flex-col items-center text-white bg-[#00000056]">
-                          <div className="text-3xl font-bold">{frame.totalPosts > 99 ? `${frame.totalPosts}+` : frame.totalPosts}</div>
-                          <div className="text-sm mt-1 px-3 text-center capitalize">{frame.title || "Untitled Frame"}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {frameItems.map((frame, i) => (
+                    <FrameGridCard
+                      key={frame._id || i}
+                      frame={frame}
+                      onClick={() => router.push(`/frame-detail/${frame._id}`)}
+                    />
+                  ))}
                 </div>
 
                 <div ref={loadMoreRef} className="h-12" />
@@ -476,37 +583,21 @@ export default function TravelStoryPage() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] gap-6 cursor-pointer">
                   {(isFeedTab ? activePosts : Array.from({ length: 20 }).map((_, i) => i)).map(
                     (item, i) => {
-                      const isTall = i % 5 === 0 || i % 7 === 0;
-                      const imageUrl =
-                        isFeedTab
-                          ? (item as { media?: { location?: string | null } }).media?.location ?? "/images/1.jpg"
-                          : `/images/${(i % 4) + 1}.jpg`;
+                      const post = item as any;
+                      const postId = post?._id || post?.id;
 
                       return (
-                        <div
-                          key={isFeedTab ? (item as { _id: string })._id : i}
+                        <PostGridCard
+                          key={isFeedTab ? postId : i}
+                          item={item}
+                          index={i}
                           onClick={() => {
-                            const post = item as any;
-                            const postId = post._id || post.id;
-                            setPostDetails(post);
-                            router.push(`/postdetails?id=${postId}`);
+                            if (post) {
+                              setPostDetails(post);
+                              router.push(`/postdetails?id=${postId}`);
+                            }
                           }}
-                          className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${isTall ? "row-span-2" : "row-span-3"
-                            }`}
-                        >
-                          <img
-                            src={imageUrl}
-                            alt="Travel"
-                            className="absolute inset-0 h-full w-full object-cover"
-                            loading="lazy"
-                            onError={(event) => {
-                              const target = event.currentTarget;
-                              if (target.src !== FALLBACK_IMAGE_URL) {
-                                target.src = FALLBACK_IMAGE_URL;
-                              }
-                            }}
-                          />
-                        </div>
+                        />
                       );
                     }
                   )}

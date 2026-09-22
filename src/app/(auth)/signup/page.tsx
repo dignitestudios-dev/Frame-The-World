@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { SignupFormData, signupSchema } from "@/schemas/Auth";
@@ -134,11 +135,14 @@ export default function SignupPage() {
           Enter your details to begin your journey. <br />
           <span className="flex items-baseline justify-center">
             Only
-            <img
-              src={"/images/check-mark.png"}
-              alt="check-mark-icon"
-              className="ml-1 w-3.25 h-2.75 mr-1"
-            />
+            <span className="relative inline-block w-3.5 h-3 ml-1 mr-1 align-baseline">
+              <Image
+                src="/images/check-mark.png"
+                alt="check-mark-icon"
+                fill
+                className="object-contain"
+              />
+            </span>
             verified travel professionals can contribute.
           </span>
         </p>
@@ -226,11 +230,14 @@ export default function SignupPage() {
               </span>
             </div>
           </div>
-          <img
-            src="/images/border-image.png"
-            className="w-48 mx-auto"
-            alt="border-image.png"
-          />
+          <div className="relative w-48 h-2 mx-auto my-3">
+            <Image
+              src="/images/border-image.png"
+              fill
+              className="object-contain"
+              alt="border-image.png"
+            />
+          </div>
 
           {/* Social Login */}
           <div className="flex gap-4 justify-center">

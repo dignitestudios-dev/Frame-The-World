@@ -30,6 +30,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
+import Image from "next/image";
 
 // ─── Timeframes ──────────────────────────────────────────────────────────────
 const TIMEFRAMES = [
@@ -198,7 +199,8 @@ export default function OwnPostView({
 
                 {/* ── Hero image ── */}
                 <div className="relative w-full h-[621px] rounded-[32px] overflow-hidden mt-[32px] shadow-[0px_4px_15px_rgba(0,0,0,0.25)]">
-                    <img
+                    <Image
+                    fill
                         src={imageUrl}
                         alt={currentPost?.caption || "Post image"}
                         className="w-full h-full object-cover"

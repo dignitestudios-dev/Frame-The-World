@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Imagepage from "@/components/createpost/Imagepage";
 import Header from "@/components/global/header";
 import React, { useEffect, useState, Suspense } from "react";
@@ -14,6 +15,7 @@ import { FolderImageItem } from "@/services/frameApi";
 import { isTrialLimitError, getApiErrorMessage } from "@/lib/apiError";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 import { Loader2 } from "lucide-react";
+import LocationAutocomplete, { PlaceSelectionDetails } from "@/components/global/LocationAutocomplete";
 
 interface UploadFormProps {
   onGenerate?: (data: any) => void;
@@ -35,6 +37,9 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
     categories: [],
     fileId: null,
   });
+  const [location, setLocation] = useState<string>("");
+  const [locationData, setLocationData] = useState<PlaceSelectionDetails | null>(null);
+  const [locationError, setLocationError] = useState<string>("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImage, setIsImage] = useState<boolean>(false);
   const MAX_IMAGE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
@@ -117,8 +122,11 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
   const handleRemoveImage = () => {
     setFormData((prev) => ({ ...prev, image: null, fileId: null }));
     setImagePreview(null);
+    setLocation("");
+    setLocationData(null);
+    setLocationError("");
     reset();
-    
+
     // Clear query params if any
     if (searchParams.get("fileId") || searchParams.get("imageUrl")) {
       router.replace("/Createdpost");
@@ -127,6 +135,11 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
 
   const handleGenerate = () => {
     if (!formData.image && !formData.fileId) return;
+
+    if (!location.trim()) {
+      setLocationError("Location is required.");
+      return;
+    }
 
     const data = new FormData();
 
@@ -140,7 +153,12 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
     formData.categories.forEach((catId, index) => {
       data.append(`categories[${index}]`, catId);
     });
-    // data.append("isContentReleaseAccepted", formData.agreedToTerms.toString());
+    data.append("country", locationData?.country || "");
+    data.append("state", locationData?.state || "");
+    data.append("latitude", locationData?.latitude?.toString() || "");
+    data.append("longitude", locationData?.longitude?.toString() || "");
+    data.append("isContentReleaseAccepted", formData.agreedToTerms ? "true" : "false");
+
     const values = Object.fromEntries(data.entries());
     console.log(values, "form-->data--->");
     // setIsImage(true);
@@ -184,7 +202,9 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
               fileId: null,
             });
             setImagePreview(null);
-
+            setLocation("");
+            setLocationData(null);
+            setLocationError("");
           }}
         />
       ) : (
@@ -224,15 +244,16 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
           <div className="mb-4 ">
             {imagePreview && (
               <div className="mt-4 flex justify-center">
-                <div className=" w-70 h-70 group relative">
-                  <img
+                <div className="w-70 h-70 group relative rounded-xl overflow-hidden border shadow-sm">
+                  <Image
                     src={imagePreview}
                     alt="Preview"
-                    className="w-full h-full object-cover rounded-xl border shadow-sm"
+                    fill
+                    className="object-cover"
                   />
 
                   {/* Overlay */}
-                  <div className="absolute inset-0  rounded-xl  flex items-start justify-end  p-2">
+                  <div className="absolute inset-0 rounded-xl flex items-start justify-end p-2 z-10">
                     <button
                       type="button"
                       onClick={handleRemoveImage}
@@ -282,18 +303,46 @@ const UploadFormContent: React.FC<UploadFormProps> = ({ onGenerate }) => {
                   onClick={() => setIsImportModalOpen(true)}
                   className="w-full py-4 bg-white border-2 border-blue-100 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all flex items-center justify-center gap-2"
                 >
-                  <img
-                    src="/images/folder.png"
-                    className="w-6 h-6"
-                    alt="folder icon"
-                  />
+                  <div className="relative w-6 h-6 shrink-0">
+                    <Image
+                      src="/images/folder.png"
+                      fill
+                      alt="folder icon"
+                      className="object-contain"
+                    />
+                  </div>
                   Import from Folder
                 </button>
               </div>
             )}
           </div>
 
-          {/* Destination Input */}
+          {/* Location Input */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2 px-1">
+              <label className="text-sm font-bold text-gray-700">Location</label>
+            </div>
+            <LocationAutocomplete
+              placeholder="Enter location..."
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                if (locationError) setLocationError("");
+              }}
+              onLocationSelect={(data) => {
+                setLocation(data.address);
+                setLocationData(data);
+                if (locationError) setLocationError("");
+              }}
+            />
+            {locationError && (
+              <p className="mt-1.5 text-xs font-bold text-red-500">
+                {locationError}
+              </p>
+            )}
+          </div>
+
+          {/* Caption Input */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2 px-1">
               <label className="text-sm font-bold text-gray-700">Caption</label>

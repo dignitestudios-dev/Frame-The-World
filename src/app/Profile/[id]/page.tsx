@@ -114,7 +114,9 @@ function OtherProfileContent({ userId }: { userId: string }) {
         subtitle={`Exploring the world through ${targetUser?.name || "their"} lens.`}
       />
       <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
-        <img  src="/images/not-found-without-text.png" className="w-64 h-64 mb-4" alt="User Not Found" />
+        <div className="relative w-64 h-64 mb-4">
+          <Image src="/images/not-found-without-text.png" alt="User Not Found" fill sizes="256px" className="object-contain" />
+        </div>
         <p className="text-gray-900 mb-6 font-bold">You are not allowed to view this user profile.</p>
         <button onClick={() => router.back()} className="px-6 py-2 bg-blue-500 text-white rounded-full font-bold">
           Go Back
@@ -152,7 +154,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
                   <div className="absolute inset-0 rounded-[55px] bg-gradient-to-b from-blue-400 to-blue-600 shadow-[0_10px_20px_rgba(59,130,246,0.3)]" />
                   <div className="absolute inset-[5px] rounded-[50px] bg-[#f1f3f6] p-1">
                     <div className="relative h-full w-full overflow-hidden rounded-[45px]">
-                      <img
+                      <Image
                         src={
                           targetUser?.profilePicture?.location ||
                           (typeof targetUser?.profilePicture === "string"
@@ -161,7 +163,9 @@ function OtherProfileContent({ userId }: { userId: string }) {
                           "/images/person.png"
                         }
                         alt={targetUser?.name || "User"}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="144px"
+                        className="object-cover"
                       />
                     </div>
                   </div>
@@ -311,7 +315,7 @@ function OtherProfileContent({ userId }: { userId: string }) {
                             className="relative overflow-hidden rounded-[49.26px] shadow-lg w-[200px] h-[200px] cursor-pointer"
                             onClick={() => id && router.push(`/frame-detail/${id}`)}
                           >
-                            <img src={image} alt={frame.title} className="w-full h-full object-cover" />
+                            <Image src={image} alt={frame.title} fill sizes="200px" className="object-cover" />
                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                               <div className="text-center text-white p-2">
                                 <span className="text-2xl font-bold block">{frame.totalPosts}+</span>
@@ -363,7 +367,13 @@ function OtherProfileContent({ userId }: { userId: string }) {
             ) : (
               <>
                 <div className="relative w-40 h-40 mb-8">
-                  <img src={(badgeDetail?.isLocked || !badgeDetail?.icon?.location) ? LOCK_ICON : badgeDetail?.icon?.location} alt={badgeDetail?.name} className="object-contain" />
+                  <Image
+                    src={(badgeDetail?.isLocked || !badgeDetail?.icon?.location) ? LOCK_ICON : badgeDetail?.icon?.location}
+                    alt={badgeDetail?.name || "Badge"}
+                    fill
+                    sizes="160px"
+                    className="object-contain"
+                  />
                 </div>
                 <h2 className="text-2xl font-black text-gray-900 text-center mb-4">{badgeDetail?.name}</h2>
                 <p className="text-sm font-medium text-gray-500 text-center leading-relaxed">

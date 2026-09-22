@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, LoginFormData } from "@/schemas/Auth";
+import { loginSchema, LoginFormData, passwordSchema } from "@/schemas/Auth";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation } from "@tanstack/react-query";
 import { checkEmailApi, signinApi, signupApi, socialAuthApi } from "@/services/authApi";
@@ -31,10 +32,16 @@ export default function LoginPage() {
     trigger,
     getValues,
     reset,
+    clearErrors,
+    setError,
     formState: { errors, isValid },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: "onChange",
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const watchedEmail = watch("email");
@@ -50,6 +57,7 @@ export default function LoginPage() {
   const handleEmailChange = () => {
     if (step !== "email") {
       setStep("email");
+      clearErrors();
       setConfirmPassword("");
       setConfirmPasswordError("");
     }
@@ -58,6 +66,7 @@ export default function LoginPage() {
   const { mutate: checkEmail, isPending: isCheckingEmail } = useMutation({
     mutationFn: checkEmailApi,
     onSuccess: (data) => {
+      clearErrors("password");
       if (data.success && data.data?.exists) {
         setStep("login");
       } else {
@@ -66,6 +75,7 @@ export default function LoginPage() {
     },
     onError: (error: any) => {
       if (error?.response?.status === 404) {
+        clearErrors("password");
         setStep("signup");
       } else {
         setToastMessage(getApiErrorMessage(error));
@@ -240,13 +250,22 @@ export default function LoginPage() {
 
     if (step === "email") {
       setEmailValue(data.email);
-      checkEmail({ email: data.email, method: 'email' });
+      checkEmail({ email: data.email, method: "email" });
       return;
     }
 
     if (step === "login") {
       mutate({ email: data.email, password: data.password, method: "email" });
     } else if (step === "signup") {
+      const passwordValidation = passwordSchema.safeParse(data.password);
+      if (!passwordValidation.success) {
+        setError("password", {
+          message:
+            passwordValidation.error.issues[0]?.message ||
+            "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
+        });
+        return;
+      }
       if (data.password !== confirmPassword) {
         setConfirmPasswordError("Passwords do not match");
         return;
@@ -257,8 +276,9 @@ export default function LoginPage() {
 
   const handleEditEmail = () => {
     setStep("email");
-    // Clear password field
+    // Clear password field and reset errors
     reset({ email: getValues("email"), password: "" });
+    clearErrors();
     setConfirmPassword("");
     setConfirmPasswordError("");
   };
@@ -434,11 +454,14 @@ export default function LoginPage() {
             </div>
           </div>
           {/* Social Login */}
-          <img
-            src="/images/border-image.png"
-            className="w-48 mx-auto"
-            alt="border-image.png"
-          />
+          <div className="relative w-48 h-2 mx-auto my-3">
+            <Image
+              src="/images/border-image.png"
+              fill
+              className="object-contain"
+              alt="border-image.png"
+            />
+          </div>
           <div className="flex gap-4 justify-center">
             <button
               type="button"

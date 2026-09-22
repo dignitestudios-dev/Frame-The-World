@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const passwordSchema = z
-  .string()
+  .string({ error: "Password is required" })
   .min(8, "Password must be at least 8 characters")
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
   .regex(/[a-z]/, "Password must contain at least one lowercase letter")
@@ -11,26 +11,26 @@ export const passwordSchema = z
 
 // Signup Schema - matches POST /auth/signup { email, method, password }
 export const signupSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  email: z.string({ error: "Email is required" }).min(1, "Email is required").email("Invalid email address"),
   password: passwordSchema,
 });
 
 // Login Schema - matches POST /auth/signin { email, method, password }
 export const loginSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: passwordSchema, // Login only requires the password to be present, strict rules are for creation
+  email: z.string({ error: "Email is required" }).min(1, "Email is required").email("Invalid email address"),
+  password: z.string({ error: "Password is required" }).min(1, "Password is required"), // Login only requires the password to be present, strict rules are for creation
 });
 
 // Forgot Password Schema - matches POST /auth/forgot { email }
 export const forgotPasswordSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  email: z.string({ error: "Email is required" }).min(1, "Email is required").email("Invalid email address"),
 });
 
 // OTP Verification Schema - matches POST /auth/verify-otp and /auth/verify-email { email, otp }
 export const otpSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string({ error: "Email is required" }).email("Invalid email address"),
   otp: z
-    .string()
+    .string({ error: "OTP is required" })
     .length(5, "OTP must be exactly 5 digits")
     .regex(/^\d+$/, "OTP must contain only digits"),
 });
@@ -40,7 +40,7 @@ export const otpSchema = z.object({
 export const createPasswordSchema = z
   .object({
     password: passwordSchema,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    confirmPassword: z.string({ error: "Please confirm your password" }).min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -50,7 +50,7 @@ export const createPasswordSchema = z
 // Profile Schema (Step 1)
 export const profileSchema = z.object({
   fullName: z
-    .string()
+    .string({ error: "Name is required" })
     .min(1, "Name is required")
     .max(100, "Name must be at most 100 characters")
     .regex(/^[a-zA-Z\s]*$/, "Name can only contain letters and spaces")
@@ -58,7 +58,7 @@ export const profileSchema = z.object({
     .transform((val) => val.trim()),
   bio: z.string().max(250, "Bio must be at most 250 characters").optional(),
   companyName: z
-    .string()
+    .string({ error: "Company name is required" })
     .min(1, "Company name is required")
     .max(100, "Company name must be at most 100 characters")
     .regex(/^[^\s].*$/, "Company name cannot start with a whitespace")
@@ -68,7 +68,7 @@ export const profileSchema = z.object({
       street: z.string().max(150).optional(),
       city: z.string().max(50).optional(),
       state: z.string().max(50).optional(),
-      country: z.string().min(1, "Location is required").max(100),
+      country: z.string({ error: "Location is required" }).min(1, "Location is required").max(100),
       postalCode: z.string().max(20).optional(),
     }),
   fullAddress: z.string().optional(),
@@ -99,7 +99,7 @@ export const verifyCredentialsSchema = z.object({
 // Account Information Schema - for editing account details
 export const accountInformationSchema = z.object({
   name: z
-    .string()
+    .string({ error: "Name is required" })
     .min(1, "Name is required")
     .max(100, "Name must be at most 100 characters")
     .regex(/^[a-zA-Z\s]*$/, "Name can only contain letters and spaces")
@@ -107,14 +107,14 @@ export const accountInformationSchema = z.object({
     .transform((val) => val.trim()),
   bio: z.string().max(250, "Bio must be at most 250 characters").optional().or(z.literal("")),
   companyName: z
-    .string()
+    .string({ error: "Company name is required" })
     .min(1, "Company name is required")
     .max(100, "Company name must be at most 100 characters")
     .regex(/^[^\s].*$/, "Company name cannot start with a whitespace")
     .transform((val) => val.trim()),
   street: z.string().optional().or(z.literal("")),
   city: z.string().optional().or(z.literal("")),
-  country: z.string().min(1, "Location is required"),
+  country: z.string({ error: "Location is required" }).min(1, "Location is required"),
   iataNumber: z.string().max(8, "IATA number must be at most 8 digits").regex(/^\d*$/, "IATA number must contain only digits").optional().or(z.literal("")),
   cliaNumber: z.string().max(8, "CLIA number must be at most 8 digits").regex(/^\d*$/, "CLIA number must contain only digits").optional().or(z.literal("")),
   profilePicture: z.any().optional(),

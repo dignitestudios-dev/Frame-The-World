@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, LogIn, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "../ui/button";
 
 interface GuestAccessModalProps {
@@ -40,8 +41,10 @@ const GuestAccessModal = ({ isOpen, onClose }: GuestAccessModalProps) => {
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
-          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-            <img src="/images/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center relative p-3">
+            <div className="relative w-10 h-10">
+              <Image src="/images/logo.png" alt="Logo" fill className="object-contain" />
+            </div>
           </div>
         </div>
 

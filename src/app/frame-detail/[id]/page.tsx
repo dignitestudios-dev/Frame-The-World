@@ -407,11 +407,14 @@ export default function FrameDetailPage() {
                   }`}
               >
                 <div className="flex flex-col items-center gap-3">
-                  <img
-                    src={editCategory === "public" ? "/images/publicwhite.png" : "/images/world.png"}
-                    className="w-[40px] transition-all duration-300"
-                    alt=""
-                  />
+                  <div className="relative w-[40px] h-[40px]">
+                    <Image
+                      src={editCategory === "public" ? "/images/publicwhite.png" : "/images/world.png"}
+                      fill
+                      alt="public icon"
+                      className="object-contain transition-all duration-300"
+                    />
+                  </div>
                   <span className="font-medium">Public Frame</span>
                 </div>
               </button>
@@ -425,11 +428,14 @@ export default function FrameDetailPage() {
                   }`}
               >
                 <div className="flex flex-col items-center gap-3">
-                  <img
-                    src={editCategory === "private" ? "/images/lockicon.png" : "/images/lockiconblue.png"}
-                    className="w-[40px] transition-all duration-300"
-                    alt=""
-                  />
+                  <div className="relative w-[40px] h-[40px]">
+                    <Image
+                      src={editCategory === "private" ? "/images/lockicon.png" : "/images/lockiconblue.png"}
+                      fill
+                      alt="lock icon"
+                      className="object-contain transition-all duration-300"
+                    />
+                  </div>
                   <span className="font-medium">Private Frame</span>
                 </div>
               </button>
@@ -629,17 +635,12 @@ export default function FrameDetailPage() {
                     className={`relative cursor-pointer overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${isTall ? "row-span-2" : "row-span-3"
                       }`}
                   >
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={post.caption || "Frame post"}
-                      className="absolute inset-0 h-full w-full object-cover"
-                      loading="lazy"
-                      onError={(event) => {
-                        const target = event.currentTarget;
-                        if (target.src !== FALLBACK_IMAGE_URL) {
-                          target.src = FALLBACK_IMAGE_URL;
-                        }
-                      }}
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                      className="object-cover"
                     />
 
                     {canManageFrame && (

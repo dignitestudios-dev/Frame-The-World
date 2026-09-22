@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 
 // export const baseURL = "https://api.dev.frametheworld.org";
-export const baseURL = "https://api.frametheworld.org";
+export const baseURL =  process.env.NEXT_PUBLIC_API_URL ||"https://api.frametheworld.org";
 // export const baseURL = "https://b97z49q3-3050.inc1.devtunnels.ms";
 
 const headers = {

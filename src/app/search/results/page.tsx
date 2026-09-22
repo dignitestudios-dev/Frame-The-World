@@ -232,14 +232,21 @@ function SearchResultsContent() {
           onClick={() => router.push(`/frame-detail/${item.id}`)}
           className="relative overflow-hidden cursor-pointer rounded-[49.26px] aspect-square"
         >
-          <img src={item.image} alt={item.title} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+          <Image
+            src={item.image}
+            alt={item.title}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+            className="object-cover"
+          />
 
           <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
-            <img
+            <Image
               src={item.image}
               alt={`${item.title} inner`}
-              className="absolute inset-0 h-full w-full object-cover opacity-90"
-              loading="lazy"
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+              className="object-cover opacity-90"
             />
           </div>
 
@@ -247,11 +254,12 @@ function SearchResultsContent() {
 
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
             <div className="relative w-[70%] h-[70%] rounded-[30px] overflow-hidden border border-white/20">
-              <img
+              <Image
                 src={item.image}
                 alt={`${item.title} preview`}
-                className="absolute inset-0 h-full w-full object-cover opacity-80"
-                loading="lazy"
+                fill
+                sizes="(max-width: 768px) 35vw, 15vw"
+                className="object-cover opacity-80"
               />
             </div>
           </div>

@@ -157,12 +157,14 @@ const CaptionGenerator: React.FC = () => {
                     key={index}
                     className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-sm group border border-gray-200"
                   >
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
                       alt="preview"
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="96px"
+                      className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center z-10">
                       <button
                         onClick={() => handleRemoveImage(index)}
                         className="bg-red-500 text-white p-1.5 rounded-full shadow-lg hover:bg-red-600 transition"

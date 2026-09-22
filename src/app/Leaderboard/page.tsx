@@ -243,9 +243,11 @@ function LeaderboardListPlaceholder({ scoreIcon }: { scoreIcon: string }) {
               />
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-1">
             <span className="text-xs font-bold leading-4 text-black">0</span>
-            <img src={scoreIcon} className="h-4 w-4" alt="" />
+            <div className="relative h-4 w-4 shrink-0">
+              <Image src={scoreIcon} fill alt="score icon" className="object-contain" />
+            </div>
           </div>
         </div>
       ))}
@@ -303,7 +305,9 @@ function LeaderboardListRow({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <span className="text-xs font-bold leading-4 text-black pt-[3px]">{score}</span>
-        <img src={scoreIcon} className="h-4 w-4" alt="" />
+        <div className="relative h-4 w-4 shrink-0">
+          <Image src={scoreIcon} fill alt="score icon" className="object-contain" />
+        </div>
       </div>
     </div>
   );
@@ -389,11 +393,13 @@ function TopUser({
           >
             {name}
           </p>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-1">
             <span className="text-center text-sm font-bold leading-5 text-black">
               {votes}
             </span>
-            <img src={scoreIcon} className="h-6 w-6" alt="" />
+            <div className="relative h-6 w-6 shrink-0">
+              <Image src={scoreIcon} fill alt="score icon" className="object-contain" />
+            </div>
           </div>
         </div>
       ) : (

@@ -154,9 +154,8 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
         onClick={() => { setIsDiscardModalOpen(true) }}
       >
         <div
-          className={`w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300 ${
-            isReuploadOnly ? "max-w-2xl" : "max-w-lg"
-          }`}
+          className={`w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300 ${isReuploadOnly ? "max-w-2xl" : "max-w-lg"
+            }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -176,24 +175,22 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
             {/* Image Preview (Read-only) */}
             <div
               onClick={() => isReuploadOnly && fileInputRef.current?.click()}
-              className={`${
-                !isReuploadOnly
+              className={`${!isReuploadOnly
                   ? "cursor-not-allowed border-transparent"
                   : "cursor-pointer border-dashed border-blue-200 hover:border-blue-400"
-              } relative w-full   rounded-2xl  bg-gray-100 group border-2 transition-all ${
-                isReuploadOnly ? "min-h-[320px] overflow-hidden sm:min-h-[340px]" : "h-64"
-              }`}
+                } relative w-full   rounded-2xl  bg-gray-100 group border-2 transition-all ${isReuploadOnly ? "min-h-[320px] overflow-hidden sm:min-h-[340px]" : "h-64"
+                }`}
             >
               {currentImage ? (
                 <>
-                  <img
+                  <Image
                     src={currentImage}
                     alt="Post"
-                    className={`w-full h-full rounded-xl object-contain transition-transform duration-500 ${
-                      isReuploadOnly
-                        ? "h-full  group-hover:scale-[1.02]"
-                        : " group-hover:scale-105"
-                    }`}
+                    fill
+                    className={`rounded-xl object-contain transition-transform duration-500 ${isReuploadOnly
+                        ? "group-hover:scale-[1.02]"
+                        : "group-hover:scale-105"
+                      }`}
                   />
                   {
                     !isReuploadOnly ? <></> : <>
@@ -336,9 +333,8 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
               <button
                 onClick={handleSubmit}
                 disabled={isPending || (isReuploadOnly && !newImage)}
-                className={`flex-1 w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                  isReuploadOnly ? "py-3.5 text-base sm:text-lg" : "py-3"
-                }`}
+                className={`flex-1 w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isReuploadOnly ? "py-3.5 text-base sm:text-lg" : "py-3"
+                  }`}
               >
                 {isPending ? (
                   <>

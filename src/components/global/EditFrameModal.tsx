@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { X, Loader2, MapPin, Globe, Lock, Camera } from "lucide-react";
 import LocationAutocomplete, { PlaceSelectionDetails } from "./LocationAutocomplete";
 import { getGeocode, getLatLng } from "use-places-autocomplete";
@@ -201,10 +202,11 @@ const EditFrameModal = ({
             >
               {coverPreviewUrl ? (
                 <>
-                  <img
+                  <Image
                     src={coverPreviewUrl}
                     alt="Cover preview"
-                    className="absolute inset-0 w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <Camera className="w-8 h-8 text-white" />

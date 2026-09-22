@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Search, X, SlidersHorizontal, Clock, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -210,17 +211,19 @@ function SearchClientContent() {
         key={post._id}
         type="button"
         onClick={() => toggleSelectedPost(post._id)}
-        className={`relative overflow-hidden rounded-[28px] border transition-all text-left focus:outline-none ${
+        className={`relative h-44 w-full overflow-hidden rounded-[28px] border transition-all text-left focus:outline-none ${
           selected ? "border-blue-500 shadow-xl ring-2 ring-blue-200" : "border-transparent shadow-sm"
         }`}
       >
-        <img
+        <Image
           src={getPostImage(post)}
           alt={post.caption || "Post image"}
-          className="h-44 w-full object-cover"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-black/10" />
-        <div className="absolute right-3 top-3 h-9 w-9 rounded-full border border-white/80 bg-white/90 flex items-center justify-center shadow-sm">
+        <div className="absolute right-3 top-3 h-9 w-9 rounded-full border border-white/80 bg-white/90 flex items-center justify-center shadow-sm z-10">
           <div className={`h-4 w-4 rounded-full ${selected ? "bg-blue-600" : "bg-transparent border border-gray-300"}`} />
         </div>
       </button>

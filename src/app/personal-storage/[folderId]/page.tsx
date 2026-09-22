@@ -559,9 +559,19 @@ export default function PersonalStorageFolderImagesPage() {
                       key={image._id || `${image.filename}-${index}`}
                       className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl group ${isTall ? "row-span-2" : "row-span-3"}`}
                     >
-                      <img
+                      <Image
                         src={imageUrl}
                         alt={image.filename || "Folder image"}
+                        fill
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                        className={`object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105 ${
+                          isSelectMode &&
+                          selectedForDownload.some(
+                            (img) => img._id === image._id,
+                          )
+                            ? "border-4 rounded-[28px] border-blue-500 opacity-80"
+                            : ""
+                        }`}
                         onClick={() => {
                           if (isSelectMode) {
                             setSelectedForDownload((prev) => {
@@ -580,21 +590,6 @@ export default function PersonalStorageFolderImagesPage() {
                               alt: image.filename || "Folder image",
                               downloadName: image.filename || undefined,
                             });
-                          }
-                        }}
-                        className={`absolute inset-0 h-full w-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105 ${
-                          isSelectMode &&
-                          selectedForDownload.some(
-                            (img) => img._id === image._id,
-                          )
-                            ? "border-4 rounded-[28px] border-blue-500 opacity-80"
-                            : ""
-                        }`}
-                        loading="lazy"
-                        onError={(event) => {
-                          const target = event.currentTarget;
-                          if (target.src !== FALLBACK_IMAGE_URL) {
-                            target.src = FALLBACK_IMAGE_URL;
                           }
                         }}
                       />
@@ -685,12 +680,15 @@ export default function PersonalStorageFolderImagesPage() {
             </button>
           </div>
 
-          <img
-            src={previewImage.url}
-            alt={previewImage.alt}
-            className="max-h-[92vh] max-w-[96vw] rounded-2xl object-contain shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          />
+          <div className="relative max-h-[92vh] max-w-[96vw] w-[800px] h-[600px] rounded-2xl overflow-hidden shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <Image
+              src={previewImage.url}
+              alt={previewImage.alt}
+              fill
+              sizes="96vw"
+              className="object-contain"
+            />
+          </div>
         </div>
       ) : null}
 
@@ -767,10 +765,12 @@ export default function PersonalStorageFolderImagesPage() {
                       key={i}
                       className="relative aspect-square rounded-xl overflow-hidden border border-gray-200"
                     >
-                      <img
+                      <Image
                         src={url}
                         alt={`Preview ${i}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="100px"
+                        className="object-cover"
                       />
                       <button
                         type="button"

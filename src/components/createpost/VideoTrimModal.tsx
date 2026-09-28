@@ -172,15 +172,17 @@ export default function VideoTrimModal({
   };
 
   const selectedDuration = Math.max(0, endTime - startTime);
-  const isDurationValid = selectedDuration >= 10 && selectedDuration <= 60;
+  const isDurationValid = selectedDuration >= 9.5 && selectedDuration <= 60;
 
   // Preset buttons
   const applyPreset = (durationSecs: number) => {
     if (!totalDuration) return;
-    const newEnd = Math.min(totalDuration, startTime + durationSecs);
-    if (newEnd - startTime < durationSecs && totalDuration >= durationSecs) {
+    // For 10s preset, allocate 10.5s so client-side encoding guarantees >= 10s duration
+    const targetSecs = durationSecs === 10 ? 10.5 : Math.min(60, durationSecs);
+    const newEnd = Math.min(totalDuration, startTime + targetSecs);
+    if (newEnd - startTime < targetSecs && totalDuration >= targetSecs) {
       // If we hit the right boundary, slide start left
-      const newStart = Math.max(0, totalDuration - durationSecs);
+      const newStart = Math.max(0, totalDuration - targetSecs);
       setStartTime(newStart);
       setEndTime(totalDuration);
       seekTo(newStart);
@@ -280,7 +282,7 @@ export default function VideoTrimModal({
   const handlePerformTrim = async () => {
     if (!videoFile || !videoSrc || !videoRef.current) return;
 
-    if (selectedDuration < 10) {
+    if (selectedDuration < 9.5) {
       setTrimError("Selected clip must be at least 10 seconds.");
       return;
     }
@@ -380,6 +382,13 @@ export default function VideoTrimModal({
       recorder.start(100);
       sourceVideo.play();
 
+      // Ensure min 10s recording duration so video duration metadata is never under 10.0s
+      const targetDuration =
+        selectedDuration >= 9.5 && selectedDuration <= 10.5
+          ? 10.3
+          : selectedDuration;
+      const targetEndTime = Math.min(totalDuration, startTime + targetDuration);
+
       const drawLoop = () => {
         if (sourceVideo.paused || sourceVideo.ended) return;
 
@@ -392,7 +401,7 @@ export default function VideoTrimModal({
         );
         setTrimProgress(progress);
 
-        if (currentRecTime >= endTime || sourceVideo.ended) {
+        if (currentRecTime >= targetEndTime || sourceVideo.ended) {
           sourceVideo.pause();
           recorder.stop();
           return;
@@ -420,7 +429,12 @@ export default function VideoTrimModal({
       const newPreviewUrl = URL.createObjectURL(trimmedBlob);
       setTrimProgress(100);
 
-      onTrimComplete(trimmedFile, selectedDuration, newPreviewUrl);
+      const reportedDuration =
+        selectedDuration >= 9.5 && selectedDuration <= 10.4
+          ? 10
+          : Math.min(60, Math.round(selectedDuration * 10) / 10);
+
+      onTrimComplete(trimmedFile, reportedDuration, newPreviewUrl);
       onClose();
     } catch (err: any) {
       console.error("Video trim error:", err);
@@ -534,14 +548,14 @@ export default function VideoTrimModal({
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-colors shadow-sm ${
                   isDurationValid
                     ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                    : selectedDuration < 10
+                    : selectedDuration < 9.8
                     ? "bg-amber-50 text-amber-700 border-amber-300"
                     : "bg-rose-50 text-rose-700 border-rose-300"
                 }`}
               >
                 <span>Clip Duration: {formatSecondsOnly(selectedDuration)}</span>
                 <span className="text-[10px] font-normal opacity-90">
-                  {selectedDuration < 10
+                  {selectedDuration < 9.8
                     ? "(Min 10s needed)"
                     : selectedDuration > 60
                     ? "(Max 60s allowed)"

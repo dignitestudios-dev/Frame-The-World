@@ -158,13 +158,13 @@ const UploadFormContent: React.FC<UploadFormProps> = () => {
           const duration = videoElement.duration;
           setVideoDuration(duration);
 
-          if (duration > MEDIA_LIMITS.MAX_VIDEO_DURATION_SECONDS) {
+          if (duration > 60.5) {
             setUploadError(
-              `Video duration (${Math.round(duration)}s) exceeds 60 seconds. Please trim your video to between 10 and 60 seconds.`
+              `Video duration (${Math.round(duration)}s) exceeds 60 seconds. Please trim your video to 59 seconds or less.`
             );
             // Automatically open trim modal for user convenience
             setIsTrimModalOpen(true);
-          } else if (duration < MEDIA_LIMITS.MIN_VIDEO_DURATION_SECONDS) {
+          } else if (duration < 9.5) {
             setUploadError(
               `Video duration (${Math.round(duration)}s) is shorter than 10 seconds. Videos must be at least 10 seconds.`
             );
@@ -230,13 +230,19 @@ const UploadFormContent: React.FC<UploadFormProps> = () => {
 
   // Callback when video trimming completes
   const handleTrimComplete = (trimmedFile: File, trimmedDuration: number, previewUrl: string) => {
+    // Normalize duration: if close to 10s (9.5-10.4), set to 10s. Cap max to 59s.
+    const normalizedDuration =
+      trimmedDuration >= 9.5 && trimmedDuration < 10.4
+        ? 10
+        : Math.min(59, Math.round(trimmedDuration * 10) / 10);
+
     setFormData((prev) => ({
       ...prev,
       file: trimmedFile,
       mediaType: "video",
     }));
     setMediaPreview(previewUrl);
-    setVideoDuration(trimmedDuration);
+    setVideoDuration(normalizedDuration);
     setUploadError("");
   };
 
@@ -252,11 +258,10 @@ const UploadFormContent: React.FC<UploadFormProps> = () => {
     if (
       formData.mediaType === "video" &&
       videoDuration !== null &&
-      (videoDuration < MEDIA_LIMITS.MIN_VIDEO_DURATION_SECONDS ||
-        videoDuration > MEDIA_LIMITS.MAX_VIDEO_DURATION_SECONDS)
+      (videoDuration < 9.5 || videoDuration > 60.5)
     ) {
       setUploadError(
-        `Video duration is ${Math.round(videoDuration)}s. Videos must be between 10 and 60 seconds.`
+        `Video duration is ${Math.round(videoDuration)}s. Videos must be between 10 and 59 seconds.`
       );
       setIsTrimModalOpen(true);
       return;

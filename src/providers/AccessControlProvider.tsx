@@ -9,6 +9,8 @@ import { Toast } from "@/components/ui/toast";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentSubscriptionApi } from "@/services/subscriptionApi";
 import { isRestrictedSubscriber } from "@/lib/subscriptionAccess";
+import { usePathname } from "next/navigation";
+import { isAuthRoute } from "@/lib/authRoutes";
 
 interface AccessControlContextType {
   openGuestModal: () => void;
@@ -41,13 +43,16 @@ export const AccessControlProvider = ({ children }: { children: ReactNode }) => 
     type: "success",
   });
 
+  const pathname = usePathname();
+  const isAuthPage = pathname ? isAuthRoute(pathname) : false;
   const { isGuest, user, token, updateUser } = useAuthStore();
 
   const subscriptionQuery = useQuery({
     queryKey: ["current-subscription-access"],
     queryFn: getCurrentSubscriptionApi,
-    enabled: Boolean(token) && !isGuest,
+    enabled: Boolean(token) && !isGuest && !isAuthPage,
     staleTime: 60 * 1000,
+    retry: false,
   });
 
   const subscriptionData = subscriptionQuery.data?.data;

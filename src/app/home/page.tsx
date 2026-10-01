@@ -239,6 +239,16 @@ function FeedLoadingIndicator({ label = "Loading more posts..." }: { label?: str
   );
 }
 
+const getDisplayMediaUrl = (item: any): string => {
+  if (!item?.media) return FALLBACK_IMAGE_URL;
+  if (typeof item.media === "string") return item.media;
+  return (
+    item.media.thumbnail?.location ||
+    item.media.location ||
+    FALLBACK_IMAGE_URL
+  );
+};
+
 const PostGridCard = React.memo(function PostGridCard({
   item,
   index,
@@ -250,13 +260,16 @@ const PostGridCard = React.memo(function PostGridCard({
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const isTall = index % 5 === 0 || index % 7 === 0;
-  const imageUrl = item?.media?.location || "/images/1.jpg";
-  const [imgSrc, setImgSrc] = useState(imageUrl);
+  const isVideo =
+    item?.mediaType === "video" ||
+    (typeof item?.media === "object" && item?.media?.type === "video");
+  const mediaUrl = getDisplayMediaUrl(item);
+  const [imgSrc, setImgSrc] = useState(mediaUrl);
 
   useEffect(() => {
-    setImgSrc(item?.media?.location || "/images/1.jpg");
+    setImgSrc(getDisplayMediaUrl(item));
     setIsLoaded(false);
-  }, [item?.media?.location]);
+  }, [item?.media]);
 
   return (
     <div
@@ -292,6 +305,15 @@ const PostGridCard = React.memo(function PostGridCard({
           }
         }}
       />
+
+      {/* Video Indicator */}
+      {isVideo && (
+        <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+          <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 });
@@ -371,14 +393,14 @@ export default function TravelStoryPage() {
     if (!forYouPages?.pages) return [];
     return forYouPages.pages
       .flatMap((page) => page.data)
-      .filter((post) => isImageUrl(post.media?.location));
+      .filter((post) => Boolean(post.media?.location || (post.media as any)?.thumbnail?.location || post.media));
   }, [forYouPages]);
 
   const featuredPosts = useMemo(() => {
     if (!featuredPages?.pages) return [];
     return featuredPages.pages
       .flatMap((page) => page.data)
-      .filter((post) => isImageUrl(post.media?.location));
+      .filter((post) => Boolean(post.media?.location || (post.media as any)?.thumbnail?.location || post.media));
   }, [featuredPages]);
 
   const frameItems = useMemo(() => {

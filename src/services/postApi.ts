@@ -100,13 +100,32 @@ export type LeaderboardResponse = {
 
 // ─── API Functions ────────────────────────────────────────────────────────────
 
-// POST /posts - FormData { image, caption, categories[0], categories[1], ... }
-export const createPostApi = async (formData: FormData) => {
-  const res = await API.post("/posts", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+export interface CreatePostPayload {
+  caption?: string | null;
+  categories: string[];
+  media: string; // fileId
+  country?: string;
+  state?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+  isContentReleaseAccepted?: boolean;
+}
+
+export interface UpdatePostPayload {
+  caption?: string | null;
+  categories?: string[];
+  media?: string; // fileId
+  country?: string;
+  state?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+  isContentReleaseAccepted?: boolean;
+  status?: string;
+}
+
+// POST /posts - JSON { caption, categories, media, country, state, latitude, longitude, isContentReleaseAccepted }
+export const createPostApi = async (payload: CreatePostPayload | any) => {
+  const res = await API.post("/posts", payload);
   return res.data;
 };
 
@@ -134,13 +153,9 @@ export const getOwnPostsApi = async (params?: { page?: number; limit?: number })
   return res.data;
 };
 
-// PATCH /posts/:postId
-export const updatePostApi = async (postId: string, formData: FormData) => {
-  const res = await API.patch(`/posts/${postId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+// PATCH /posts/:postId - JSON { caption?, categories?, media?, country?, state?, ... }
+export const updatePostApi = async (postId: string, payload: UpdatePostPayload | any) => {
+  const res = await API.patch(`/posts/${postId}`, payload);
   return res.data;
 };
 

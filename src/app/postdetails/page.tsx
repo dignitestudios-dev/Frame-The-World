@@ -201,21 +201,26 @@ function PostDetailsContent() {
 
   const { mutate: updateRejectedImage, isPending: isUpdatingImage } =
     useMutation({
-      mutationFn: ({
+      mutationFn: async ({
         postId,
-        formData,
+        file,
       }: {
         postId: string;
-        formData: FormData;
-      }) => updatePostApi(postId, formData),
+        file: File;
+      }) => {
+        const { uploadMediaFile } = await import("@/services/fileApi");
+        const uploadedFile = await uploadMediaFile(file);
+        return updatePostApi(postId, { media: uploadedFile._id });
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });
         setAnalyzingModalOpen(false);
-        showToast("Image updated successfully!");
+        showToast("Media updated successfully!");
       },
-      onError: (err) => {
-        console.error("Failed to update image", err);
-        showToast("Failed to update image", "error");
+      onError: (err: any) => {
+        console.error("Failed to update media", err);
+        const msg = err?.file?.rejectionReason || err?.response?.data?.message || err?.message || "Failed to update media";
+        showToast(msg, "error");
       },
     });
 
@@ -393,16 +398,16 @@ function PostDetailsContent() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && currentPostId) {
-      if (file.size > MAX_REUPLOAD_IMAGE_FILE_SIZE_BYTES) {
-        showToast("Image must be 15MB or smaller.", "error");
-        e.target.value = "";
-        return;
-      }
-      const formData = new FormData();
-      formData.append("media", file);
-      updateRejectedImage({ postId: currentPostId, formData });
+      updateRejectedImage({ postId: currentPostId, file });
     }
   };
+
+  const isVideoPost =
+    postToDisplay?.mediaType === "video" ||
+    postToDisplay?.media?.type === "video" ||
+    imageUrl.endsWith(".mp4") ||
+    imageUrl.endsWith(".mov");
+  const posterUrl = postToDisplay?.media?.thumbnail?.location || imageUrl;
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: (postId: string) => deletePostApi(postId),
@@ -581,16 +586,26 @@ function PostDetailsContent() {
 
       <div className="grid grid-cols-1 mt-8 p-4 pt-0 lg:grid-cols-[420px_1fr] gap-5 max-w-[1500px] mx-auto">
         <div className="flex flex-col gap-4">
-          <div className="relative h-[540px] rounded-[32px] overflow-hidden shadow-xl">
-            <Image
-              src={imageUrl}
-              alt={currentPost?.caption || "Post image"}
-              fill
-              className="object-cover"
-            />
+          <div className="relative h-[540px] rounded-[32px] overflow-hidden shadow-xl bg-black">
+            {isVideoPost ? (
+              <video
+                src={imageUrl}
+                poster={posterUrl}
+                controls
+                playsInline
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={currentPost?.caption || "Post image"}
+                fill
+                className="object-cover"
+              />
+            )}
             <button
               onClick={() => router.back()}
-              className="absolute top-5 left-5 h-11 w-11 rounded-md bg-white/30 flex items-center justify-center shadow"
+              className="absolute top-5 left-5 h-11 w-11 rounded-md bg-white/30 flex items-center justify-center shadow z-10"
             >
               <ArrowLeft className="h-5 w-5 text-gray-700" />
             </button>

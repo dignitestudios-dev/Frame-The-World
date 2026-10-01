@@ -20,6 +20,7 @@ type ImageResultItem = {
   id: string;
   title: string;
   image: string;
+  isVideo?: boolean;
 };
 
 type FrameResultItem = {
@@ -173,11 +174,22 @@ function SearchResultsContent() {
     if (!postsData?.pages) return [];
     return postsData.pages.flatMap((page) => {
       if (!Array.isArray(page.data)) return [];
-      return page.data.map((post: any) => ({
-        id: post._id,
-        title: "Image",
-        image: isImageUrl(post.media?.location) ? post.media?.location : FALLBACK_IMAGE_URL,
-      })).filter((item: any) => !!item.id);
+      return page.data.map((post: any) => {
+        const isVideo =
+          post.mediaType === "video" ||
+          (typeof post.media === "object" && post.media?.type === "video");
+        const mediaLoc =
+          post.media?.thumbnail?.location ||
+          post.media?.location ||
+          (typeof post.media === "string" ? post.media : null);
+
+        return {
+          id: post._id,
+          title: post.caption || "Post",
+          image: mediaLoc || FALLBACK_IMAGE_URL,
+          isVideo,
+        };
+      }).filter((item: any) => !!item.id);
     });
   }, [postsData]);
 
@@ -218,6 +230,14 @@ function SearchResultsContent() {
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             />
             <div className="absolute inset-0 bg-black/10" />
+
+            {item.isVideo && (
+              <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+                <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            )}
           </div>
         );
       })}

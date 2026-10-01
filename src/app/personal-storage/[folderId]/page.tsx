@@ -362,16 +362,22 @@ export default function PersonalStorageFolderImagesPage() {
       "image/jpeg",
       "image/jpg",
       "image/webp",
-      "image/gif",
-      "image/bmp",
-      "image/svg+xml",
+      "image/heic",
     ];
 
     const newFiles = Array.from(files);
 
     // Filter valid files
     const validFiles = newFiles.filter((file) => {
-      if (!allowedMimeTypes.includes(file.type)) return false;
+      const mime = file.type || "";
+      const name = file.name.toLowerCase();
+      const isValidExt =
+        name.endsWith(".png") ||
+        name.endsWith(".jpg") ||
+        name.endsWith(".jpeg") ||
+        name.endsWith(".webp") ||
+        name.endsWith(".heic");
+      if (!allowedMimeTypes.includes(mime) && !isValidExt) return false;
       if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) return false;
       return true;
     });
@@ -726,7 +732,7 @@ export default function PersonalStorageFolderImagesPage() {
               <label className="mb-3 relative flex h-36 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 text-center text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50 transition-colors">
                 <input
                   type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp,image/svg+xml"
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,.png,.jpg,.jpeg,.webp,.heic"
                   className="hidden"
                   multiple={true}
                   onChange={(event) => handleSelectFiles(event.target.files)}
@@ -746,7 +752,7 @@ export default function PersonalStorageFolderImagesPage() {
                       Add more
                       <input
                         type="file"
-                        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp,image/svg+xml"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,.png,.jpg,.jpeg,.webp,.heic"
                         className="hidden"
                         multiple={true}
                         onChange={(event) =>

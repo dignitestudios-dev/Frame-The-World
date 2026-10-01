@@ -93,7 +93,7 @@ export default function FrameDetailPage() {
     | undefined;
 
   const framePosts = useMemo(() => {
-    return (framePostsData?.data ?? []).filter((post) => isImageUrl(post.media?.location));
+    return (framePostsData?.data ?? []).filter((post) => Boolean(post.media?.location || (post.media as any)?.thumbnail?.location));
   }, [framePostsData?.data]);
 
   const locationTitle = useMemo(() => {
@@ -624,9 +624,15 @@ export default function FrameDetailPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">
-              {framePosts.map((post, i) => {
+              {framePosts.map((post: any, i: number) => {
                 const isTall = i % 5 === 0 || i % 7 === 0;
-                const imageUrl = post.media?.location ?? FALLBACK_IMAGE_URL;
+                const isVideo =
+                  post.mediaType === "video" ||
+                  (typeof post.media === "object" && post.media?.type === "video");
+                const imageUrl =
+                  post.media?.thumbnail?.location ||
+                  post.media?.location ||
+                  FALLBACK_IMAGE_URL;
 
                 return (
                   <div
@@ -643,8 +649,16 @@ export default function FrameDetailPage() {
                       className="object-cover"
                     />
 
+                    {isVideo && (
+                      <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+                        <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    )}
+
                     {canManageFrame && (
-                      <div className="absolute top-3 right-3 flex gap-2">
+                      <div className="absolute top-3 right-3 flex gap-2 z-10">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

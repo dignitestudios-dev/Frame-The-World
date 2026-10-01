@@ -251,19 +251,18 @@ export const getFolderImagesApi = async (
   return res.data;
 };
 
-// POST /folders/:folderId/upload - FormData { image }
-export const uploadImageToFolderApi = async (folderId: string, files: File[]) => {
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append("images", file);
-  });
-
-  const res = await API.post(`/folders/${folderId}/upload`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+// POST /folders/:folderId/upload - JSON { fileIds: string[] }
+export const attachFilesToFolderApi = async (folderId: string, fileIds: string[]) => {
+  const res = await API.post(`/folders/${folderId}/upload`, { fileIds });
   return res.data;
+};
+
+// End-to-end: Upload image files to S3 via pre-signed URLs then attach to folder
+export const uploadImageToFolderApi = async (folderId: string, files: File[]) => {
+  const { uploadMultipleImagesToS3 } = await import("@/services/fileApi");
+  const finalizedFiles = await uploadMultipleImagesToS3(files);
+  const fileIds = finalizedFiles.map((f) => f._id);
+  return attachFilesToFolderApi(folderId, fileIds);
 };
 
 // PATCH /folders/:folderId - { name }

@@ -7,7 +7,13 @@ import { Loader2 } from "lucide-react";
 interface Post {
   id?: string;
   _id?: string;
-  media?: { location: string } | string;
+  media?: {
+    location?: string | null;
+    type?: string | null;
+    duration?: number | null;
+    thumbnail?: { location?: string | null } | null;
+  } | string;
+  mediaType?: "image" | "video" | null;
   caption?: string;
   categories?: any[];
   status?: string;
@@ -49,10 +55,17 @@ const statusStyles: Record<string, { bg: string; dot: string; text: string }> = 
 };
 
 const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
-  const imageUrl =
-    typeof post.media === "string"
-      ? post.media
-      : post.media?.location || "/images/placeholder.jpg";
+  const isVideo =
+    post.mediaType === "video" ||
+    (typeof post.media === "object" && post.media?.type === "video");
+
+  const thumbnailLocation =
+    typeof post.media === "object" ? post.media?.thumbnail?.location : null;
+  const directLocation =
+    typeof post.media === "string" ? post.media : post.media?.location;
+
+  const displayUrl =
+    thumbnailLocation || directLocation || "/images/placeholder.jpg";
 
   const statusKey = post.status?.toLowerCase() ?? "";
   const style = statusStyles[statusKey] ?? {
@@ -67,12 +80,21 @@ const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
         ${isTall ? "row-span-3" : "row-span-2"}`}
     >
       <Image
-        src={imageUrl}
+        src={displayUrl}
         alt={post.caption || "Post"}
         fill
         className="object-cover cursor-pointer"
         onClick={onClick}
       />
+
+      {/* Video Indicator */}
+      {isVideo && (
+        <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+          <svg className="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      )}
 
       {/* Status Badge */}
       {post.status && post.status != "completed" && (

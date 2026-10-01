@@ -1,5 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { useAuthStore } from "@/store/authStore";
 
 
 // export const baseURL = "https://api.staging.frametheworld.org";
@@ -54,8 +55,12 @@ API.interceptors.response.use(
       const isAuthRequest = requestUrl.startsWith("/auth/");
       if (!isAuthRequest) {
         Cookies.remove("token");
+        useAuthStore.getState().logout();
         if (typeof window !== "undefined") {
-          window.location.href = "/login";
+          const pathname = window.location.pathname;
+          if (pathname !== "/login" && !pathname.startsWith("/login")) {
+            window.location.href = "/login";
+          }
         }
       }
     }

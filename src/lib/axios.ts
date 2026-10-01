@@ -55,7 +55,7 @@ API.interceptors.response.use(
       if (!isAuthRequest) {
         Cookies.remove("token");
         if (typeof window !== "undefined") {
-          // window.location.href = "/login";
+          window.location.href = "/login";
         }
       }
     }

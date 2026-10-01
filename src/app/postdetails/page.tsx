@@ -407,7 +407,7 @@ function PostDetailsContent() {
     postToDisplay?.media?.type === "video" ||
     imageUrl.endsWith(".mp4") ||
     imageUrl.endsWith(".mov");
-  const posterUrl = postToDisplay?.media?.thumbnail?.location || imageUrl;
+  const posterUrl = postToDisplay?.media?.thumbnail?.location || undefined;
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: (postId: string) => deletePostApi(postId),
@@ -733,14 +733,31 @@ function PostDetailsContent() {
               relatedPosts.map((post: any, i: number) => {
                 const isTall = i % 3 === 0 || i % 2 === 0;
                 const relatedPostId = post._id || post.id;
-                const relatedImageUrl = post.media?.location || FALLBACK_POST_IMAGE;
+                const isVideo =
+                  post.mediaType === "video" ||
+                  (typeof post.media === "object" && post.media?.type === "video") ||
+                  (typeof post.media?.location === "string" &&
+                    (post.media.location.endsWith(".mp4") || post.media.location.endsWith(".mov"))) ||
+                  (typeof post.media === "string" &&
+                    (post.media.endsWith(".mp4") || post.media.endsWith(".mov")));
+
+                const thumbnailLocation =
+                  typeof post.media === "object" ? post.media?.thumbnail?.location : null;
+                const directLocation =
+                  typeof post.media === "string" ? post.media : post.media?.location;
+
+                const relatedImageUrl =
+                  thumbnailLocation ||
+                  (!isVideo && directLocation ? directLocation : null) ||
+                  FALLBACK_POST_IMAGE;
 
                 return (
                   <div
                     key={relatedPostId || i}
                     onClick={() => router.push(`/postdetails?id=${relatedPostId}`)}
-                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition cursor-pointer group ${isTall ? "row-span-3" : "row-span-2"
-                      }`}
+                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition cursor-pointer group ${
+                      isTall ? "row-span-3" : "row-span-2"
+                    }`}
                   >
                     <Image
                       src={relatedImageUrl}
@@ -748,6 +765,13 @@ function PostDetailsContent() {
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
+                    {isVideo && (
+                      <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+                        <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <p className="text-white text-xs font-medium truncate w-full">
                         {post.caption}

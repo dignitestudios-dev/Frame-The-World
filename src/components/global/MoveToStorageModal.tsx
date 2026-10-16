@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFoldersApi, movePostToFolderApi, FolderItem } from "@/services/frameApi";
 import { Loader2, X, Check } from "lucide-react";
@@ -111,14 +112,23 @@ const MoveToStorageModal: React.FC<MoveToStorageModalProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <svg className="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
-                        </svg>
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-blue-100 shrink-0 flex items-center justify-center">
+                        {folder.cover?.location ? (
+                          <Image
+                            src={folder.cover.location}
+                            alt={folder.name}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <svg className="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                          </svg>
+                        )}
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-gray-900 text-sm">{folder.name}</p>
-                        <p className="text-[11px] text-gray-400">{folder.noOfImages || 0} images</p>
+                        <p className="font-bold text-gray-900 text-sm line-clamp-1">{folder.name}</p>
+                        <p className="text-[11px] text-gray-400">{folder.noOfImages ?? 0} {Number(folder.noOfImages) === 1 ? 'image' : 'images'}</p>
                       </div>
                     </div>
                     {isSelected && <Check className="w-5 h-5 text-blue-600" />}

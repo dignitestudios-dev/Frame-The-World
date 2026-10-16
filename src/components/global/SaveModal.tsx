@@ -128,33 +128,50 @@ const SaveModal = ({
     </div>
   );
 
-  const ListItem = ({ title, img, locked, onClick, isPending, id, currentSelectedId }: any) => (
-    <button
-      onClick={onClick}
-      disabled={isPending}
-      className={`flex items-center justify-between w-full px-6 py-4 hover:bg-gray-50 transition-colors ${isPending ? "opacity-70 cursor-not-allowed" : ""}`}
-    >
-      <div className="flex items-center gap-4">
-        <div className="relative w-12 h-12">
-          <div className="absolute inset-0 bg-gray-200 rounded-lg translate-x-1 -translate-y-1 rotate-2" />
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-white shadow-sm bg-gray-100">
-            {img ? (
-              <Image src={img} alt={title} fill className="object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <Hash className="w-5 h-5" />
-              </div>
-            )}
+  const ListItem = ({ title, subtitle, img, locked, onClick, isPending, id, currentSelectedId }: any) => {
+    const [imgSrc, setImgSrc] = useState(img);
+
+    useEffect(() => {
+      setImgSrc(img);
+    }, [img]);
+
+    return (
+      <button
+        onClick={onClick}
+        disabled={isPending}
+        className={`flex items-center justify-between w-full px-6 py-4 hover:bg-gray-50 transition-colors ${isPending ? "opacity-70 cursor-not-allowed" : ""}`}
+      >
+        <div className="flex items-center gap-4">
+          <div className="relative w-12 h-12 shrink-0">
+            <div className="absolute inset-0 bg-gray-200 rounded-lg translate-x-1 -translate-y-1 rotate-2" />
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-white shadow-sm bg-gray-100">
+              {imgSrc ? (
+                <Image
+                  src={imgSrc}
+                  alt={title}
+                  fill
+                  className="object-cover"
+                  onError={() => setImgSrc("/images/folder.png")}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <Hash className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="text-left">
+            <span className="text-[15px] font-bold text-gray-800 line-clamp-1">{title}</span>
+            {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
           </div>
         </div>
-        <span className="text-[15px] font-bold text-gray-800 line-clamp-1 text-left">{title}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        {isPending && currentSelectedId === id && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
-        {locked && <span className="text-xl">🔒</span>}
-      </div>
-    </button>
-  );
+        <div className="flex items-center gap-2">
+          {isPending && currentSelectedId === id && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
+          {locked && <span className="text-xl">🔒</span>}
+        </div>
+      </button>
+    );
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
@@ -268,7 +285,8 @@ const SaveModal = ({
                     key={f._id || f.id} 
                     id={f._id || f.id}
                     title={f.name} 
-                    img="/images/folder.png"
+                    img={f.cover?.location || "/images/folder.png"}
+                    subtitle={`${f.noOfImages ?? 0} items`}
                     isPending={isMoving}
                     currentSelectedId={selectedId}
                     onClick={() => !isMoving && moveToStorage(f)} 

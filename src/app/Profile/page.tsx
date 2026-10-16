@@ -22,6 +22,48 @@ const PERSONAL_FOLDER_LIMIT = 12;
 import AnalyzingModal from "@/components/createpost/AnalyzingModalProps";
 import EditPostModal from "@/components/profile/EditPostModal";
 
+function PersonalFolderCard({ folder, router }: { folder: any; router: any }) {
+  const folderId = folder.id || folder._id;
+  const folderName = folder.name || "Untitled Folder";
+  const noOfImagesCount = Number(folder.noOfImages ?? 0);
+  const initialUrl = folder.cover?.location || "/images/folder.png";
+  const [imgSrc, setImgSrc] = useState(initialUrl);
+
+  useEffect(() => {
+    setImgSrc(folder.cover?.location || "/images/folder.png");
+  }, [folder.cover?.location]);
+
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className="relative overflow-hidden rounded-[24px] w-[200px] h-[200px] cursor-pointer group shadow-sm hover:shadow-md transition-all bg-gray-100"
+        onClick={() => {
+          if (!folderId) return;
+          const encodedFolderName = encodeURIComponent(folderName);
+          router.push(`/personal-storage/${folderId}?name=${encodedFolderName}`);
+        }}
+      >
+        <Image
+          src={imgSrc}
+          alt={folderName}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={() => setImgSrc("/images/folder.png")}
+        />
+        <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white">
+          {noOfImagesCount} {noOfImagesCount === 1 ? "item" : "items"}
+        </div>
+      </div>
+      <p className="mt-3 text-sm font-semibold text-black text-center line-clamp-1 max-w-[190px]">
+        {folderName}
+      </p>
+      <p className="mt-0.5 text-xs text-gray-500 text-center">
+        {noOfImagesCount} {noOfImagesCount === 1 ? "item" : "items"}
+      </p>
+    </div>
+  );
+}
+
 function ProfileContent() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as "posts" | "frames" | "space") || "posts";
@@ -632,39 +674,13 @@ function ProfileContent() {
                       </div>
                     </div>
                   ) : (
-                    personalFolders.map((folder: any, i: number) => {
-                      const folderId = folder.id || folder._id;
-                      const folderName = folder.name || "Untitled Folder";
-                      const noOfImagesCount = Number(folder.noOfImages ?? 0);
-                      const imageUrl = "/images/folder.png";
-
-                      return (
-                        <div key={folderId || i} className="flex flex-col items-center">
-                          <div
-                            className="relative overflow-hidden rounded-[24px] w-[200px] h-[200px] cursor-pointer"
-                            onClick={() => {
-                              if (!folderId) return;
-                              const encodedFolderName = encodeURIComponent(folderName);
-                              router.push(`/personal-storage/${folderId}?name=${encodedFolderName}`);
-                            }}
-                          >
-                            <Image
-                              src={imageUrl}
-                              alt={folderName}
-                              fill
-                              className="object-cover"
-                            />
-
-                          </div>
-                          <p className="mt-3 text-sm font-semibold text-black text-center line-clamp-1">
-                            {folderName}
-                          </p>
-                          <p className="mt-1 text-xs text-gray-500 text-center">
-                            {noOfImagesCount} items
-                          </p>
-                        </div>
-                      );
-                    })
+                    personalFolders.map((folder: any, i: number) => (
+                      <PersonalFolderCard
+                        key={folder.id || folder._id || i}
+                        folder={folder}
+                        router={router}
+                      />
+                    ))
                   )}
                 </div>
               </div>

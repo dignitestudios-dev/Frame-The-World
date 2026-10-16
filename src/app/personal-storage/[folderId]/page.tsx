@@ -6,6 +6,8 @@ import {
   deleteFolderImageApi,
   deleteFolderApi,
   getFolderImagesApi,
+  getFolderByIdApi,
+  updateFolderApi,
   renameFolderApi,
   uploadImageToFolderApi,
 } from "@/services/frameApi";
@@ -22,12 +24,14 @@ import {
   EllipsisVertical,
   Trash2,
   Download,
+  ImagePlus,
 } from "lucide-react";
 import { useAccessControl } from "@/providers/AccessControlProvider";
 
 const INITIAL_PAGE = 1;
 const PAGE_LIMIT = 30;
 const MAX_UPLOAD_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
+const MAX_COVER_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB per backend specs
 const FALLBACK_IMAGE_URL =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
 
@@ -62,6 +66,11 @@ export default function PersonalStorageFolderImagesPage() {
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [renameFolderName, setRenameFolderName] = useState(initialFolderName);
   const [renameError, setRenameError] = useState("");
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
+  const [editCoverError, setEditCoverError] = useState("");
+  const editCoverInputRef = useRef<HTMLInputElement>(null);
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<{ file: File; url: string }[]>(
     [],
@@ -82,6 +91,31 @@ export default function PersonalStorageFolderImagesPage() {
     message: "",
     type: "success",
   });
+
+  // Fetch folder details (with cover & noOfImages)
+  const { data: folderDetailsData } = useQuery({
+    queryKey: ["personal-folder", folderId],
+    queryFn: () => getFolderByIdApi(folderId!),
+    enabled: Boolean(folderId),
+  });
+
+  const currentFolder = folderDetailsData?.data;
+
+  useEffect(() => {
+    if (currentFolder?.name) {
+      setFolderName(currentFolder.name);
+    }
+  }, [currentFolder?.name]);
+
+  useEffect(() => {
+    if (editCoverFile) {
+      const url = URL.createObjectURL(editCoverFile);
+      setEditCoverPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setEditCoverPreview(currentFolder?.cover?.location || null);
+    }
+  }, [editCoverFile, currentFolder?.cover?.location]);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["folder-images", folderId, INITIAL_PAGE, PAGE_LIMIT],
@@ -113,6 +147,10 @@ export default function PersonalStorageFolderImagesPage() {
       queryClient.invalidateQueries({
         queryKey: ["folder-images", folderId, INITIAL_PAGE, PAGE_LIMIT],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["personal-folder", folderId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["personalFolders"] });
     },
     onError: (uploadError) => {
       setToast({
@@ -123,32 +161,47 @@ export default function PersonalStorageFolderImagesPage() {
     },
   });
 
-  const renameFolderMutation = useMutation({
+  const updateFolderMutation = useMutation({
     mutationFn: async () => {
       if (!folderId) throw new Error("Folder id not found");
       const trimmedName = renameFolderName.trim();
-      if (!trimmedName) throw new Error("Folder name is required");
-      return renameFolderApi(folderId, { name: trimmedName });
+      if (!trimmedName && !editCoverFile) {
+        throw new Error("Folder name or cover image is required");
+      }
+
+      if (editCoverFile) {
+        const formData = new FormData();
+        if (trimmedName) formData.append("name", trimmedName);
+        formData.append("cover", editCoverFile);
+        return updateFolderApi(folderId, formData);
+      } else {
+        return updateFolderApi(folderId, { name: trimmedName });
+      }
     },
     onSuccess: () => {
       const updatedFolderName = renameFolderName.trim();
-      setFolderName(updatedFolderName);
+      if (updatedFolderName) setFolderName(updatedFolderName);
       setIsRenameModalOpen(false);
       setRenameError("");
+      setEditCoverError("");
+      setEditCoverFile(null);
       setToast({
         open: true,
-        message: "Folder renamed successfully",
+        message: "Folder updated successfully",
         type: "success",
       });
+      queryClient.invalidateQueries({ queryKey: ["personal-folder", folderId] });
       queryClient.invalidateQueries({ queryKey: ["personalFolders"] });
-      router.replace(
-        `/personal-storage/${folderId}?name=${encodeURIComponent(updatedFolderName)}`,
-      );
+      if (updatedFolderName) {
+        router.replace(
+          `/personal-storage/${folderId}?name=${encodeURIComponent(updatedFolderName)}`,
+        );
+      }
     },
-    onError: (renameErrorResponse) => {
+    onError: (updateErrorResponse) => {
       setToast({
         open: true,
-        message: getApiErrorMessage(renameErrorResponse),
+        message: getApiErrorMessage(updateErrorResponse),
         type: "error",
       });
     },
@@ -187,6 +240,9 @@ export default function PersonalStorageFolderImagesPage() {
       });
       queryClient.invalidateQueries({
         queryKey: ["folder-images", folderId, INITIAL_PAGE, PAGE_LIMIT],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["personal-folder", folderId],
       });
       queryClient.invalidateQueries({ queryKey: ["personalFolders"] });
     },
@@ -414,7 +470,12 @@ export default function PersonalStorageFolderImagesPage() {
         onClose={() => setToast((previous) => ({ ...previous, open: false }))}
       />
       <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
-        <Header title={folderName} subtitle={`${folderImages.length} images`} />
+        <Header
+          title={folderName}
+          subtitle={`${currentFolder?.noOfImages ?? folderImages.length} ${
+            (currentFolder?.noOfImages ?? folderImages.length) === 1 ? "image" : "images"
+          }`}
+        />
 
         <div className="px-6 py-4">
           <div className="mb-6 flex items-center justify-between">
@@ -504,13 +565,16 @@ export default function PersonalStorageFolderImagesPage() {
                       type="button"
                       onClick={() => {
                         setIsActionsOpen(false);
-                        setRenameFolderName(folderName);
+                        setRenameFolderName(currentFolder?.name || folderName);
+                        setEditCoverFile(null);
+                        setEditCoverPreview(currentFolder?.cover?.location || null);
                         setRenameError("");
+                        setEditCoverError("");
                         setIsRenameModalOpen(true);
                       }}
                       className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100"
                     >
-                      Rename Folder
+                      Edit Folder
                     </button>
                   </div>
                 ) : null}
@@ -937,23 +1001,30 @@ export default function PersonalStorageFolderImagesPage() {
         <div
           className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4"
           onClick={() => {
-            if (renameFolderMutation.isPending) return;
+            if (updateFolderMutation.isPending) return;
             setIsRenameModalOpen(false);
             setRenameError("");
+            setEditCoverError("");
+            setEditCoverFile(null);
           }}
         >
           <div
             className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">Rename folder</h2>
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Edit Folder</h2>
+                <p className="text-xs text-gray-500">Update folder name or cover image</p>
+              </div>
               <button
                 type="button"
                 onClick={() => {
-                  if (renameFolderMutation.isPending) return;
+                  if (updateFolderMutation.isPending) return;
                   setIsRenameModalOpen(false);
                   setRenameError("");
+                  setEditCoverError("");
+                  setEditCoverFile(null);
                 }}
                 className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
               >
@@ -961,44 +1032,132 @@ export default function PersonalStorageFolderImagesPage() {
               </button>
             </div>
 
-            <input
-              type="text"
-              maxLength={80}
-              value={renameFolderName}
-              onChange={(event) => {
-                setRenameFolderName(event.target.value);
-                setRenameError("");
-              }}
-              placeholder="Enter folder name"
-              className="mb-3 h-12 w-full rounded-xl border border-gray-200 px-4 text-sm font-medium text-gray-800 outline-none focus:border-blue-400"
-            />
+            {/* Cover Image */}
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Cover Image
+              </label>
+              <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center group">
+                {editCoverPreview ? (
+                  <>
+                    <Image
+                      src={editCoverPreview}
+                      alt="Cover Preview"
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => editCoverInputRef.current?.click()}
+                        className="px-3.5 py-1.5 bg-white text-gray-800 rounded-full text-xs font-semibold shadow hover:bg-gray-100 transition"
+                      >
+                        Change Cover
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => editCoverInputRef.current?.click()}
+                    className="flex flex-col items-center justify-center text-gray-400 hover:text-blue-500 transition"
+                  >
+                    <ImagePlus className="w-8 h-8 mb-1" />
+                    <span className="text-xs font-medium">Upload Cover (max 50MB)</span>
+                  </button>
+                )}
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <input
+                  ref={editCoverInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (!file.type.startsWith("image/")) {
+                        setEditCoverError("Cover must be an image file.");
+                        return;
+                      }
+                      if (file.size > MAX_COVER_FILE_SIZE_BYTES) {
+                        setEditCoverError("Cover image must be 50MB or smaller.");
+                        return;
+                      }
+                      setEditCoverError("");
+                      setEditCoverFile(file);
+                    }
+                    e.target.value = "";
+                  }}
+                />
+                {editCoverError && (
+                  <p className="text-xs text-red-500 font-medium">{editCoverError}</p>
+                )}
+                {editCoverFile && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditCoverFile(null);
+                      setEditCoverPreview(currentFolder?.cover?.location || null);
+                    }}
+                    className="text-xs text-red-500 hover:underline ml-auto"
+                  >
+                    Reset Cover
+                  </button>
+                )}
+              </div>
+            </div>
 
-            {renameError ? (
-              <p className="mb-2 text-xs font-semibold text-red-500">
-                {renameError}
-              </p>
-            ) : null}
+            {/* Folder Name */}
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Folder Name
+              </label>
+              <input
+                type="text"
+                maxLength={100}
+                value={renameFolderName}
+                onChange={(event) => {
+                  setRenameFolderName(event.target.value);
+                  setRenameError("");
+                }}
+                placeholder="Enter folder name"
+                className="h-11 w-full rounded-xl border border-gray-200 px-4 text-sm font-medium text-gray-800 outline-none focus:border-blue-400"
+              />
+              <div className="flex justify-between items-center mt-1">
+                {renameError ? (
+                  <p className="text-xs font-semibold text-red-500">{renameError}</p>
+                ) : <span />}
+                <span className="text-[11px] text-gray-400 ml-auto">
+                  {renameFolderName.length}/100
+                </span>
+              </div>
+            </div>
 
             <button
               type="button"
-              disabled={renameFolderMutation.isPending}
+              disabled={
+                updateFolderMutation.isPending ||
+                (!renameFolderName.trim() && !editCoverFile) ||
+                (renameFolderName.trim() === (currentFolder?.name || folderName) && !editCoverFile)
+              }
               onClick={() => {
                 const trimmedName = renameFolderName.trim();
-                if (!trimmedName) {
+                if (!trimmedName && !editCoverFile) {
                   setRenameError("Folder name is required.");
                   return;
                 }
-                renameFolderMutation.mutate();
+                updateFolderMutation.mutate();
               }}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-blue-500 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-blue-500 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300 transition-colors"
             >
-              {renameFolderMutation.isPending ? (
+              {updateFolderMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : (
-                "Save Name"
+                "Save Changes"
               )}
             </button>
           </div>

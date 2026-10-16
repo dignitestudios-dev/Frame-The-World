@@ -67,6 +67,14 @@ export type FramePostsResponse = {
   };
 };
 
+export type FolderCover = {
+  _id?: string;
+  fileName?: string;
+  location?: string | null;
+  type?: string | null;
+  status?: string;
+};
+
 export type FolderItem = {
   _id: string;
   name: string;
@@ -74,9 +82,7 @@ export type FolderItem = {
   noOfImages?: number;
   createdAt?: string;
   updatedAt?: string;
-  cover?: {
-    location?: string | null;
-  } | null;
+  cover?: FolderCover | null;
 };
 
 export type FoldersResponse = {
@@ -230,15 +236,35 @@ export const removePostFromFrameApi = async (frameId: string, postId: string) =>
   return res.data;
 };
 
-// POST /folders - { name }
-export const createFolderApi = async (data: { name: string }) => {
-  const res = await API.post("/folders", data);
+// POST /folders - FormData { name, cover }
+export const createFolderApi = async (data: FormData | { name: string; cover: File }) => {
+  let formData: FormData;
+  if (data instanceof FormData) {
+    formData = data;
+  } else {
+    formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("cover", data.cover);
+  }
+  const res = await API.post("/folders", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return res.data;
 };
 
 // GET /folders - { page, limit }
 export const getFoldersApi = async (params: { page: number; limit: number }) => {
   const res = await API.get<FoldersResponse>("/folders/own", { params });
+  return res.data;
+};
+
+// GET /folders/:folderId - Single folder details
+export const getFolderByIdApi = async (folderId: string) => {
+  const res = await API.get<{ success: boolean; message: string; data: FolderItem }>(
+    `/folders/${folderId}`
+  );
   return res.data;
 };
 
@@ -265,11 +291,30 @@ export const uploadImageToFolderApi = async (folderId: string, files: File[]) =>
   return attachFilesToFolderApi(folderId, fileIds);
 };
 
-// PATCH /folders/:folderId - { name }
-export const renameFolderApi = async (folderId: string, data: { name: string }) => {
-  const res = await API.patch(`/folders/${folderId}`, data);
+// PATCH /folders/:folderId - JSON { name } or FormData { name?, cover? }
+export const updateFolderApi = async (
+  folderId: string,
+  data: { name?: string; cover?: File } | FormData
+) => {
+  let payload: any = data;
+  let headers: Record<string, string> | undefined = undefined;
+
+  if (data instanceof FormData) {
+    payload = data;
+    headers = { "Content-Type": "multipart/form-data" };
+  } else if (data && "cover" in data && data.cover instanceof File) {
+    const formData = new FormData();
+    if (data.name) formData.append("name", data.name);
+    formData.append("cover", data.cover);
+    payload = formData;
+    headers = { "Content-Type": "multipart/form-data" };
+  }
+
+  const res = await API.patch(`/folders/${folderId}`, payload, { headers });
   return res.data;
 };
+
+export const renameFolderApi = updateFolderApi;
 
 // DELETE /folders/:folderId
 export const deleteFolderApi = async (folderId: string) => {

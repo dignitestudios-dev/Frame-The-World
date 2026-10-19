@@ -10,6 +10,7 @@ import Header from "@/components/global/header";
 import LocationAutocomplete from "@/components/global/LocationAutocomplete";
 import { getCategoriesApi, getSearchPostsApi } from "@/services/postApi";
 import { addPostsToFrameApi } from "@/services/frameApi";
+import { getPostCoverUrl } from "@/lib/postMedia";
 
 const RECENT_SEARCHES_KEY = "search_recent_locations";
 
@@ -199,7 +200,7 @@ function SearchClientContent() {
     : `${selectedPosts.length} posts selected`;
 
   const getPostImage = (post: any) =>
-    post?.media?.location || "/images/no data found.jpg";
+    getPostCoverUrl(post, "/images/no data found.jpg");
 
   const isLocationPostSelected = (postId: string) =>
     selectedPosts.includes(postId);

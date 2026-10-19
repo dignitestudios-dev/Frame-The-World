@@ -31,6 +31,8 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import Image from "next/image";
+import PostMediaCarousel from "@/components/post/PostMediaCarousel";
+import { getPostMediaList } from "@/lib/postMedia";
 
 // ─── Timeframes ──────────────────────────────────────────────────────────────
 const TIMEFRAMES = [
@@ -198,43 +200,19 @@ export default function OwnPostView({
             <div className="max-w-[1340px] mx-auto px-5 pb-12">
 
                 {/* ── Hero media ── */}
-                {(() => {
-                    const isVideo =
-                        currentPost?.mediaType === "video" ||
-                        currentPost?.media?.type === "video" ||
-                        (typeof imageUrl === "string" && (imageUrl.endsWith(".mp4") || imageUrl.endsWith(".mov")));
-                    const poster = currentPost?.media?.thumbnail?.location || imageUrl;
-
-                    return (
-                        <div className="relative w-full h-[621px] rounded-[32px] overflow-hidden mt-[32px] shadow-[0px_4px_15px_rgba(0,0,0,0.25)] bg-black">
-                            {isVideo ? (
-                                <video
-                                    src={imageUrl}
-                                    poster={poster}
-                                    controls
-                                    playsInline
-                                    className="w-full h-full object-contain"
-                                />
-                            ) : (
-                                <>
-                                    <Image
-                                        fill
-                                        src={imageUrl}
-                                        alt={currentPost?.caption || "Post image"}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80 rounded-[32px]" />
-                                </>
-                            )}
-                            <button
-                                onClick={onBack}
-                                className="absolute top-4 left-4 w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md hover:bg-gray-50 transition z-10"
-                            >
-                                <ArrowLeft className="w-5 h-5 text-[#181818]" />
-                            </button>
-                        </div>
-                    );
-                })()}
+                <PostMediaCarousel
+                    mediaList={getPostMediaList(currentPost)}
+                    caption={currentPost?.caption}
+                    className="w-full h-[621px] rounded-[32px] overflow-hidden mt-[32px] shadow-[0px_4px_15px_rgba(0,0,0,0.25)]"
+                >
+                    <button
+                        onClick={onBack}
+                        className="absolute top-4 left-4 w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md hover:bg-gray-50 transition z-20"
+                        aria-label="Back"
+                    >
+                        <ArrowLeft className="w-5 h-5 text-[#181818]" />
+                    </button>
+                </PostMediaCarousel>
 
                 {/* ── Post info row ── */}
                 <div className="flex items-start justify-between mt-6 gap-4">

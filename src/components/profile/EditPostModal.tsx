@@ -174,7 +174,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
         payload.isContentReleaseAccepted = true;
       }
       if (mediaFileId) {
-        payload.media = mediaFileId;
+        payload.media = [mediaFileId];
       }
 
       return updatePostApi(postId, payload);
@@ -186,9 +186,11 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
     },
   });
 
+  const isPendingPost = post?.status === "pending";
   const isReuploadOnly = post?.status === "rejected" || post?.status === "needs_human_removal";
 
   const handleSubmit = () => {
+    if (isPendingPost) return;
     if (!isReuploadOnly && !location.trim()) {
       setLocationError("Location is required.");
       return;
@@ -382,6 +384,13 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
               </>
             )}
 
+            {/* Pending Notice */}
+            {isPendingPost && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl">
+                <span>This post is pending verification and cannot be edited until moderation is complete.</span>
+              </div>
+            )}
+
             {/* Error */}
             {isError && (
               <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl">
@@ -413,7 +422,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
             <div className={`flex gap-3 ${isReuploadOnly ? "pt-2" : "pt-1"}`}>
               <button
                 onClick={handleSubmit}
-                disabled={isPending || (isReuploadOnly && !newFile)}
+                disabled={isPending || isPendingPost || (isReuploadOnly && !newFile)}
                 className={`flex-1 w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold rounded-full hover:from-blue-500 hover:to-purple-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isReuploadOnly ? "py-3.5 text-base sm:text-lg" : "py-3"
                   }`}
               >

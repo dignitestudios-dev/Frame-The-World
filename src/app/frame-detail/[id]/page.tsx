@@ -17,6 +17,7 @@ import { Toast } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/authStore";
 import ConfirmDeleteModal from "@/components/global/ConfirmDeleteModal";
 import ReportModal from "@/components/global/ReportModal";
+import { getPostCoverUrl, isPostCoverVideo, hasPostMedia } from "@/lib/postMedia";
 
 const FALLBACK_IMAGE_URL =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -93,7 +94,7 @@ export default function FrameDetailPage() {
     | undefined;
 
   const framePosts = useMemo(() => {
-    return (framePostsData?.data ?? []).filter((post) => Boolean(post.media?.location || (post.media as any)?.thumbnail?.location));
+    return (framePostsData?.data ?? []).filter((post) => hasPostMedia(post));
   }, [framePostsData?.data]);
 
   const locationTitle = useMemo(() => {
@@ -626,13 +627,8 @@ export default function FrameDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">
               {framePosts.map((post: any, i: number) => {
                 const isTall = i % 5 === 0 || i % 7 === 0;
-                const isVideo =
-                  post.mediaType === "video" ||
-                  (typeof post.media === "object" && post.media?.type === "video");
-                const imageUrl =
-                  post.media?.thumbnail?.location ||
-                  post.media?.location ||
-                  FALLBACK_IMAGE_URL;
+                const isVideo = isPostCoverVideo(post);
+                const imageUrl = getPostCoverUrl(post, FALLBACK_IMAGE_URL);
 
                 return (
                   <div

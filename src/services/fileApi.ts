@@ -414,3 +414,117 @@ export const uploadMultipleImagesToS3 = async (
 
   return completeResponse.data.files;
 };
+
+export interface MixedUploadProgressCallback {
+  (
+    stage: "requesting_url" | "uploading_s3" | "completing" | "processing" | "ready",
+    percent: number,
+    message: string
+  ): void;
+}
+
+/**
+ * End-to-end multi-media upload orchestrator (any mix of up to 10 images and videos)
+ * In compliance with §1:
+ * - Mixed batch in POST /files/upload-urls
+ * - Parallel S3 PUTs
+ * - POST /files/complete
+ * - Polling of videos until ready
+ * - Returns FileObjects in the exact same order as input
+ */
+export const uploadMixedMediaFiles = async (
+  files: File[],
+  onProgress?: MixedUploadProgressCallback
+): Promise<FileObject[]> => {
+  if (files.length === 0) return [];
+
+  // Validate all files
+  for (const file of files) {
+    const val = validateMediaFile(file);
+    if (!val.valid) {
+      throw new Error(val.error || `File ${file.name} is invalid.`);
+    }
+  }
+
+  // 1. Request upload URLs for all files
+  onProgress?.("requesting_url", 10, "Authorizing uploads...");
+  const requestItems: UploadUrlRequestItem[] = files.map((file) => ({
+    fileName: file.name,
+    mimeType: normalizeMimeType(file),
+    type: detectMediaType(file),
+  }));
+
+  const urlResponse = await requestUploadUrlsApi(requestItems);
+  const uploadItems = urlResponse.data?.files || [];
+  if (uploadItems.length !== files.length) {
+    throw new Error("Mismatch in generated upload authorizations.");
+  }
+
+  // 2. Upload all files to S3 in parallel with aggregated progress
+  onProgress?.(
+    "uploading_s3",
+    15,
+    `Uploading ${files.length} item${files.length > 1 ? "s" : ""} to storage...`
+  );
+  const individualProgress = new Array(files.length).fill(0);
+
+  await Promise.all(
+    files.map(async (file, index) => {
+      const item = uploadItems[index];
+      const mime = normalizeMimeType(file);
+      await uploadBytesToS3(item.uploadUrl, file, mime, (pct) => {
+        individualProgress[index] = pct;
+        const totalPct =
+          individualProgress.reduce((a, b) => a + b, 0) / files.length;
+        const overall = 15 + Math.round(totalPct * 0.5);
+        onProgress?.(
+          "uploading_s3",
+          overall,
+          `Uploading media: ${Math.round(totalPct)}%`
+        );
+      });
+    })
+  );
+
+  // 3. Complete uploads
+  onProgress?.("completing", 70, "Finalizing uploads with server...");
+  const fileIds = uploadItems.map((item) => item.fileId);
+  const completeResponse = await completeUploadsApi(fileIds);
+  const completedFilesMap = new Map<string, FileObject>();
+  for (const f of completeResponse.data?.files || []) {
+    completedFilesMap.set(f._id, f);
+  }
+
+  // 4. Poll videos until ready
+  const videoItemsToPoll = uploadItems.filter((item) => item.type === "video");
+  if (videoItemsToPoll.length > 0) {
+    onProgress?.(
+      "processing",
+      75,
+      `Verifying ${videoItemsToPoll.length} video clip${
+        videoItemsToPoll.length > 1 ? "s" : ""
+      } (checking 10–60s duration & scanning for humans)...`
+    );
+    const polledMap = new Map<string, FileObject>();
+
+    await Promise.all(
+      videoItemsToPoll.map(async (vItem) => {
+        const readyFile = await pollVideoFileUntilReady(vItem.fileId);
+        polledMap.set(vItem.fileId, readyFile);
+      })
+    );
+
+    for (const [id, f] of polledMap.entries()) {
+      completedFilesMap.set(id, f);
+    }
+  }
+
+  onProgress?.("ready", 100, "All media verified and ready!");
+
+  return uploadItems.map(
+    (item) =>
+      completedFilesMap.get(item.fileId) ||
+      ({ _id: item.fileId, type: item.type, status: "ready" } as FileObject)
+  );
+};
+

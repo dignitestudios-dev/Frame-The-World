@@ -8,6 +8,7 @@ import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import Header from "@/components/global/header";
 import { getSearchPostsApi } from "@/services/postApi";
 import { getSearchFramesApi } from "@/services/frameApi";
+import { getPostCoverUrl, isPostCoverVideo } from "@/lib/postMedia";
 
 type SearchTab = "all" | "images" | "frames";
 
@@ -175,18 +176,13 @@ function SearchResultsContent() {
     return postsData.pages.flatMap((page) => {
       if (!Array.isArray(page.data)) return [];
       return page.data.map((post: any) => {
-        const isVideo =
-          post.mediaType === "video" ||
-          (typeof post.media === "object" && post.media?.type === "video");
-        const mediaLoc =
-          post.media?.thumbnail?.location ||
-          post.media?.location ||
-          (typeof post.media === "string" ? post.media : null);
+        const isVideo = isPostCoverVideo(post);
+        const mediaLoc = getPostCoverUrl(post, FALLBACK_IMAGE_URL);
 
         return {
           id: post._id,
           title: post.caption || "Post",
-          image: mediaLoc || FALLBACK_IMAGE_URL,
+          image: mediaLoc,
           isVideo,
         };
       }).filter((item: any) => !!item.id);

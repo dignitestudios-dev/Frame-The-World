@@ -40,6 +40,8 @@ import { Toast } from "@/components/ui/toast";
 import { useQuery as useInsightsQuery } from "@tanstack/react-query";
 import { getPostInsightsApi } from "@/services/postApi";
 import OwnPostView from "./OwnPostView";
+import PostMediaCarousel from "@/components/post/PostMediaCarousel";
+import { getPostMediaList } from "@/lib/postMedia";
 
 const FALLBACK_POST_IMAGE =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -210,7 +212,7 @@ function PostDetailsContent() {
       }) => {
         const { uploadMediaFile } = await import("@/services/fileApi");
         const uploadedFile = await uploadMediaFile(file);
-        return updatePostApi(postId, { media: uploadedFile._id });
+        return updatePostApi(postId, { media: [uploadedFile._id] });
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });
@@ -426,11 +428,11 @@ function PostDetailsContent() {
   const { mutate: downloadPost, isPending: isDownloading } = useMutation({
     mutationFn: (postId: string) => downloadPostApi(postId),
     onSuccess: async (response) => {
-      const updatedPost = response?.data ?? response;
+      const updatedPost = (response as any)?.data ?? response;
       const apiCount = getReturnedCount(
-        updatedPost?.downloads,
-        updatedPost?.data?.downloads,
-        response?.downloads,
+        (updatedPost as any)?.downloads,
+        (updatedPost as any)?.data?.downloads,
+        (response as any)?.downloads,
       );
       const newCount =
         apiCount !== null ? apiCount : downloadCountRef.current + 1;
@@ -439,27 +441,54 @@ function PostDetailsContent() {
       queryClient.invalidateQueries({ queryKey: ["postInsights", currentPostId] });
 
       try {
-        let fileUrl = response?.data?.filePath;
-        fileUrl = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}t=${new Date().getTime()}`;
-        const fileName = response?.data?.fileName;
+        const rawData = (response as any)?.data;
+        const downloadFiles: any[] =
+          rawData?.files ||
+          (rawData?.filePath
+            ? [
+                {
+                  filePath: rawData.filePath,
+                  fileName: rawData.fileName || "download",
+                },
+              ]
+            : []);
 
-        if (!fileUrl) throw new Error("File URL missing");
+        if (!downloadFiles || downloadFiles.length === 0) {
+          throw new Error("No download files returned.");
+        }
 
-        const responseBlob = await fetch(fileUrl);
-        const blob = await responseBlob.blob();
+        showToast(
+          `Downloading ${downloadFiles.length} file${
+            downloadFiles.length > 1 ? "s" : ""
+          }...`
+        );
 
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        for (let i = 0; i < downloadFiles.length; i++) {
+          const item = downloadFiles[i];
+          let fileUrl = item.filePath;
+          fileUrl = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}t=${Date.now()}`;
+          const fileName = item.fileName || `post-media-${i + 1}`;
 
-        link.href = url;
-        link.download = fileName || "download";
+          const resBlob = await fetch(fileUrl);
+          const blob = await resBlob.blob();
 
-        document.body.appendChild(link);
-        link.click();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
 
-        link.remove();
-        window.URL.revokeObjectURL(url);
-        showToast("Download started.");
+          link.href = url;
+          link.download = fileName;
+
+          document.body.appendChild(link);
+          link.click();
+
+          link.remove();
+          window.URL.revokeObjectURL(url);
+
+          if (downloadFiles.length > 1) {
+            await new Promise((r) => setTimeout(r, 250));
+          }
+        }
+        showToast("Download completed.");
       } catch (error) {
         showToast(getApiErrorMessage(error), "error");
       }
@@ -586,30 +615,19 @@ function PostDetailsContent() {
 
       <div className="grid grid-cols-1 mt-8 p-4 pt-0 lg:grid-cols-[420px_1fr] gap-5 max-w-[1500px] mx-auto">
         <div className="flex flex-col gap-4">
-          <div className="relative h-[540px] rounded-[32px] overflow-hidden shadow-xl bg-black">
-            {isVideoPost ? (
-              <video
-                src={imageUrl}
-                poster={posterUrl}
-                controls
-                playsInline
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <Image
-                src={imageUrl}
-                alt={currentPost?.caption || "Post image"}
-                fill
-                className="object-cover"
-              />
-            )}
+          <PostMediaCarousel
+            mediaList={getPostMediaList(postToDisplay)}
+            caption={currentPost?.caption}
+            className="h-[540px] rounded-[32px] overflow-hidden shadow-xl"
+          >
             <button
               onClick={() => router.back()}
-              className="absolute top-5 left-5 h-11 w-11 rounded-md bg-white/30 flex items-center justify-center shadow z-10"
+              className="absolute top-5 left-5 h-11 w-11 rounded-md bg-white/30 flex items-center justify-center shadow z-20"
+              aria-label="Back"
             >
               <ArrowLeft className="h-5 w-5 text-gray-700" />
             </button>
-          </div>
+          </PostMediaCarousel>
 
           <div className="px-2">
             <div className="flex items-center justify-between mb-1 gap-4">

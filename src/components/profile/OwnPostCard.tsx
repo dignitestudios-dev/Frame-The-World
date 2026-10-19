@@ -3,6 +3,7 @@
 import Image from "next/image";
 import React from "react";
 import { Loader2 } from "lucide-react";
+import { getPostCoverUrl, isPostCoverVideo } from "@/lib/postMedia";
 
 interface Post {
   id?: string;
@@ -55,17 +56,8 @@ const statusStyles: Record<string, { bg: string; dot: string; text: string }> = 
 };
 
 const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
-  const isVideo =
-    post.mediaType === "video" ||
-    (typeof post.media === "object" && post.media?.type === "video");
-
-  const thumbnailLocation =
-    typeof post.media === "object" ? post.media?.thumbnail?.location : null;
-  const directLocation =
-    typeof post.media === "string" ? post.media : post.media?.location;
-
-  const displayUrl =
-    thumbnailLocation || directLocation || "/images/placeholder.jpg";
+  const isVideo = isPostCoverVideo(post);
+  const displayUrl = getPostCoverUrl(post, "/images/placeholder.jpg");
 
   const statusKey = post.status?.toLowerCase() ?? "";
   const style = statusStyles[statusKey] ?? {

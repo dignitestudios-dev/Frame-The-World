@@ -12,6 +12,7 @@ import { getApiErrorMessage } from "@/lib/apiError";
 import { getFeaturedPostsApi, getPostsApi } from "@/services/postApi";
 import { getFramesApi } from "@/services/frameApi";
 import { usePostStore } from "@/store/PostStore";
+import { getPostCoverUrl, isPostCoverVideo, hasPostMedia } from "@/lib/postMedia";
 
 const FEED_PAGE_LIMIT = 10;
 const FALLBACK_IMAGE_URL =
@@ -240,13 +241,7 @@ function FeedLoadingIndicator({ label = "Loading more posts..." }: { label?: str
 }
 
 const getDisplayMediaUrl = (item: any): string => {
-  if (!item?.media) return FALLBACK_IMAGE_URL;
-  if (typeof item.media === "string") return item.media;
-  return (
-    item.media.thumbnail?.location ||
-    item.media.location ||
-    FALLBACK_IMAGE_URL
-  );
+  return getPostCoverUrl(item, FALLBACK_IMAGE_URL);
 };
 
 const PostGridCard = React.memo(function PostGridCard({
@@ -260,9 +255,7 @@ const PostGridCard = React.memo(function PostGridCard({
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const isTall = index % 5 === 0 || index % 7 === 0;
-  const isVideo =
-    item?.mediaType === "video" ||
-    (typeof item?.media === "object" && item?.media?.type === "video");
+  const isVideo = isPostCoverVideo(item);
   const mediaUrl = getDisplayMediaUrl(item);
   const [imgSrc, setImgSrc] = useState(mediaUrl);
 
@@ -393,14 +386,14 @@ export default function TravelStoryPage() {
     if (!forYouPages?.pages) return [];
     return forYouPages.pages
       .flatMap((page) => page.data)
-      .filter((post) => Boolean(post.media?.location || (post.media as any)?.thumbnail?.location || post.media));
+      .filter((post) => hasPostMedia(post));
   }, [forYouPages]);
 
   const featuredPosts = useMemo(() => {
     if (!featuredPages?.pages) return [];
     return featuredPages.pages
       .flatMap((page) => page.data)
-      .filter((post) => Boolean(post.media?.location || (post.media as any)?.thumbnail?.location || post.media));
+      .filter((post) => hasPostMedia(post));
   }, [featuredPages]);
 
   const frameItems = useMemo(() => {

@@ -163,50 +163,8 @@ export const uploadBytesToS3 = async (
   mimeType: string,
   onProgress?: (percent: number) => void
 ): Promise<void> => {
-  // Primary: Direct S3 PUT via XHR (real progress and bypasses server limits)
-  try {
-    await uploadViaXhr(uploadUrl, file, mimeType, onProgress);
-    return;
-  } catch (directErr: any) {
-    console.warn(
-      "Direct storage upload failed. Checking fallback suitability...",
-      directErr
-    );
-
-    // Vercel serverless functions strictly reject payloads > 4.5 MB with 413 FUNCTION_PAYLOAD_TOO_LARGE.
-    // Large video files (up to 60s) cannot go through /api/upload-s3 on Vercel.
-    const VERCEL_MAX_PAYLOAD_BYTES = 4.2 * 1024 * 1024;
-    if (file.size > VERCEL_MAX_PAYLOAD_BYTES) {
-      throw new Error(
-        `Direct upload to S3 failed due to CORS on the storage bucket, and file size (${(
-          file.size /
-          (1024 * 1024)
-        ).toFixed(1)} MB) exceeds serverless proxy limit. Please ensure CORS is enabled on 'frame-the-world-bucket' in AWS S3.`
-      );
-    }
-
-    // Fallback for smaller files (under 4.2 MB) through local route
-    const proxyRes = await fetch("/api/upload-s3", {
-      method: "PUT",
-      headers: {
-        "x-upload-url": uploadUrl,
-        "Content-Type": mimeType,
-      },
-      body: file,
-    });
-
-    if (proxyRes.ok) {
-      if (onProgress) onProgress(100);
-      return;
-    }
-
-    const proxyData = await proxyRes.json().catch(() => ({}));
-    throw new Error(
-      proxyData.message ||
-        directErr.message ||
-        "Failed to upload media to storage. Please check your connection and try again."
-    );
-  }
+  // Direct S3 PUT via XHR: full upload speed, real-time progress, no size limits
+  await uploadViaXhr(uploadUrl, file, mimeType, onProgress);
 };
 
 /**

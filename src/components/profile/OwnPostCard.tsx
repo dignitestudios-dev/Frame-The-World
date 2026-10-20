@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import React from "react";
-import { Loader2 } from "lucide-react";
-import { getPostCoverUrl, isPostCoverVideo } from "@/lib/postMedia";
+import { Loader2, Layers } from "lucide-react";
+import { getPostCoverUrl, isPostCoverVideo, getPostMediaList } from "@/lib/postMedia";
 
 interface Post {
   id?: string;
@@ -58,6 +58,9 @@ const statusStyles: Record<string, { bg: string; dot: string; text: string }> = 
 const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
   const isVideo = isPostCoverVideo(post);
   const displayUrl = getPostCoverUrl(post, "/images/placeholder.jpg");
+  const mediaCount = Array.isArray(post?.media)
+    ? post.media.length
+    : getPostMediaList(post).length;
 
   const statusKey = post.status?.toLowerCase() ?? "";
   const style = statusStyles[statusKey] ?? {
@@ -78,6 +81,14 @@ const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
         className="object-cover cursor-pointer"
         onClick={onClick}
       />
+
+      {/* Multi-Media Count Badge */}
+      {mediaCount > 1 && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold shadow-md pointer-events-none">
+          <Layers className="w-3.5 h-3.5" />
+          <span>{mediaCount}</span>
+        </div>
+      )}
 
       {/* Video Indicator */}
       {isVideo && (

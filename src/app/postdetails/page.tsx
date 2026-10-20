@@ -41,7 +41,7 @@ import { useQuery as useInsightsQuery } from "@tanstack/react-query";
 import { getPostInsightsApi } from "@/services/postApi";
 import OwnPostView from "./OwnPostView";
 import PostMediaCarousel from "@/components/post/PostMediaCarousel";
-import { getPostMediaList, getPostCoverUrl, isPostCoverVideo } from "@/lib/postMedia";
+import { getPostMediaList, getPostCoverUrl, isPostCoverVideo, isMediaItemVideo } from "@/lib/postMedia";
 
 const FALLBACK_POST_IMAGE =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -596,6 +596,11 @@ function PostDetailsContent() {
   }
 
   // --- Other User's Post View ---
+  const displayedMediaList = getPostMediaList(postToDisplay);
+  const mediaCount = displayedMediaList.length;
+  const imageCount = displayedMediaList.filter((m) => !isMediaItemVideo(m)).length;
+  const videoCount = displayedMediaList.filter((m) => isMediaItemVideo(m)).length;
+
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
       {trialLimitModal}
@@ -614,7 +619,7 @@ function PostDetailsContent() {
       <div className="grid grid-cols-1 mt-8 p-4 pt-0 lg:grid-cols-[420px_1fr] gap-5 max-w-[1500px] mx-auto">
         <div className="flex flex-col gap-4">
           <PostMediaCarousel
-            mediaList={getPostMediaList(postToDisplay)}
+            mediaList={displayedMediaList}
             caption={currentPost?.caption}
             className="h-[540px] rounded-[32px] overflow-hidden shadow-xl"
           >
@@ -638,7 +643,26 @@ function PostDetailsContent() {
               </div>
             </div>
 
-            <div className="mb-6 flex flex-wrap gap-2">
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              {mediaCount > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-sm">
+                  <Layers className="w-3.5 h-3.5 text-blue-600" />
+                  <span>
+                    {mediaCount} {mediaCount === 1 ? "Media" : "Media items"}
+                    {imageCount > 0 && videoCount > 0 ? (
+                      <span className="text-blue-600/80 font-normal"> ({imageCount} {imageCount === 1 ? "image" : "images"}, {videoCount} {videoCount === 1 ? "video" : "videos"})</span>
+                    ) : imageCount > 1 ? (
+                      <span className="text-blue-600/80 font-normal"> ({imageCount} images)</span>
+                    ) : videoCount > 1 ? (
+                      <span className="text-blue-600/80 font-normal"> ({videoCount} videos)</span>
+                    ) : imageCount === 1 ? (
+                      <span className="text-blue-600/80 font-normal"> (1 image)</span>
+                    ) : videoCount === 1 ? (
+                      <span className="text-blue-600/80 font-normal"> (1 video)</span>
+                    ) : null}
+                  </span>
+                </span>
+              )}
               {currentPost?.categories?.map((category: any) => (
                 <span
                   key={category?.id}
@@ -751,6 +775,9 @@ function PostDetailsContent() {
                 const relatedPostId = post._id || post.id;
                 const isVideo = isPostCoverVideo(post);
                 const relatedImageUrl = getPostCoverUrl(post, FALLBACK_POST_IMAGE);
+                const relatedMediaCount = Array.isArray(post?.media)
+                  ? post.media.length
+                  : getPostMediaList(post).length;
 
                 return (
                   <div
@@ -766,6 +793,12 @@ function PostDetailsContent() {
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
+                    {relatedMediaCount > 1 && (
+                      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold shadow-md pointer-events-none">
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>{relatedMediaCount}</span>
+                      </div>
+                    )}
                     {isVideo && (
                       <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
                         <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">

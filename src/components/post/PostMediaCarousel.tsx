@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { PostMediaFile, isMediaItemVideo } from "@/lib/postMedia";
-import { ChevronLeft, ChevronRight, Film, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Film, Image as ImageIcon, Layers } from "lucide-react";
 
 interface PostMediaCarouselProps {
   mediaList: PostMediaFile[];
@@ -22,6 +22,9 @@ export default function PostMediaCarousel({
 
   const safeList = mediaList.length > 0 ? mediaList : [];
   const currentItem = safeList[activeIndex] || safeList[0] || null;
+
+  const imageCount = safeList.filter((m) => !isMediaItemVideo(m)).length;
+  const videoCount = safeList.filter((m) => isMediaItemVideo(m)).length;
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,12 +78,36 @@ export default function PostMediaCarousel({
       {children}
 
       {/* Multi-item indicator badge & Type badge */}
-      {safeList.length > 1 && (
+      {safeList.length > 1 ? (
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-          <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-white text-xs font-bold shadow">
-            {activeIndex + 1} / {safeList.length}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-white text-xs font-semibold shadow">
+            <Layers className="w-3.5 h-3.5 text-blue-400" />
+            <span>
+              {activeIndex + 1} / {safeList.length}
+            </span>
+            <span className="text-white/80 font-normal text-[11px] ml-0.5">
+              ({imageCount > 0 && `${imageCount} ${imageCount === 1 ? "img" : "imgs"}`}
+              {imageCount > 0 && videoCount > 0 && ", "}
+              {videoCount > 0 && `${videoCount} ${videoCount === 1 ? "video" : "videos"}`})
+            </span>
+          </div>
+          <span
+            className="p-1.5 bg-black/60 backdrop-blur-md rounded-full text-white shadow"
+            title={isVideo ? "Video" : "Photo"}
+          >
+            {isVideo ? (
+              <Film className="w-3.5 h-3.5 text-blue-400" />
+            ) : (
+              <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
+            )}
           </span>
-          <span className="p-1.5 bg-black/60 backdrop-blur-md rounded-full text-white shadow">
+        </div>
+      ) : (
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <span
+            className="p-1.5 bg-black/60 backdrop-blur-md rounded-full text-white shadow"
+            title={isVideo ? "Video" : "Photo"}
+          >
             {isVideo ? (
               <Film className="w-3.5 h-3.5 text-blue-400" />
             ) : (
@@ -111,17 +138,27 @@ export default function PostMediaCarousel({
           </button>
 
           {/* Dots Indicator */}
-          <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-1.5 z-10 pointer-events-none">
-            {safeList.map((_, idx) => (
-              <span
-                key={idx}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx === activeIndex
-                    ? "w-6 bg-white shadow-md"
-                    : "w-2 bg-white/50"
-                }`}
-              />
-            ))}
+          <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-2 z-10">
+            {safeList.map((item, idx) => {
+              const isItemVid = isMediaItemVideo(item);
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveIndex(idx);
+                  }}
+                  title={isItemVid ? `Video ${idx + 1}` : `Image ${idx + 1}`}
+                  className={`h-2.5 rounded-full transition-all duration-300 shadow-md ${
+                    idx === activeIndex
+                      ? "w-7 bg-white"
+                      : "w-2.5 bg-white/50 hover:bg-white/80"
+                  }`}
+                  aria-label={`Go to item ${idx + 1}`}
+                />
+              );
+            })}
           </div>
         </>
       )}

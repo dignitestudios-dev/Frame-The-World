@@ -32,7 +32,7 @@ import {
 } from "recharts";
 import Image from "next/image";
 import PostMediaCarousel from "@/components/post/PostMediaCarousel";
-import { getPostMediaList } from "@/lib/postMedia";
+import { getPostMediaList, isMediaItemVideo } from "@/lib/postMedia";
 
 // ─── Timeframes ──────────────────────────────────────────────────────────────
 const TIMEFRAMES = [
@@ -179,6 +179,11 @@ export default function OwnPostView({
 
     console.log(currentPost, "post-categories");
 
+    const ownMediaList = getPostMediaList(currentPost);
+    const mediaCount = ownMediaList.length;
+    const imageCount = ownMediaList.filter((m) => !isMediaItemVideo(m)).length;
+    const videoCount = ownMediaList.filter((m) => isMediaItemVideo(m)).length;
+
     // ── Render ──────────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
@@ -201,7 +206,7 @@ export default function OwnPostView({
 
                 {/* ── Hero media ── */}
                 <PostMediaCarousel
-                    mediaList={getPostMediaList(currentPost)}
+                    mediaList={ownMediaList}
                     caption={currentPost?.caption}
                     className="w-full h-[621px] rounded-[32px] overflow-hidden mt-[32px] shadow-[0px_4px_15px_rgba(0,0,0,0.25)]"
                 >
@@ -227,7 +232,26 @@ export default function OwnPostView({
                                 {locationText || "Paris, France"}
                             </span>
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-3" >
+                        <div className="flex flex-wrap items-center gap-2 mt-3" >
+                            {mediaCount > 0 && (
+                                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-sm">
+                                    <Layers className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>
+                                        {mediaCount} {mediaCount === 1 ? "Media" : "Media items"}
+                                        {imageCount > 0 && videoCount > 0 ? (
+                                            <span className="text-blue-600/80 font-normal"> ({imageCount} {imageCount === 1 ? "image" : "images"}, {videoCount} {videoCount === 1 ? "video" : "videos"})</span>
+                                        ) : imageCount > 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> ({imageCount} images)</span>
+                                        ) : videoCount > 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> ({videoCount} videos)</span>
+                                        ) : imageCount === 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> (1 image)</span>
+                                        ) : videoCount === 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> (1 video)</span>
+                                        ) : null}
+                                    </span>
+                                </span>
+                            )}
                             {
                                 currentPost?.categories?.length
                                     ? currentPost.categories.map((cat: any) => (
@@ -238,11 +262,7 @@ export default function OwnPostView({
                                         >
                                             {cat.name}
                                         </button>
-                                    )) : (
-                                        <p className="text-[16px] font-normal text-black/70 leading-[22px] tracking-[-0.408px] mt-0.5">
-
-                                        </p>
-                                    )}
+                                    )) : null}
                         </div>
 
                     </div>

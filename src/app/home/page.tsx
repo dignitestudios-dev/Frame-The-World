@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Layers } from "lucide-react";
 import Header from "@/components/global/header";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import { getApiErrorMessage } from "@/lib/apiError";
 import { getFeaturedPostsApi, getPostsApi } from "@/services/postApi";
 import { getFramesApi } from "@/services/frameApi";
 import { usePostStore } from "@/store/PostStore";
-import { getPostCoverUrl, isPostCoverVideo, hasPostMedia } from "@/lib/postMedia";
+import { getPostCoverUrl, isPostCoverVideo, hasPostMedia, getPostMediaList } from "@/lib/postMedia";
 
 const FEED_PAGE_LIMIT = 10;
 const FALLBACK_IMAGE_URL =
@@ -264,6 +264,10 @@ const PostGridCard = React.memo(function PostGridCard({
     setIsLoaded(false);
   }, [item?.media]);
 
+  const mediaCount = Array.isArray(item?.media)
+    ? item.media.length
+    : getPostMediaList(item).length;
+
   return (
     <div
       onClick={onClick}
@@ -298,6 +302,14 @@ const PostGridCard = React.memo(function PostGridCard({
           }
         }}
       />
+
+      {/* Multi-Media Count Badge */}
+      {mediaCount > 1 && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold shadow-md pointer-events-none">
+          <Layers className="w-3.5 h-3.5" />
+          <span>{mediaCount}</span>
+        </div>
+      )}
 
       {/* Video Indicator */}
       {isVideo && (

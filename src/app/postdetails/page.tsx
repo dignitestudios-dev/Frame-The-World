@@ -41,7 +41,7 @@ import { useQuery as useInsightsQuery } from "@tanstack/react-query";
 import { getPostInsightsApi } from "@/services/postApi";
 import OwnPostView from "./OwnPostView";
 import PostMediaCarousel from "@/components/post/PostMediaCarousel";
-import { getPostMediaList } from "@/lib/postMedia";
+import { getPostMediaList, getPostCoverUrl, isPostCoverVideo } from "@/lib/postMedia";
 
 const FALLBACK_POST_IMAGE =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -176,7 +176,7 @@ function PostDetailsContent() {
     Boolean(postOwnerId) &&
     currentUserId === postOwnerId;
 
-  const imageUrl = postToDisplay?.media?.location || FALLBACK_POST_IMAGE;
+  const imageUrl = getPostCoverUrl(postToDisplay, FALLBACK_POST_IMAGE);
   const authorImage =
     postToDisplay?.createdBy?.profilePicture?.location ||
     postToDisplay?.createdBy?.profilePicture ||
@@ -749,23 +749,8 @@ function PostDetailsContent() {
               relatedPosts.map((post: any, i: number) => {
                 const isTall = i % 3 === 0 || i % 2 === 0;
                 const relatedPostId = post._id || post.id;
-                const isVideo =
-                  post.mediaType === "video" ||
-                  (typeof post.media === "object" && post.media?.type === "video") ||
-                  (typeof post.media?.location === "string" &&
-                    (post.media.location.endsWith(".mp4") || post.media.location.endsWith(".mov"))) ||
-                  (typeof post.media === "string" &&
-                    (post.media.endsWith(".mp4") || post.media.endsWith(".mov")));
-
-                const thumbnailLocation =
-                  typeof post.media === "object" ? post.media?.thumbnail?.location : null;
-                const directLocation =
-                  typeof post.media === "string" ? post.media : post.media?.location;
-
-                const relatedImageUrl =
-                  thumbnailLocation ||
-                  (!isVideo && directLocation ? directLocation : null) ||
-                  FALLBACK_POST_IMAGE;
+                const isVideo = isPostCoverVideo(post);
+                const relatedImageUrl = getPostCoverUrl(post, FALLBACK_POST_IMAGE);
 
                 return (
                   <div

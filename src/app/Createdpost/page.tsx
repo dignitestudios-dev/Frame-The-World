@@ -93,8 +93,10 @@ const createEmptyPostDraft = (index = 1): PostDraft => ({
 });
 
 const formatDuration = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
+  if (isNaN(seconds) || seconds < 0) return "0:00";
+  const rounded = Math.round(seconds);
+  const mins = Math.floor(rounded / 60);
+  const secs = rounded % 60;
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
 
@@ -626,10 +628,18 @@ const UploadFormContent: React.FC = () => {
     const targetId = trimPostId || currentPost.id;
     if (trimMediaIndex === null) return;
 
-    const isTenSec = Math.abs(trimmedDuration - 10) <= 0.4;
-    const normalizedDuration = isTenSec
-      ? 10
-      : Math.min(59, Math.round(trimmedDuration * 10) / 10);
+    let normalizedDuration = Math.round(trimmedDuration * 10) / 10;
+    if (Math.abs(trimmedDuration - 10) <= 0.5) {
+      normalizedDuration = 10;
+    } else if (Math.abs(trimmedDuration - 15) <= 0.5) {
+      normalizedDuration = 15;
+    } else if (Math.abs(trimmedDuration - 30) <= 0.5) {
+      normalizedDuration = 30;
+    } else if (Math.abs(trimmedDuration - 60) <= 0.5) {
+      normalizedDuration = 60;
+    } else if (Math.abs(normalizedDuration - Math.round(normalizedDuration)) <= 0.1) {
+      normalizedDuration = Math.round(normalizedDuration);
+    }
 
     const safePreviewUrl = registerBlobUrl(
       trimmedFile.type === "video/quicktime" ||

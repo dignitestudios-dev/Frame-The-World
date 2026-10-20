@@ -102,41 +102,90 @@ export const requestUploadUrlsApi = async (
 };
 
 /**
- * Upload raw file bytes directly to S3 via pre-signed PUT URL.
- * Attempts direct fetch first, and falls back to server upload proxy if browser CORS blocks it.
+ * Upload raw file bytes directly to S3 via pre-signed PUT URL using XMLHttpRequest.
+ * Provides real-time upload progress events and avoids crashing Vercel's 4.5MB serverless payload limit.
  */
+const uploadViaXhr = (
+  url: string,
+  body: File | Blob,
+  contentType: string,
+  onProgress?: (percent: number) => void
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url, true);
+    if (contentType) {
+      xhr.setRequestHeader("Content-Type", contentType);
+    }
+
+    if (xhr.upload && onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && event.total > 0) {
+          const percent = Math.min(99, Math.round((event.loaded / event.total) * 100));
+          onProgress(percent);
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (onProgress) onProgress(100);
+        resolve();
+      } else {
+        const errMessage = xhr.responseText || xhr.statusText;
+        reject(
+          new Error(
+            `Direct storage upload returned status ${xhr.status}: ${errMessage || "Forbidden or expired URL"}`
+          )
+        );
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(
+        new Error(
+          "Direct storage upload failed due to a network or CORS policy restriction on S3."
+        )
+      );
+    };
+
+    xhr.ontimeout = () => {
+      reject(new Error("Storage upload timed out. Please check your network connection."));
+    };
+
+    xhr.send(body);
+  });
+};
+
 export const uploadBytesToS3 = async (
   uploadUrl: string,
   file: File | Blob,
   mimeType: string,
   onProgress?: (percent: number) => void
 ): Promise<void> => {
-  // Primary: Direct S3 PUT
+  // Primary: Direct S3 PUT via XHR (real progress and bypasses server limits)
   try {
-    const directRes = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": mimeType,
-      },
-      body: file,
-    });
-
-    if (directRes.ok) {
-      if (onProgress) onProgress(100);
-      return;
-    }
-
-    const errText = await directRes.text().catch(() => "");
-    throw new Error(
-      `Direct storage upload returned ${directRes.status}: ${errText || directRes.statusText}`
-    );
+    await uploadViaXhr(uploadUrl, file, mimeType, onProgress);
+    return;
   } catch (directErr: any) {
     console.warn(
-      "Direct storage upload encountered a network/CORS error. Attempting upload via local proxy fallback...",
+      "Direct storage upload failed. Checking fallback suitability...",
       directErr
     );
 
-    // Resilient Fallback: Stream to Next.js API server which relays to S3 (no browser CORS restrictions)
+    // Vercel serverless functions strictly reject payloads > 4.5 MB with 413 FUNCTION_PAYLOAD_TOO_LARGE.
+    // Large video files (up to 60s) cannot go through /api/upload-s3 on Vercel.
+    const VERCEL_MAX_PAYLOAD_BYTES = 4.2 * 1024 * 1024;
+    if (file.size > VERCEL_MAX_PAYLOAD_BYTES) {
+      throw new Error(
+        `Direct upload to S3 failed due to CORS on the storage bucket, and file size (${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(1)} MB) exceeds serverless proxy limit. Please ensure CORS is enabled on 'frame-the-world-bucket' in AWS S3.`
+      );
+    }
+
+    // Fallback for smaller files (under 4.2 MB) through local route
     const proxyRes = await fetch("/api/upload-s3", {
       method: "PUT",
       headers: {

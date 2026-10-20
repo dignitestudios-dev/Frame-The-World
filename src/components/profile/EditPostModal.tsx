@@ -135,9 +135,15 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   };
 
   const handleTrimComplete = (trimmedFile: File, trimmedDuration: number, previewUrl: string) => {
+    let normalized = Math.round(trimmedDuration);
+    if (Math.abs(trimmedDuration - 10) <= 0.5) normalized = 10;
+    else if (Math.abs(trimmedDuration - 15) <= 0.5) normalized = 15;
+    else if (Math.abs(trimmedDuration - 30) <= 0.5) normalized = 30;
+    else if (Math.abs(trimmedDuration - 60) <= 0.5) normalized = 60;
+
     setNewFile(trimmedFile);
     setMediaPreview(previewUrl);
-    setVideoDuration(trimmedDuration);
+    setVideoDuration(normalized);
     setImageError("");
   };
 

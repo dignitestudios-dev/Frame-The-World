@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function PUT(req: NextRequest) {
   try {
@@ -17,17 +18,29 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Read the binary stream from request
-    const buffer = await req.arrayBuffer();
+    // Stream the body directly to S3 without buffering entire payload into memory
+    let s3Response: Response;
 
-    // Perform direct S3 PUT from server side (avoids browser preflight CORS restrictions)
-    const s3Response = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": contentType,
-      },
-      body: Buffer.from(buffer),
-    });
+    if (req.body) {
+      s3Response = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": contentType,
+        },
+        body: req.body,
+        // @ts-expect-error duplex is required for streaming request bodies in Node.js
+        duplex: "half",
+      });
+    } else {
+      const buffer = await req.arrayBuffer();
+      s3Response = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": contentType,
+        },
+        body: Buffer.from(buffer),
+      });
+    }
 
     if (!s3Response.ok) {
       const errorText = await s3Response.text().catch(() => "");

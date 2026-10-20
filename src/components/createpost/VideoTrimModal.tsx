@@ -178,8 +178,8 @@ export default function VideoTrimModal({
   const applyPreset = (durationSecs: number) => {
     if (!totalDuration) return;
     const targetSecs = Math.min(60, durationSecs);
-    let newStart = startTime;
-    let newEnd = startTime + targetSecs;
+    let newStart = Math.max(0, startTime);
+    let newEnd = newStart + targetSecs;
 
     if (newEnd > totalDuration) {
       newEnd = totalDuration;
@@ -189,12 +189,14 @@ export default function VideoTrimModal({
     newStart = Math.round(newStart * 10) / 10;
     newEnd = Math.round(newEnd * 10) / 10;
 
-    // Ensure exact difference for 10s preset
-    if (durationSecs === 10 && totalDuration >= 10) {
-      newEnd = Math.round((newStart + 10) * 10) / 10;
-      if (newEnd > totalDuration) {
+    // Ensure exact difference for preset
+    if (totalDuration >= targetSecs - 0.5) {
+      if (newStart + targetSecs <= totalDuration) {
+        newEnd = Math.round((newStart + targetSecs) * 10) / 10;
+      } else {
         newEnd = Math.round(totalDuration * 10) / 10;
-        newStart = Math.round((newEnd - 10) * 10) / 10;
+        newStart = Math.round(Math.max(0, newEnd - targetSecs) * 10) / 10;
+        newEnd = Math.round((newStart + targetSecs) * 10) / 10;
       }
     }
 
@@ -390,29 +392,57 @@ export default function VideoTrimModal({
         sourceVideo.onseeked = () => resolve();
       });
 
-      recorder.start(100);
-      sourceVideo.play();
+      // Draw initial frame
+      ctx.drawImage(sourceVideo, 0, 0, videoWidth, videoHeight);
 
-      // Ensure min 10s recording duration so video duration metadata is never under 10.0s
-      const isTenSecTrim = Math.abs(selectedDuration - 10) <= 0.4;
-      const targetDuration = isTenSecTrim ? 10.15 : selectedDuration;
+      try {
+        await sourceVideo.play();
+      } catch {
+        sourceVideo.muted = true;
+        await sourceVideo.play();
+      }
+
+      recorder.start(100);
+      const recordStartTime = performance.now();
+
+      // Ensure recording duration so video duration metadata is never under selected preset
+      const isPreset10 = Math.abs(selectedDuration - 10) <= 0.5;
+      const isPreset15 = Math.abs(selectedDuration - 15) <= 0.5;
+      const isPreset30 = Math.abs(selectedDuration - 30) <= 0.5;
+      const isPreset60 = Math.abs(selectedDuration - 60) <= 0.5;
+
+      const targetDuration = selectedDuration + 0.35;
+      const minRecordMs = Math.round(targetDuration * 1000);
       const targetEndTime = Math.min(totalDuration, startTime + targetDuration);
 
-      const drawLoop = () => {
-        if (sourceVideo.paused || sourceVideo.ended) return;
+      let hasReachedEnd = false;
 
-        ctx.drawImage(sourceVideo, 0, 0, videoWidth, videoHeight);
+      const drawLoop = () => {
+        const elapsedMs = performance.now() - recordStartTime;
+
+        if (!sourceVideo.paused && !sourceVideo.ended) {
+          ctx.drawImage(sourceVideo, 0, 0, videoWidth, videoHeight);
+        }
 
         const currentRecTime = sourceVideo.currentTime;
         const progress = Math.min(
           99,
-          Math.round(((currentRecTime - startTime) / selectedDuration) * 100)
+          Math.round((elapsedMs / minRecordMs) * 100)
         );
         setTrimProgress(progress);
 
         if (currentRecTime >= targetEndTime || sourceVideo.ended) {
-          sourceVideo.pause();
-          recorder.stop();
+          hasReachedEnd = true;
+          if (!sourceVideo.paused) {
+            sourceVideo.pause();
+          }
+        }
+
+        // Keep pumping frames until the minimum required recording duration has elapsed
+        if (hasReachedEnd && elapsedMs >= minRecordMs) {
+          if (recorder.state === "recording") {
+            recorder.stop();
+          }
           return;
         }
 
@@ -438,9 +468,14 @@ export default function VideoTrimModal({
       const newPreviewUrl = URL.createObjectURL(trimmedBlob);
       setTrimProgress(100);
 
-      const reportedDuration = isTenSecTrim
-        ? 10
-        : Math.min(60, Math.round(selectedDuration * 10) / 10);
+      let reportedDuration = Math.round(selectedDuration * 10) / 10;
+      if (isPreset10) reportedDuration = 10;
+      else if (isPreset15) reportedDuration = 15;
+      else if (isPreset30) reportedDuration = 30;
+      else if (isPreset60) reportedDuration = 60;
+      else if (Math.abs(reportedDuration - Math.round(reportedDuration)) <= 0.1) {
+        reportedDuration = Math.round(reportedDuration);
+      }
 
       onTrimComplete(trimmedFile, reportedDuration, newPreviewUrl);
       onClose();
@@ -748,7 +783,7 @@ export default function VideoTrimModal({
               <span className="text-xs text-slate-500 font-semibold mr-1">Quick Presets:</span>
               <button
                 type="button"
-                disabled={isTrimming || totalDuration < 10}
+                disabled={isTrimming || totalDuration < 9.5}
                 onClick={() => applyPreset(10)}
                 className="px-3 py-1 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition shadow-sm"
               >
@@ -756,7 +791,7 @@ export default function VideoTrimModal({
               </button>
               <button
                 type="button"
-                disabled={isTrimming || totalDuration < 15}
+                disabled={isTrimming || totalDuration < 14.5}
                 onClick={() => applyPreset(15)}
                 className="px-3 py-1 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition shadow-sm"
               >
@@ -764,7 +799,7 @@ export default function VideoTrimModal({
               </button>
               <button
                 type="button"
-                disabled={isTrimming || totalDuration < 30}
+                disabled={isTrimming || totalDuration < 29.5}
                 onClick={() => applyPreset(30)}
                 className="px-3 py-1 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition shadow-sm"
               >
@@ -772,7 +807,7 @@ export default function VideoTrimModal({
               </button>
               <button
                 type="button"
-                disabled={isTrimming || totalDuration < 60}
+                disabled={isTrimming || totalDuration < 59.5}
                 onClick={() => applyPreset(60)}
                 className="px-3 py-1 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition shadow-sm"
               >

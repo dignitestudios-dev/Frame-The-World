@@ -490,8 +490,16 @@ export default function OwnPostView({
                 isOpen={isSaveOpen}
                 onClose={() => setIsSaveOpen(false)}
                 post={currentPost}
-                onEdit={() => setEditingPost(currentPost)}
-                showEditOption={true}
+                onEdit={() => {
+                    const status = currentPost?.status?.toLowerCase();
+                    if (status !== "approved" && status !== "completed") {
+                        setEditingPost(currentPost);
+                    }
+                }}
+                showEditOption={
+                    currentPost?.status?.toLowerCase() !== "approved" &&
+                    currentPost?.status?.toLowerCase() !== "completed"
+                }
                 onDelete={() => setDeletingPostId(currentPostId)}
                 showDeleteOption={true}
             />
@@ -530,10 +538,13 @@ export default function OwnPostView({
 
             <EditPostModal
                 post={editingPost}
-                isOpen={!!editingPost}
+                isOpen={
+                    !!editingPost &&
+                    editingPost?.status?.toLowerCase() !== "approved" &&
+                    editingPost?.status?.toLowerCase() !== "completed"
+                }
                 onClose={() => {
                     setEditingPost(null);
-                    router.push("/Profile");
                 }}
                 onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });

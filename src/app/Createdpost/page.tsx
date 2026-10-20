@@ -36,6 +36,9 @@ import {
   Layers,
   Images,
   X,
+  Play,
+  Pause,
+  Copy,
 } from "lucide-react";
 import LocationAutocomplete, {
   PlaceSelectionDetails,
@@ -46,6 +49,7 @@ export interface MediaItemDraft {
   file: File | null; // null if imported from storage
   fileId: string | null; // non-null if imported from storage or already on server
   previewUrl: string;
+  thumbnailUrl?: string; // Captured frame for videos or poster
   mediaType: MediaFileType;
   videoDuration?: number | null;
   name: string;
@@ -94,6 +98,89 @@ const formatDuration = (seconds: number) => {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
 
+const createVideoBlobUrl = (file: File | Blob, originalName?: string): string => {
+  // If .mov or quicktime, wrap in video/mp4 MIME type so Chromium and desktop browsers can play it natively
+  const isMov =
+    (file instanceof File && file.type === "video/quicktime") ||
+    (originalName && originalName.toLowerCase().endsWith(".mov")) ||
+    (file instanceof File && file.name.toLowerCase().endsWith(".mov"));
+
+  if (isMov) {
+    return URL.createObjectURL(new Blob([file], { type: "video/mp4" }));
+  }
+  return URL.createObjectURL(file);
+};
+
+const extractVideoThumbnail = (
+  source: File | string
+): Promise<{ thumbnailUrl: string; duration: number }> => {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+
+    const url =
+      typeof source === "string" ? source : createVideoBlobUrl(source);
+    video.src = url;
+
+    let isDone = false;
+    const cleanup = () => {
+      if (typeof source !== "string") {
+        URL.revokeObjectURL(url);
+      }
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    const finish = (thumbnailUrl: string, duration: number) => {
+      if (!isDone) {
+        isDone = true;
+        cleanup();
+        resolve({ thumbnailUrl, duration });
+      }
+    };
+
+    const timeout = setTimeout(() => {
+      finish("", 0);
+    }, 4000);
+
+    video.onloadedmetadata = () => {
+      const targetTime = Math.min(0.5, Math.max(0.1, (video.duration || 1) * 0.1));
+      video.currentTime = targetTime;
+    };
+
+    video.onseeked = () => {
+      try {
+        const width = video.videoWidth || 320;
+        const height = video.videoHeight || 240;
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+          clearTimeout(timeout);
+          finish(dataUrl, video.duration || 0);
+          return;
+        }
+      } catch (err) {
+        console.warn("Could not capture video thumbnail frame:", err);
+      }
+      clearTimeout(timeout);
+      finish("", video.duration || 0);
+    };
+
+    video.onerror = () => {
+      clearTimeout(timeout);
+      finish("", 0);
+    };
+
+    video.load();
+  });
+};
+
 const UploadFormContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -112,7 +199,29 @@ const UploadFormContent: React.FC = () => {
 
   // Video trimming modal state (scoped to active post)
   const [trimMediaIndex, setTrimMediaIndex] = useState<number | null>(null);
+  const [trimPostId, setTrimPostId] = useState<string | null>(null);
   const [isTrimModalOpen, setIsTrimModalOpen] = useState<boolean>(false);
+
+  // Object URL lifecycle manager (prevents premature revocation on re-renders / draft updates)
+  const activeBlobUrlsRef = useRef<Set<string>>(new Set());
+
+  const registerBlobUrl = (url: string): string => {
+    if (url && typeof url === "string" && url.startsWith("blob:")) {
+      activeBlobUrlsRef.current.add(url);
+    }
+    return url;
+  };
+
+  const revokeBlobUrl = (url?: string) => {
+    if (url && typeof url === "string" && url.startsWith("blob:")) {
+      activeBlobUrlsRef.current.delete(url);
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        // ignore
+      }
+    }
+  };
 
   // Upload progress state
   const [uploadPhase, setUploadPhase] = useState<UploadPhase>("idle");
@@ -187,7 +296,36 @@ const UploadFormContent: React.FC = () => {
     currentPost?.mediaItems[0] ||
     null;
 
+  // Hero video player state & playback controller
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isHeroVideoPlaying, setIsHeroVideoPlaying] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsHeroVideoPlaying(false);
+  }, [activePostIndex, currentPost?.activeMediaIndex]);
+
+  const handleToggleHeroPlay = () => {
+    if (!heroVideoRef.current) return;
+    if (heroVideoRef.current.paused) {
+      heroVideoRef.current.play().catch((err) => {
+        console.warn("Could not play video:", err);
+      });
+    } else {
+      heroVideoRef.current.pause();
+    }
+  };
+
   // ── Post Draft Management (Add / Delete / Switch Post) ───────────────────────
+
+  const updatePostById = (postId: string, updater: (p: PostDraft) => PostDraft) => {
+    setPosts((prev) => {
+      const idx = prev.findIndex((p) => p.id === postId);
+      if (idx === -1) return prev;
+      const copy = [...prev];
+      copy[idx] = updater(copy[idx]);
+      return copy;
+    });
+  };
 
   const handleAddPost = () => {
     if (posts.length >= MAX_POSTS) {
@@ -200,18 +338,83 @@ const UploadFormContent: React.FC = () => {
     setUploadError("");
   };
 
+  const handleDuplicatePost = (sourceIndex: number) => {
+    if (posts.length >= MAX_POSTS) {
+      setUploadError(`Maximum ${MAX_POSTS} posts allowed per batch request.`);
+      return;
+    }
+    const source = posts[sourceIndex];
+    if (!source) return;
+
+    // Clone media items with new IDs and safe blob URLs
+    const clonedMediaItems: MediaItemDraft[] = source.mediaItems.map((m) => {
+      let previewUrl = m.previewUrl;
+      if (m.file) {
+        previewUrl = registerBlobUrl(
+          m.mediaType === "video"
+            ? createVideoBlobUrl(m.file, m.name)
+            : URL.createObjectURL(m.file)
+        );
+      }
+      return {
+        ...m,
+        id: `draft-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        previewUrl,
+      };
+    });
+
+    const duplicatedDraft: PostDraft = {
+      id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      mediaItems: clonedMediaItems,
+      activeMediaIndex: 0,
+      caption: source.caption,
+      selectedCategories: [...source.selectedCategories],
+      location: source.location,
+      locationData: source.locationData ? { ...source.locationData } : null,
+      locationError: "",
+    };
+
+    setPosts((prev) => [...prev, duplicatedDraft]);
+    setActivePostIndex(posts.length);
+    setUploadError("");
+  };
+
+  const handleCopyMediaFromPrevious = (targetPostId: string, sourceIndex: number) => {
+    const source = posts[sourceIndex];
+    if (!source || source.mediaItems.length === 0) return;
+
+    const clonedMediaItems: MediaItemDraft[] = source.mediaItems.map((m) => {
+      let previewUrl = m.previewUrl;
+      if (m.file) {
+        previewUrl = registerBlobUrl(
+          m.mediaType === "video"
+            ? createVideoBlobUrl(m.file, m.name)
+            : URL.createObjectURL(m.file)
+        );
+      }
+      return {
+        ...m,
+        id: `draft-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        previewUrl,
+      };
+    });
+
+    updatePostById(targetPostId, (p) => ({
+      ...p,
+      mediaItems: clonedMediaItems,
+      activeMediaIndex: 0,
+    }));
+  };
+
   const handleRemovePost = (indexToRemove: number) => {
     if (posts.length <= 1) return; // Keep at least one post draft
-    setPosts((prev) => {
-      const postToRemove = prev[indexToRemove];
-      // Clean up object URLs for removed post
+    const postToRemove = posts[indexToRemove];
+    if (postToRemove) {
       postToRemove.mediaItems.forEach((m) => {
-        if (m.previewUrl && !m.previewUrl.startsWith("http")) {
-          URL.revokeObjectURL(m.previewUrl);
-        }
+        revokeBlobUrl(m.previewUrl);
       });
-      return prev.filter((_, idx) => idx !== indexToRemove);
-    });
+    }
+    setPosts((prev) => prev.filter((_, idx) => idx !== indexToRemove));
 
     if (activePostIndex >= indexToRemove && activePostIndex > 0) {
       setActivePostIndex((prev) => prev - 1);
@@ -222,13 +425,9 @@ const UploadFormContent: React.FC = () => {
   // ── Active Post Field Updaters ───────────────────────────────────────────────
 
   const updateActivePost = (updater: (p: PostDraft) => PostDraft) => {
-    setPosts((prev) => {
-      const copy = [...prev];
-      if (copy[activePostIndex]) {
-        copy[activePostIndex] = updater(copy[activePostIndex]);
-      }
-      return copy;
-    });
+    if (currentPost?.id) {
+      updatePostById(currentPost.id, updater);
+    }
   };
 
   const setLocationForActivePost = (
@@ -256,12 +455,14 @@ const UploadFormContent: React.FC = () => {
     }));
   };
 
-  // ── Multi-Media Files Handler for Active Post ────────────────────────────────
+  // ── Multi-Media Files Handler for Post (Targeted by Post ID) ────────────────
 
-  const processNewFilesForActivePost = async (files: File[]) => {
+  const processNewFilesForActivePost = async (files: File[], targetPostId?: string) => {
     if (files.length === 0) return;
 
-    const remainingSlots = MAX_MEDIA_ITEMS - currentPost.mediaItems.length;
+    const postId = targetPostId || currentPost.id;
+    const targetPost = posts.find((p) => p.id === postId) || currentPost;
+    const remainingSlots = MAX_MEDIA_ITEMS - (targetPost?.mediaItems?.length || 0);
     if (remainingSlots <= 0) {
       setUploadError(
         `Maximum ${MAX_MEDIA_ITEMS} media items allowed per post.`
@@ -292,21 +493,17 @@ const UploadFormContent: React.FC = () => {
       }
 
       const mediaType = validation.type;
-      const previewUrl = URL.createObjectURL(file);
+      const rawUrl =
+        mediaType === "video" ? createVideoBlobUrl(file, file.name) : URL.createObjectURL(file);
+      const previewUrl = registerBlobUrl(rawUrl);
 
       let duration: number | null = null;
+      let thumbnailUrl: string | undefined = undefined;
       if (mediaType === "video") {
         try {
-          duration = await new Promise<number>((resolve) => {
-            const videoElement = document.createElement("video");
-            videoElement.preload = "metadata";
-            videoElement.onloadedmetadata = () => {
-              window.URL.revokeObjectURL(videoElement.src);
-              resolve(videoElement.duration);
-            };
-            videoElement.onerror = () => resolve(0);
-            videoElement.src = URL.createObjectURL(file);
-          });
+          const extracted = await extractVideoThumbnail(file);
+          thumbnailUrl = extracted.thumbnailUrl || undefined;
+          duration = extracted.duration || null;
         } catch {
           duration = null;
         }
@@ -317,6 +514,7 @@ const UploadFormContent: React.FC = () => {
         file,
         fileId: null,
         previewUrl,
+        thumbnailUrl,
         mediaType,
         videoDuration: duration,
         name: file.name,
@@ -324,13 +522,12 @@ const UploadFormContent: React.FC = () => {
     }
 
     if (newDrafts.length > 0) {
-      updateActivePost((p) => {
+      updatePostById(postId, (p) => {
         const updatedMedia = [...p.mediaItems, ...newDrafts];
         return {
           ...p,
           mediaItems: updatedMedia,
-          activeMediaIndex:
-            p.mediaItems.length === 0 ? 0 : p.activeMediaIndex,
+          activeMediaIndex: p.mediaItems.length,
         };
       });
     }
@@ -338,14 +535,14 @@ const UploadFormContent: React.FC = () => {
 
   const handleInitialUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processNewFilesForActivePost(Array.from(e.target.files));
+      processNewFilesForActivePost(Array.from(e.target.files), currentPost.id);
       e.target.value = "";
     }
   };
 
   const handleAppendUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processNewFilesForActivePost(Array.from(e.target.files));
+      processNewFilesForActivePost(Array.from(e.target.files), currentPost.id);
       e.target.value = "";
     }
   };
@@ -375,14 +572,12 @@ const UploadFormContent: React.FC = () => {
   };
 
   const handleRemoveMedia = (indexToRemove: number) => {
+    const itemToRemove = currentPost.mediaItems[indexToRemove];
+    if (itemToRemove?.previewUrl) {
+      revokeBlobUrl(itemToRemove.previewUrl);
+    }
+
     updateActivePost((p) => {
-      const itemToRemove = p.mediaItems[indexToRemove];
-      if (
-        itemToRemove?.previewUrl &&
-        !itemToRemove.previewUrl.startsWith("http")
-      ) {
-        URL.revokeObjectURL(itemToRemove.previewUrl);
-      }
       const updated = p.mediaItems.filter((_, idx) => idx !== indexToRemove);
       const newActiveIdx =
         p.activeMediaIndex >= indexToRemove && p.activeMediaIndex > 0
@@ -417,38 +612,87 @@ const UploadFormContent: React.FC = () => {
     });
   };
 
-  const handleOpenTrimmer = (mediaIndex: number) => {
+  const handleOpenTrimmer = (mediaIndex: number, targetPostId?: string) => {
+    setTrimPostId(targetPostId || currentPost.id);
     setTrimMediaIndex(mediaIndex);
     setIsTrimModalOpen(true);
   };
 
-  const handleTrimComplete = (
+  const handleTrimComplete = async (
     trimmedFile: File,
     trimmedDuration: number,
     previewUrl: string
   ) => {
-    if (trimMediaIndex === null || !currentPost.mediaItems[trimMediaIndex])
-      return;
+    const targetId = trimPostId || currentPost.id;
+    if (trimMediaIndex === null) return;
 
-    const normalizedDuration =
-      trimmedDuration >= 9.5 && trimmedDuration < 10.4
-        ? 10
-        : Math.min(59, Math.round(trimmedDuration * 10) / 10);
+    const isTenSec = Math.abs(trimmedDuration - 10) <= 0.4;
+    const normalizedDuration = isTenSec
+      ? 10
+      : Math.min(59, Math.round(trimmedDuration * 10) / 10);
 
-    updateActivePost((p) => {
+    const safePreviewUrl = registerBlobUrl(
+      trimmedFile.type === "video/quicktime" ||
+      trimmedFile.name.toLowerCase().endsWith(".mov")
+        ? createVideoBlobUrl(trimmedFile, trimmedFile.name)
+        : previewUrl
+    );
+
+    let newThumbnailUrl: string | undefined = undefined;
+    try {
+      const extracted = await extractVideoThumbnail(trimmedFile);
+      newThumbnailUrl = extracted.thumbnailUrl || undefined;
+    } catch {
+      // Keep existing thumbnail if extraction fails
+    }
+
+    updatePostById(targetId, (p) => {
       const copy = [...p.mediaItems];
-      copy[trimMediaIndex] = {
-        ...copy[trimMediaIndex],
-        file: trimmedFile,
-        previewUrl,
-        videoDuration: normalizedDuration,
-      };
+      if (copy[trimMediaIndex]) {
+        copy[trimMediaIndex] = {
+          ...copy[trimMediaIndex],
+          file: trimmedFile,
+          previewUrl: safePreviewUrl,
+          thumbnailUrl: newThumbnailUrl || copy[trimMediaIndex].thumbnailUrl,
+          videoDuration: normalizedDuration,
+        };
+      }
       return { ...p, mediaItems: copy };
     });
 
     setUploadError("");
     setIsTrimModalOpen(false);
     setTrimMediaIndex(null);
+    setTrimPostId(null);
+  };
+
+  // Self-healing media restorer if a blob URL is ever invalidated
+  const handleMediaRestoreError = (postId: string, mediaIndex: number) => {
+    setPosts((prev) => {
+      const pIdx = prev.findIndex((p) => p.id === postId);
+      if (pIdx === -1) return prev;
+      const copy = [...prev];
+      const targetPost = copy[pIdx];
+      const item = targetPost.mediaItems[mediaIndex];
+      if (!item || !item.file) return prev;
+
+      const freshUrl = registerBlobUrl(
+        item.mediaType === "video"
+          ? createVideoBlobUrl(item.file, item.name)
+          : URL.createObjectURL(item.file)
+      );
+
+      const updatedMedia = [...targetPost.mediaItems];
+      updatedMedia[mediaIndex] = {
+        ...item,
+        previewUrl: freshUrl,
+      };
+      copy[pIdx] = {
+        ...targetPost,
+        mediaItems: updatedMedia,
+      };
+      return copy;
+    });
   };
 
   // ── Error Parsing (All-or-Nothing Section 2) ────────────────────────────────
@@ -678,18 +922,20 @@ const UploadFormContent: React.FC = () => {
     });
   };
 
-  // Clean up object URLs on unmount
+  // Clean up object URLs ONLY when component unmounts
   useEffect(() => {
+    const urls = activeBlobUrlsRef.current;
     return () => {
-      posts.forEach((p) => {
-        p.mediaItems.forEach((m) => {
-          if (m.previewUrl && !m.previewUrl.startsWith("http")) {
-            URL.revokeObjectURL(m.previewUrl);
-          }
-        });
+      urls.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          // ignore
+        }
       });
+      urls.clear();
     };
-  }, [posts]);
+  }, []);
 
   const isSubmitting =
     uploadPhase !== "idle" &&
@@ -800,7 +1046,7 @@ const UploadFormContent: React.FC = () => {
             <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-thin">
               {posts.map((p, idx) => {
                 const isActive = idx === activePostIndex;
-                const coverThumb = p.mediaItems[0]?.previewUrl;
+                const mediaCount = p.mediaItems.length;
                 return (
                   <div
                     key={p.id}
@@ -811,46 +1057,58 @@ const UploadFormContent: React.FC = () => {
                         : "bg-white/70 border-gray-200 text-gray-700 hover:bg-white"
                     }`}
                   >
-                    {/* Small thumbnail or post icon */}
-                    <div className="w-7 h-7 rounded-lg overflow-hidden bg-gray-100 relative shrink-0 flex items-center justify-center border border-gray-200">
-                      {coverThumb ? (
-                        <Image
-                          src={coverThumb}
-                          alt=""
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="text-[11px] font-bold text-gray-500">
-                          #{idx + 1}
+                    <div className="flex flex-col text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold leading-tight">
+                          Post {idx + 1}
                         </span>
+                        {mediaCount > 0 && (
+                          <span
+                            className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"
+                            title={`${mediaCount} items`}
+                          />
+                        )}
+                      </div>
+                      <span className="text-[10px] text-gray-400">
+                        {mediaCount === 0
+                          ? "Empty draft"
+                          : `${mediaCount} ${mediaCount === 1 ? "item" : "items"}`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-0.5 ml-1">
+                      {/* Duplicate post button */}
+                      {posts.length < MAX_POSTS && mediaCount > 0 && (
+                        <button
+                          type="button"
+                          disabled={isSubmitting}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicatePost(idx);
+                          }}
+                          className="p-1 hover:bg-purple-100 text-gray-400 hover:text-purple-700 rounded-full transition"
+                          title="Duplicate this post"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      {/* Delete post button (only if > 1 post) */}
+                      {posts.length > 1 && (
+                        <button
+                          type="button"
+                          disabled={isSubmitting}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemovePost(idx);
+                          }}
+                          className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition"
+                          title="Delete post draft"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       )}
                     </div>
-
-                    <div className="flex flex-col text-left">
-                      <span className="text-xs font-bold leading-tight">
-                        Post {idx + 1}
-                      </span>
-                      <span className="text-[10px] text-gray-400">
-                        {p.mediaItems.length} media
-                      </span>
-                    </div>
-
-                    {/* Delete post button (only if > 1 post) */}
-                    {posts.length > 1 && (
-                      <button
-                        type="button"
-                        disabled={isSubmitting}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemovePost(idx);
-                        }}
-                        className="ml-1 p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition"
-                        title="Delete post draft"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
                   </div>
                 );
               })}
@@ -892,19 +1150,62 @@ const UploadFormContent: React.FC = () => {
               {/* Active Hero Preview */}
               <div className="w-full max-w-[460px] aspect-[4/3] relative rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-black group">
                 {activeMediaItem.mediaType === "video" ? (
-                  <video
-                    key={activeMediaItem.previewUrl}
-                    src={activeMediaItem.previewUrl}
-                    controls
-                    playsInline
-                    className="w-full h-full object-contain"
-                  />
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <video
+                      ref={heroVideoRef}
+                      key={activeMediaItem.id}
+                      src={activeMediaItem.previewUrl}
+                      poster={activeMediaItem.thumbnailUrl}
+                      controls
+                      playsInline
+                      preload="auto"
+                      onClick={handleToggleHeroPlay}
+                      onPlay={() => setIsHeroVideoPlaying(true)}
+                      onPause={() => setIsHeroVideoPlaying(false)}
+                      onEnded={() => setIsHeroVideoPlaying(false)}
+                      onError={() =>
+                        handleMediaRestoreError(
+                          currentPost.id,
+                          currentPost.activeMediaIndex
+                        )
+                      }
+                      className="w-full h-full object-contain cursor-pointer"
+                    >
+                      <source
+                        src={activeMediaItem.previewUrl}
+                        type={
+                          activeMediaItem.file?.type?.includes("quicktime") ||
+                          activeMediaItem.name?.toLowerCase().endsWith(".mov")
+                            ? "video/mp4"
+                            : activeMediaItem.file?.type || "video/mp4"
+                        }
+                      />
+                    </video>
+
+                    {/* Prominent Center Play Button Overlay when paused */}
+                    {!isHeroVideoPlaying && (
+                      <button
+                        type="button"
+                        onClick={handleToggleHeroPlay}
+                        className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border-2 border-white/40 flex items-center justify-center text-white shadow-2xl transition-all hover:scale-110 active:scale-95 z-20 pointer-events-auto"
+                        aria-label="Play video"
+                      >
+                        <Play className="w-8 h-8 fill-white ml-1 text-white drop-shadow" />
+                      </button>
+                    )}
+                  </div>
                 ) : (
-                  <Image
+                  <img
+                    key={activeMediaItem.id}
                     src={activeMediaItem.previewUrl}
                     alt={activeMediaItem.name || "Preview"}
-                    fill
-                    className="object-contain"
+                    onError={() =>
+                      handleMediaRestoreError(
+                        currentPost.id,
+                        currentPost.activeMediaIndex
+                      )
+                    }
+                    className="w-full h-full object-contain select-none"
                   />
                 )}
 
@@ -1038,21 +1339,30 @@ const UploadFormContent: React.FC = () => {
                         }
                       >
                         {item.mediaType === "video" ? (
-                          <div className="w-full h-full bg-gray-900 flex items-center justify-center text-white relative">
-                            <video
-                              src={item.previewUrl}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                              <Film className="w-5 h-5 text-white/90" />
+                          <div className="w-full h-full bg-gray-900 flex items-center justify-center text-white relative pointer-events-none">
+                            {item.thumbnailUrl ? (
+                              <img
+                                src={item.thumbnailUrl}
+                                alt={`Thumb ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                                <Film className="w-6 h-6 text-slate-400" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/25 flex items-center justify-center group-hover:bg-black/40 transition">
+                              <div className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center shadow">
+                                <Play className="w-3 h-3 fill-white ml-0.5 text-white" />
+                              </div>
                             </div>
                           </div>
                         ) : (
-                          <Image
+                          <img
                             src={item.previewUrl}
                             alt={`Thumb ${idx + 1}`}
-                            fill
-                            className="object-cover"
+                            onError={() => handleMediaRestoreError(currentPost.id, idx)}
+                            className="w-full h-full object-cover pointer-events-none"
                           />
                         )}
 
@@ -1153,6 +1463,34 @@ const UploadFormContent: React.FC = () => {
           {/* Empty State: Initial Upload Dropzone */}
           {currentPost.mediaItems.length === 0 && (
             <div className="space-y-4">
+              {/* If in multiple batch mode and a previous post has media, offer 1-click copy */}
+              {mode === "multiple" &&
+                activePostIndex > 0 &&
+                posts[activePostIndex - 1]?.mediaItems?.length > 0 && (
+                  <div className="p-3.5 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl flex items-center justify-between gap-3 shadow-sm animate-in fade-in">
+                    <div className="flex items-center gap-2.5 text-xs text-purple-900">
+                      <Layers className="w-4 h-4 text-purple-600 shrink-0" />
+                      <span>
+                        Copy all media from <strong>Post #{activePostIndex}</strong> (
+                        {posts[activePostIndex - 1].mediaItems.length} items)?
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleCopyMediaFromPrevious(
+                          currentPost.id,
+                          activePostIndex - 1
+                        )
+                      }
+                      className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow-sm shrink-0 flex items-center gap-1.5"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Media</span>
+                    </button>
+                  </div>
+                )}
+
               <label
                 htmlFor="media-upload-initial"
                 className="relative block w-full border-2 border-dashed border-blue-300 bg-blue-50/60 rounded-2xl p-10 text-center cursor-pointer group hover:bg-blue-100/60 transition-colors"

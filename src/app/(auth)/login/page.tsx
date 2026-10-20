@@ -137,7 +137,7 @@ export default function LoginPage() {
           } else if (!user?.isSubscribed) {
             router.push("/subscription");
           } else {
-            router.push("/setup-completed");
+            router.push("/home");
           }
         }, 200);
       } else {
@@ -173,7 +173,7 @@ export default function LoginPage() {
           } else if (!user?.isSubscribed) {
             router.push("/subscription");
           } else {
-            router.push("/setup-completed");
+            router.push("/home");
           }
         }, 200);
       } else {

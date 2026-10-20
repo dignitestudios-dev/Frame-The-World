@@ -390,8 +390,6 @@ function PostDetailsContent() {
 
           setAnalyzingModalStatus(aiIssue || humanIssue || editingIssue ? "error" : "success");
           setAnalyzingModalOpen(true);
-        } else if ((status === "approved" || status === "completed") && !postToDisplay.country) {
-          setEditingPost(postToDisplay);
         }
       }
     }
@@ -861,7 +859,11 @@ function PostDetailsContent() {
 
       <EditPostModal
         post={editingPost}
-        isOpen={!!editingPost}
+        isOpen={
+          !!editingPost &&
+          editingPost?.status?.toLowerCase() !== "approved" &&
+          editingPost?.status?.toLowerCase() !== "completed"
+        }
         onClose={() => setEditingPost(null)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });

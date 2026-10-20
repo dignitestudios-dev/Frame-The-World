@@ -55,6 +55,10 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
 
+  const isApproved =
+    post?.status?.toLowerCase() === "approved" ||
+    post?.status?.toLowerCase() === "completed";
+
   useEffect(() => {
     if (post) {
       setCaption(post.caption || "");
@@ -73,11 +77,11 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
 
   // Lock background scroll
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "unset";
+    document.body.style.overflow = (isOpen && !isApproved) ? "hidden" : "unset";
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isOpen]);
+  }, [isOpen, isApproved]);
 
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
@@ -198,7 +202,13 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
     mutate();
   };
 
-  if (!isOpen || !post) return null;
+  useEffect(() => {
+    if (isApproved && isOpen) {
+      onClose();
+    }
+  }, [isApproved, isOpen, onClose]);
+
+  if (!isOpen || !post || isApproved) return null;
 
   return (
     <>

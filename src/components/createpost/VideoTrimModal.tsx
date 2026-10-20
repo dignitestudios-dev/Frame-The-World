@@ -177,19 +177,30 @@ export default function VideoTrimModal({
   // Preset buttons
   const applyPreset = (durationSecs: number) => {
     if (!totalDuration) return;
-    // For 10s preset, allocate 10.5s so client-side encoding guarantees >= 10s duration
-    const targetSecs = durationSecs === 10 ? 10.5 : Math.min(60, durationSecs);
-    const newEnd = Math.min(totalDuration, startTime + targetSecs);
-    if (newEnd - startTime < targetSecs && totalDuration >= targetSecs) {
-      // If we hit the right boundary, slide start left
-      const newStart = Math.max(0, totalDuration - targetSecs);
-      setStartTime(newStart);
-      setEndTime(totalDuration);
-      seekTo(newStart);
-    } else {
-      setEndTime(newEnd);
-      seekTo(startTime);
+    const targetSecs = Math.min(60, durationSecs);
+    let newStart = startTime;
+    let newEnd = startTime + targetSecs;
+
+    if (newEnd > totalDuration) {
+      newEnd = totalDuration;
+      newStart = Math.max(0, totalDuration - targetSecs);
     }
+
+    newStart = Math.round(newStart * 10) / 10;
+    newEnd = Math.round(newEnd * 10) / 10;
+
+    // Ensure exact difference for 10s preset
+    if (durationSecs === 10 && totalDuration >= 10) {
+      newEnd = Math.round((newStart + 10) * 10) / 10;
+      if (newEnd > totalDuration) {
+        newEnd = Math.round(totalDuration * 10) / 10;
+        newStart = Math.round((newEnd - 10) * 10) / 10;
+      }
+    }
+
+    setStartTime(newStart);
+    setEndTime(newEnd);
+    seekTo(newStart);
   };
 
   const resetSelection = () => {
@@ -383,10 +394,8 @@ export default function VideoTrimModal({
       sourceVideo.play();
 
       // Ensure min 10s recording duration so video duration metadata is never under 10.0s
-      const targetDuration =
-        selectedDuration >= 9.5 && selectedDuration <= 10.5
-          ? 10.3
-          : selectedDuration;
+      const isTenSecTrim = Math.abs(selectedDuration - 10) <= 0.4;
+      const targetDuration = isTenSecTrim ? 10.15 : selectedDuration;
       const targetEndTime = Math.min(totalDuration, startTime + targetDuration);
 
       const drawLoop = () => {
@@ -429,10 +438,9 @@ export default function VideoTrimModal({
       const newPreviewUrl = URL.createObjectURL(trimmedBlob);
       setTrimProgress(100);
 
-      const reportedDuration =
-        selectedDuration >= 9.5 && selectedDuration <= 10.4
-          ? 10
-          : Math.min(60, Math.round(selectedDuration * 10) / 10);
+      const reportedDuration = isTenSecTrim
+        ? 10
+        : Math.min(60, Math.round(selectedDuration * 10) / 10);
 
       onTrimComplete(trimmedFile, reportedDuration, newPreviewUrl);
       onClose();

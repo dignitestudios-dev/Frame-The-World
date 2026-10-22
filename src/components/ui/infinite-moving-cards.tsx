@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface InfiniteMovingCardsProps {
   items: Array<{
@@ -117,10 +118,12 @@ export function InfiniteMovingCards({
               minHeight: orientation === "vertical" ? "300px" : "100%",
             }}
           >
-            <img
+            <Image
               src={item.image}
               alt={item.name}
-              className="h-full w-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 300px"
+              className="object-cover"
             />
           </div>
         ))}

@@ -111,6 +111,7 @@ export default function Subscription() {
 
   const subscription = subQuery.data?.data?.subscription;
   const isSubscribed = subQuery.data?.data?.isSubscribed === true;
+  const isOnTrial = subQuery.data?.data?.isOnTrial === true || subscription?.status === "trialing";
 
   const currentPlan = useMemo(() => {
     const key = subscription?.planKey;
@@ -172,7 +173,7 @@ export default function Subscription() {
         </div>
       ) : (
         <div className="p-4 md:p-8">
-          {!isSubscribed ? (
+          {!isSubscribed && !isOnTrial ? (
             <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-8 text-center space-y-4">
               <p className="text-gray-700 text-sm font-medium">
                 You don&apos;t have an active subscription yet.
@@ -180,6 +181,50 @@ export default function Subscription() {
               <Button asChild className="rounded-full">
                 <Link href="/subscription">View plans</Link>
               </Button>
+            </div>
+          ) : isOnTrial ? (
+            <div className="rounded-[24px] border-2 border-[#A5C0FF] bg-[#E8F0FF] p-6 md:p-8 flex flex-col items-center">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 mb-2">
+                Trial Period
+              </span>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Free Trial</h3>
+              <div className="flex items-baseline mb-6">
+                <span className="text-5xl font-black">Free</span>
+              </div>
+
+              <div className="space-y-3 mb-8 text-left w-full max-w-md">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <CheckCircle2 className="h-5 w-5 text-[#4F6EF7] shrink-0" fill="currentColor" stroke="white" />
+                  <span className="text-sm font-medium">
+                    A constantly updated library of authentic travel images from around the world
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <CheckCircle2 className="h-5 w-5 text-[#4F6EF7] shrink-0" fill="currentColor" stroke="white" />
+                  <span className="text-sm font-medium">
+                    Your own personal storage vault to securely save and organize all your travel photos
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <CheckCircle2 className="h-5 w-5 text-[#4F6EF7] shrink-0" fill="currentColor" stroke="white" />
+                  <span className="text-sm font-medium">
+                    An AI-powered caption generator that creates tailored captions based on your images
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full max-w-[34em] space-y-4 text-center">
+                <p className="text-sm font-medium leading-relaxed text-gray-600">
+                  Your free trial is active and ends on{" "}
+                  <span className="font-semibold text-gray-800">
+                    {formatPeriodEnd(subscription?.trialEnd || subscription?.currentPeriodEnd)}
+                  </span>
+                  .
+                </p>
+                <Button asChild className="w-full py-3.5 h-auto rounded-full gradient-bg text-white font-bold text-sm shadow-md hover:shadow-lg">
+                  <Link href="/subscription">Upgrade to a Full Plan</Link>
+                </Button>
+              </div>
             </div>
           ) : currentPlan ? (
             <>

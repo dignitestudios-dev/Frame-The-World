@@ -2,12 +2,38 @@ import { API } from "@/lib/axios";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type PostMediaItem = {
+  _id?: string;
+  id?: string;
+  fileName?: string;
+  key?: string;
+  location?: string | null;
+  url?: string | null;
+  type?: "image" | "video" | string | null;
+  status?: string | null;
+  duration?: number | null;
+  thumbnail?: {
+    location?: string | null;
+    url?: string | null;
+    _id?: string;
+  } | null;
+  aiDetection?: {
+    isAI: boolean | null;
+    processedAt?: string | null;
+  } | null;
+  humanDetection?: {
+    hasHuman: boolean | null;
+    processedAt?: string | null;
+  } | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type FeedPost = {
   _id: string;
   caption: string | null;
-  media?: {
-    location?: string | null;
-  } | null;
+  media?: PostMediaItem[] | PostMediaItem | null;
+  mediaType?: "image" | "video" | "mixed" | null;
 };
 
 export type FeedPostsResponse = {
@@ -25,14 +51,8 @@ export type FeedPostsResponse = {
 export type FeaturedPost = {
   _id: string;
   status?: string;
-  media?: {
-    _id?: string;
-    fileName?: string;
-    key?: string;
-    location?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-  } | null;
+  media?: PostMediaItem[] | PostMediaItem | null;
+  mediaType?: "image" | "video" | "mixed" | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -51,9 +71,9 @@ export type FeaturedPostsResponse = {
 
 export type SearchPostItem = {
   _id: string;
-  media?: {
-    location?: string | null;
-  } | null;
+  media?: PostMediaItem[] | PostMediaItem | null;
+  mediaType?: "image" | "video" | "mixed" | null;
+  caption?: string | null;
 };
 
 export type SearchPostsResponse = {
@@ -100,13 +120,79 @@ export type LeaderboardResponse = {
 
 // ─── API Functions ────────────────────────────────────────────────────────────
 
-// POST /posts - FormData { image, caption, categories[0], categories[1], ... }
-export const createPostApi = async (formData: FormData) => {
-  const res = await API.post("/posts", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+export interface SinglePostItemPayload {
+  caption?: string | null;
+  categories: string[];
+  media: string[]; // 1 to 10 file ids (ordered)
+  country?: string;
+  state?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+  isContentReleaseAccepted?: boolean;
+}
+
+export interface CreatePostsPayload {
+  posts: SinglePostItemPayload[];
+}
+
+// Backwards-compatible type alias
+export type CreatePostPayload = SinglePostItemPayload | CreatePostsPayload;
+
+export interface UpdatePostPayload {
+  caption?: string | null;
+  categories?: string[];
+  media?: string[]; // full new ordered list of 1-10 fileIds
+  country?: string;
+  state?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+  isContentReleaseAccepted?: boolean;
+  status?: string;
+}
+
+export interface DownloadFileItem {
+  filePath: string;
+  fileName: string;
+  type?: "image" | "video" | string;
+}
+
+export interface DownloadPostResponse {
+  success: boolean;
+  message: string;
+  downloads?: number;
+  data: {
+    files: DownloadFileItem[];
+    filePath?: string;
+    fileName?: string;
+    downloads?: number;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
+// POST /posts - Always sends { posts: [ ... ] } with media as an array of IDs
+export const createPostApi = async (payload: CreatePostsPayload | SinglePostItemPayload | any) => {
+  let body: { posts: any[] };
+
+  if (payload && Array.isArray(payload.posts)) {
+    body = {
+      posts: payload.posts.map((item: any) => ({
+        ...item,
+        media: Array.isArray(item.media) ? item.media : [item.media].filter(Boolean),
+      })),
+    };
+  } else if (payload) {
+    const single = { ...payload };
+    const mediaArray = Array.isArray(single.media)
+      ? single.media
+      : [single.media].filter(Boolean);
+    single.media = mediaArray;
+    body = { posts: [single] };
+  } else {
+    body = { posts: [] };
+  }
+
+  const res = await API.post("/posts", body);
   return res.data;
 };
 
@@ -134,13 +220,15 @@ export const getOwnPostsApi = async (params?: { page?: number; limit?: number })
   return res.data;
 };
 
-// PATCH /posts/:postId
-export const updatePostApi = async (postId: string, formData: FormData) => {
-  const res = await API.patch(`/posts/${postId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+// PATCH /posts/:postId - JSON { caption?, categories?, media: string[]?, country?, state?, ... }
+export const updatePostApi = async (postId: string, payload: UpdatePostPayload | any) => {
+  const normalizedPayload = { ...payload };
+  if (normalizedPayload.media !== undefined) {
+    normalizedPayload.media = Array.isArray(normalizedPayload.media)
+      ? normalizedPayload.media
+      : [normalizedPayload.media].filter(Boolean);
+  }
+  const res = await API.patch(`/posts/${postId}`, normalizedPayload);
   return res.data;
 };
 
@@ -156,9 +244,9 @@ export const upvotePostApi = async (postId: string, payload?: { upvote: boolean 
   return res.data;
 };
 
-// GET /posts/:postId/download
-export const downloadPostApi = async (postId: string) => {
-  const res = await API.get(`/posts/${postId}/download`);
+// GET /posts/:postId/download - Returns data.files: DownloadFileItem[]
+export const downloadPostApi = async (postId: string): Promise<DownloadPostResponse> => {
+  const res = await API.get<DownloadPostResponse>(`/posts/${postId}/download`);
   return res.data;
 };
 
@@ -170,15 +258,25 @@ export const getPostInsightsApi = async (postId: string, timeframe: string = "we
   return res.data;
 };
 
-// POST /posts/:postId/remove-human
-export const removeHumanApi = async (postId: string) => {
-  const res = await API.post(`/posts/${postId}/remove-human`);
+// POST /posts/:postId/media/:mediaId/remove-human (Step A: Generate candidate)
+export const removeHumanApi = async (postId: string, mediaId?: string) => {
+  const url = mediaId
+    ? `/posts/${postId}/media/${mediaId}/remove-human`
+    : `/posts/${postId}/remove-human`;
+  const res = await API.post(url);
   return res.data;
 };
 
-// POST /posts/:postId/remove-human/:fileId
-export const confirmRemoveHumanApi = async (postId: string, fileId: string) => {
-  const res = await API.post(`/posts/${postId}/remove-human/${fileId}`);
+// POST /posts/:postId/media/:mediaId/remove-human/:newFileId (Step B: Swap in)
+export const confirmRemoveHumanApi = async (
+  postId: string,
+  mediaIdOrFileId: string,
+  newFileId?: string
+) => {
+  const url = newFileId
+    ? `/posts/${postId}/media/${mediaIdOrFileId}/remove-human/${newFileId}`
+    : `/posts/${postId}/remove-human/${mediaIdOrFileId}`;
+  const res = await API.post(url);
   return res.data;
 };
 

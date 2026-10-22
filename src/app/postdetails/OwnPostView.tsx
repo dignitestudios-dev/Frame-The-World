@@ -30,6 +30,9 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
+import Image from "next/image";
+import PostMediaCarousel from "@/components/post/PostMediaCarousel";
+import { getPostMediaList, isMediaItemVideo } from "@/lib/postMedia";
 
 // ─── Timeframes ──────────────────────────────────────────────────────────────
 const TIMEFRAMES = [
@@ -176,6 +179,11 @@ export default function OwnPostView({
 
     console.log(currentPost, "post-categories");
 
+    const ownMediaList = getPostMediaList(currentPost);
+    const mediaCount = ownMediaList.length;
+    const imageCount = ownMediaList.filter((m) => !isMediaItemVideo(m)).length;
+    const videoCount = ownMediaList.filter((m) => isMediaItemVideo(m)).length;
+
     // ── Render ──────────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
@@ -196,21 +204,20 @@ export default function OwnPostView({
             {/* ── Page body ── */}
             <div className="max-w-[1340px] mx-auto px-5 pb-12">
 
-                {/* ── Hero image ── */}
-                <div className="relative w-full h-[621px] rounded-[32px] overflow-hidden mt-[32px] shadow-[0px_4px_15px_rgba(0,0,0,0.25)]">
-                    <img
-                        src={imageUrl}
-                        alt={currentPost?.caption || "Post image"}
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80 rounded-[32px]" />
+                {/* ── Hero media ── */}
+                <PostMediaCarousel
+                    mediaList={ownMediaList}
+                    caption={currentPost?.caption}
+                    className="w-full h-[621px] rounded-[32px] overflow-hidden mt-[32px] shadow-[0px_4px_15px_rgba(0,0,0,0.25)]"
+                >
                     <button
                         onClick={onBack}
-                        className="absolute top-4 left-4 w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md hover:bg-gray-50 transition"
+                        className="absolute top-4 left-4 w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md hover:bg-gray-50 transition z-20"
+                        aria-label="Back"
                     >
                         <ArrowLeft className="w-5 h-5 text-[#181818]" />
                     </button>
-                </div>
+                </PostMediaCarousel>
 
                 {/* ── Post info row ── */}
                 <div className="flex items-start justify-between mt-6 gap-4">
@@ -225,7 +232,26 @@ export default function OwnPostView({
                                 {locationText || "Paris, France"}
                             </span>
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-3" >
+                        <div className="flex flex-wrap items-center gap-2 mt-3" >
+                            {mediaCount > 0 && (
+                                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-sm">
+                                    <Layers className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>
+                                        {mediaCount} {mediaCount === 1 ? "Media" : "Media items"}
+                                        {imageCount > 0 && videoCount > 0 ? (
+                                            <span className="text-blue-600/80 font-normal"> ({imageCount} {imageCount === 1 ? "image" : "images"}, {videoCount} {videoCount === 1 ? "video" : "videos"})</span>
+                                        ) : imageCount > 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> ({imageCount} images)</span>
+                                        ) : videoCount > 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> ({videoCount} videos)</span>
+                                        ) : imageCount === 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> (1 image)</span>
+                                        ) : videoCount === 1 ? (
+                                            <span className="text-blue-600/80 font-normal"> (1 video)</span>
+                                        ) : null}
+                                    </span>
+                                </span>
+                            )}
                             {
                                 currentPost?.categories?.length
                                     ? currentPost.categories.map((cat: any) => (
@@ -236,11 +262,7 @@ export default function OwnPostView({
                                         >
                                             {cat.name}
                                         </button>
-                                    )) : (
-                                        <p className="text-[16px] font-normal text-black/70 leading-[22px] tracking-[-0.408px] mt-0.5">
-
-                                        </p>
-                                    )}
+                                    )) : null}
                         </div>
 
                     </div>
@@ -488,8 +510,16 @@ export default function OwnPostView({
                 isOpen={isSaveOpen}
                 onClose={() => setIsSaveOpen(false)}
                 post={currentPost}
-                onEdit={() => setEditingPost(currentPost)}
-                showEditOption={true}
+                onEdit={() => {
+                    const status = currentPost?.status?.toLowerCase();
+                    if (status !== "approved" && status !== "completed") {
+                        setEditingPost(currentPost);
+                    }
+                }}
+                showEditOption={
+                    currentPost?.status?.toLowerCase() !== "approved" &&
+                    currentPost?.status?.toLowerCase() !== "completed"
+                }
                 onDelete={() => setDeletingPostId(currentPostId)}
                 showDeleteOption={true}
             />
@@ -520,7 +550,7 @@ export default function OwnPostView({
 
             <input
                 type="file"
-                accept="image/*"
+                accept=".png,.jpg,.jpeg,.webp,.heic,.mp4,.mov,image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime"
                 className="hidden"
                 ref={hiddenFileInputRef}
                 onChange={handleImageChange}
@@ -528,10 +558,13 @@ export default function OwnPostView({
 
             <EditPostModal
                 post={editingPost}
-                isOpen={!!editingPost}
+                isOpen={
+                    !!editingPost &&
+                    editingPost?.status?.toLowerCase() !== "approved" &&
+                    editingPost?.status?.toLowerCase() !== "completed"
+                }
                 onClose={() => {
                     setEditingPost(null);
-                    router.push("/Profile");
                 }}
                 onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });

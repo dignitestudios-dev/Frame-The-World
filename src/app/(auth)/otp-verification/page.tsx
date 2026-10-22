@@ -190,7 +190,7 @@ export default function OtpVerificationPage() {
       <div className="absolute inset-0 -z-10 grid grid-cols-3 gap-2 opacity-10 blur-[1px] scale-110">
         {bgImages.map((src, i) => (
           <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl grayscale">
-            <img src={src} alt="Travel bg" className="h-full w-full object-cover" />
+            <Image src={src} alt="Travel bg" fill className="object-cover" />
           </div>
         ))}
       </div>

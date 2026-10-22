@@ -17,6 +17,7 @@ import { Toast } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/authStore";
 import ConfirmDeleteModal from "@/components/global/ConfirmDeleteModal";
 import ReportModal from "@/components/global/ReportModal";
+import { getPostCoverUrl, isPostCoverVideo, hasPostMedia } from "@/lib/postMedia";
 
 const FALLBACK_IMAGE_URL =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -93,7 +94,7 @@ export default function FrameDetailPage() {
     | undefined;
 
   const framePosts = useMemo(() => {
-    return (framePostsData?.data ?? []).filter((post) => isImageUrl(post.media?.location));
+    return (framePostsData?.data ?? []).filter((post) => hasPostMedia(post));
   }, [framePostsData?.data]);
 
   const locationTitle = useMemo(() => {
@@ -407,11 +408,14 @@ export default function FrameDetailPage() {
                   }`}
               >
                 <div className="flex flex-col items-center gap-3">
-                  <img
-                    src={editCategory === "public" ? "/images/publicwhite.png" : "/images/world.png"}
-                    className="w-[40px] transition-all duration-300"
-                    alt=""
-                  />
+                  <div className="relative w-[40px] h-[40px]">
+                    <Image
+                      src={editCategory === "public" ? "/images/publicwhite.png" : "/images/world.png"}
+                      fill
+                      alt="public icon"
+                      className="object-contain transition-all duration-300"
+                    />
+                  </div>
                   <span className="font-medium">Public Frame</span>
                 </div>
               </button>
@@ -425,11 +429,14 @@ export default function FrameDetailPage() {
                   }`}
               >
                 <div className="flex flex-col items-center gap-3">
-                  <img
-                    src={editCategory === "private" ? "/images/lockicon.png" : "/images/lockiconblue.png"}
-                    className="w-[40px] transition-all duration-300"
-                    alt=""
-                  />
+                  <div className="relative w-[40px] h-[40px]">
+                    <Image
+                      src={editCategory === "private" ? "/images/lockicon.png" : "/images/lockiconblue.png"}
+                      fill
+                      alt="lock icon"
+                      className="object-contain transition-all duration-300"
+                    />
+                  </div>
                   <span className="font-medium">Private Frame</span>
                 </div>
               </button>
@@ -618,9 +625,10 @@ export default function FrameDetailPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 auto-rows-[120px] gap-6">
-              {framePosts.map((post, i) => {
+              {framePosts.map((post: any, i: number) => {
                 const isTall = i % 5 === 0 || i % 7 === 0;
-                const imageUrl = post.media?.location ?? FALLBACK_IMAGE_URL;
+                const isVideo = isPostCoverVideo(post);
+                const imageUrl = getPostCoverUrl(post, FALLBACK_IMAGE_URL);
 
                 return (
                   <div
@@ -629,21 +637,24 @@ export default function FrameDetailPage() {
                     className={`relative cursor-pointer overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition ${isTall ? "row-span-2" : "row-span-3"
                       }`}
                   >
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={post.caption || "Frame post"}
-                      className="absolute inset-0 h-full w-full object-cover"
-                      loading="lazy"
-                      onError={(event) => {
-                        const target = event.currentTarget;
-                        if (target.src !== FALLBACK_IMAGE_URL) {
-                          target.src = FALLBACK_IMAGE_URL;
-                        }
-                      }}
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                      className="object-cover"
                     />
 
+                    {isVideo && (
+                      <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+                        <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    )}
+
                     {canManageFrame && (
-                      <div className="absolute top-3 right-3 flex gap-2">
+                      <div className="absolute top-3 right-3 flex gap-2 z-10">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Layers } from "lucide-react";
 import { useMemo, useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import Header from "@/components/global/header";
 import { getSearchPostsApi } from "@/services/postApi";
 import { getSearchFramesApi } from "@/services/frameApi";
+import { getPostCoverUrl, isPostCoverVideo, getPostMediaList } from "@/lib/postMedia";
 
 type SearchTab = "all" | "images" | "frames";
 
@@ -20,6 +21,8 @@ type ImageResultItem = {
   id: string;
   title: string;
   image: string;
+  isVideo?: boolean;
+  mediaCount?: number;
 };
 
 type FrameResultItem = {
@@ -173,11 +176,21 @@ function SearchResultsContent() {
     if (!postsData?.pages) return [];
     return postsData.pages.flatMap((page) => {
       if (!Array.isArray(page.data)) return [];
-      return page.data.map((post: any) => ({
-        id: post._id,
-        title: "Image",
-        image: isImageUrl(post.media?.location) ? post.media?.location : FALLBACK_IMAGE_URL,
-      })).filter((item: any) => !!item.id);
+      return page.data.map((post: any) => {
+        const isVideo = isPostCoverVideo(post);
+        const mediaLoc = getPostCoverUrl(post, FALLBACK_IMAGE_URL);
+        const mediaCount = Array.isArray(post?.media)
+          ? post.media.length
+          : getPostMediaList(post).length;
+
+        return {
+          id: post._id,
+          title: post.caption || "Post",
+          image: mediaLoc,
+          isVideo,
+          mediaCount,
+        };
+      }).filter((item: any) => !!item.id);
     });
   }, [postsData]);
 
@@ -218,6 +231,22 @@ function SearchResultsContent() {
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             />
             <div className="absolute inset-0 bg-black/10" />
+
+            {/* Multi-Media Count Badge */}
+            {typeof item.mediaCount === "number" && item.mediaCount > 1 && (
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold shadow-md pointer-events-none">
+                <Layers className="w-3.5 h-3.5" />
+                <span>{item.mediaCount}</span>
+              </div>
+            )}
+
+            {item.isVideo && (
+              <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+                <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            )}
           </div>
         );
       })}
@@ -232,14 +261,21 @@ function SearchResultsContent() {
           onClick={() => router.push(`/frame-detail/${item.id}`)}
           className="relative overflow-hidden cursor-pointer rounded-[49.26px] aspect-square"
         >
-          <img src={item.image} alt={item.title} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+          <Image
+            src={item.image}
+            alt={item.title}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+            className="object-cover"
+          />
 
           <div className="absolute inset-6 rounded-[40px] border-4 border-black/40 overflow-hidden">
-            <img
+            <Image
               src={item.image}
               alt={`${item.title} inner`}
-              className="absolute inset-0 h-full w-full object-cover opacity-90"
-              loading="lazy"
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+              className="object-cover opacity-90"
             />
           </div>
 
@@ -247,11 +283,12 @@ function SearchResultsContent() {
 
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
             <div className="relative w-[70%] h-[70%] rounded-[30px] overflow-hidden border border-white/20">
-              <img
+              <Image
                 src={item.image}
                 alt={`${item.title} preview`}
-                className="absolute inset-0 h-full w-full object-cover opacity-80"
-                loading="lazy"
+                fill
+                sizes="(max-width: 768px) 35vw, 15vw"
+                className="object-cover opacity-80"
               />
             </div>
           </div>

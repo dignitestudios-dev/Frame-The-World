@@ -6,6 +6,9 @@ import { useAccessControl } from "@/providers/AccessControlProvider";
 import { useAuthStore } from "@/store/authStore";
 import { isAuthRoute } from "@/lib/authRoutes";
 
+import { useState } from "react";
+import CreatePostTypeModal from "@/components/createpost/CreatePostTypeModal";
+
 const CREATE_ACTIONS = [
   {
     image: "/images/icons/one.png",
@@ -35,17 +38,28 @@ export default function StickyCreateBar() {
   const router = useRouter();
   const { executeWithCheck } = useAccessControl();
   const { token, isGuest, _hasHydrated } = useAuthStore();
+  const [isPostTypeModalOpen, setIsPostTypeModalOpen] = useState(false);
 
   if (!_hasHydrated) return null;
   if (isAuthRoute(pathname)) return null;
   if (!token && !isGuest) return null;
 
   const handleClick = (route: string) => {
+    if (route === "/Createdpost") {
+      executeWithCheck(() => setIsPostTypeModalOpen(true), {
+        isPendingAllowed: false,
+      });
+      return;
+    }
     executeWithCheck(() => router.push(route), { isPendingAllowed: false });
   };
 
   return (
     <>
+      <CreatePostTypeModal
+        isOpen={isPostTypeModalOpen}
+        onClose={() => setIsPostTypeModalOpen(false)}
+      />
       <div aria-hidden className="h-[84px] shrink-0 md:h-[80px]" />
       <nav
         className="fixed bottom-0 left-0 right-0 z-40 flex justify-center bg-transparent px-2 pb-2 md:pb-2.5"

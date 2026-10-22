@@ -40,6 +40,8 @@ import { Toast } from "@/components/ui/toast";
 import { useQuery as useInsightsQuery } from "@tanstack/react-query";
 import { getPostInsightsApi } from "@/services/postApi";
 import OwnPostView from "./OwnPostView";
+import PostMediaCarousel from "@/components/post/PostMediaCarousel";
+import { getPostMediaList, getPostCoverUrl, isPostCoverVideo, isMediaItemVideo } from "@/lib/postMedia";
 
 const FALLBACK_POST_IMAGE =
   "https://t4.ftcdn.net/jpg/07/91/22/59/360_F_791225927_caRPPH99D6D1iFonkCRmCGzkJPf36QDw.jpg";
@@ -174,7 +176,7 @@ function PostDetailsContent() {
     Boolean(postOwnerId) &&
     currentUserId === postOwnerId;
 
-  const imageUrl = postToDisplay?.media?.location || FALLBACK_POST_IMAGE;
+  const imageUrl = getPostCoverUrl(postToDisplay, FALLBACK_POST_IMAGE);
   const authorImage =
     postToDisplay?.createdBy?.profilePicture?.location ||
     postToDisplay?.createdBy?.profilePicture ||
@@ -201,21 +203,26 @@ function PostDetailsContent() {
 
   const { mutate: updateRejectedImage, isPending: isUpdatingImage } =
     useMutation({
-      mutationFn: ({
+      mutationFn: async ({
         postId,
-        formData,
+        file,
       }: {
         postId: string;
-        formData: FormData;
-      }) => updatePostApi(postId, formData),
+        file: File;
+      }) => {
+        const { uploadMediaFile } = await import("@/services/fileApi");
+        const uploadedFile = await uploadMediaFile(file);
+        return updatePostApi(postId, { media: [uploadedFile._id] });
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });
         setAnalyzingModalOpen(false);
-        showToast("Image updated successfully!");
+        showToast("Media updated successfully!");
       },
-      onError: (err) => {
-        console.error("Failed to update image", err);
-        showToast("Failed to update image", "error");
+      onError: (err: any) => {
+        console.error("Failed to update media", err);
+        const msg = err?.file?.rejectionReason || err?.response?.data?.message || err?.message || "Failed to update media";
+        showToast(msg, "error");
       },
     });
 
@@ -383,8 +390,6 @@ function PostDetailsContent() {
 
           setAnalyzingModalStatus(aiIssue || humanIssue || editingIssue ? "error" : "success");
           setAnalyzingModalOpen(true);
-        } else if ((status === "approved" || status === "completed") && !postToDisplay.country) {
-          setEditingPost(postToDisplay);
         }
       }
     }
@@ -393,16 +398,16 @@ function PostDetailsContent() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && currentPostId) {
-      if (file.size > MAX_REUPLOAD_IMAGE_FILE_SIZE_BYTES) {
-        showToast("Image must be 15MB or smaller.", "error");
-        e.target.value = "";
-        return;
-      }
-      const formData = new FormData();
-      formData.append("media", file);
-      updateRejectedImage({ postId: currentPostId, formData });
+      updateRejectedImage({ postId: currentPostId, file });
     }
   };
+
+  const isVideoPost =
+    postToDisplay?.mediaType === "video" ||
+    postToDisplay?.media?.type === "video" ||
+    imageUrl.endsWith(".mp4") ||
+    imageUrl.endsWith(".mov");
+  const posterUrl = postToDisplay?.media?.thumbnail?.location || undefined;
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: (postId: string) => deletePostApi(postId),
@@ -421,11 +426,11 @@ function PostDetailsContent() {
   const { mutate: downloadPost, isPending: isDownloading } = useMutation({
     mutationFn: (postId: string) => downloadPostApi(postId),
     onSuccess: async (response) => {
-      const updatedPost = response?.data ?? response;
+      const updatedPost = (response as any)?.data ?? response;
       const apiCount = getReturnedCount(
-        updatedPost?.downloads,
-        updatedPost?.data?.downloads,
-        response?.downloads,
+        (updatedPost as any)?.downloads,
+        (updatedPost as any)?.data?.downloads,
+        (response as any)?.downloads,
       );
       const newCount =
         apiCount !== null ? apiCount : downloadCountRef.current + 1;
@@ -434,27 +439,54 @@ function PostDetailsContent() {
       queryClient.invalidateQueries({ queryKey: ["postInsights", currentPostId] });
 
       try {
-        let fileUrl = response?.data?.filePath;
-        fileUrl = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}t=${new Date().getTime()}`;
-        const fileName = response?.data?.fileName;
+        const rawData = (response as any)?.data;
+        const downloadFiles: any[] =
+          rawData?.files ||
+          (rawData?.filePath
+            ? [
+                {
+                  filePath: rawData.filePath,
+                  fileName: rawData.fileName || "download",
+                },
+              ]
+            : []);
 
-        if (!fileUrl) throw new Error("File URL missing");
+        if (!downloadFiles || downloadFiles.length === 0) {
+          throw new Error("No download files returned.");
+        }
 
-        const responseBlob = await fetch(fileUrl);
-        const blob = await responseBlob.blob();
+        showToast(
+          `Downloading ${downloadFiles.length} file${
+            downloadFiles.length > 1 ? "s" : ""
+          }...`
+        );
 
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        for (let i = 0; i < downloadFiles.length; i++) {
+          const item = downloadFiles[i];
+          let fileUrl = item.filePath;
+          fileUrl = `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}t=${Date.now()}`;
+          const fileName = item.fileName || `post-media-${i + 1}`;
 
-        link.href = url;
-        link.download = fileName || "download";
+          const resBlob = await fetch(fileUrl);
+          const blob = await resBlob.blob();
 
-        document.body.appendChild(link);
-        link.click();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
 
-        link.remove();
-        window.URL.revokeObjectURL(url);
-        showToast("Download started.");
+          link.href = url;
+          link.download = fileName;
+
+          document.body.appendChild(link);
+          link.click();
+
+          link.remove();
+          window.URL.revokeObjectURL(url);
+
+          if (downloadFiles.length > 1) {
+            await new Promise((r) => setTimeout(r, 250));
+          }
+        }
+        showToast("Download completed.");
       } catch (error) {
         showToast(getApiErrorMessage(error), "error");
       }
@@ -564,6 +596,11 @@ function PostDetailsContent() {
   }
 
   // --- Other User's Post View ---
+  const displayedMediaList = getPostMediaList(postToDisplay);
+  const mediaCount = displayedMediaList.length;
+  const imageCount = displayedMediaList.filter((m) => !isMediaItemVideo(m)).length;
+  const videoCount = displayedMediaList.filter((m) => isMediaItemVideo(m)).length;
+
   return (
     <div className="min-h-screen backdrop-blur-3xl bg-blur-15">
       {trialLimitModal}
@@ -581,20 +618,19 @@ function PostDetailsContent() {
 
       <div className="grid grid-cols-1 mt-8 p-4 pt-0 lg:grid-cols-[420px_1fr] gap-5 max-w-[1500px] mx-auto">
         <div className="flex flex-col gap-4">
-          <div className="relative h-[540px] rounded-[32px] overflow-hidden shadow-xl">
-            <Image
-              src={imageUrl}
-              alt={currentPost?.caption || "Post image"}
-              fill
-              className="object-cover"
-            />
+          <PostMediaCarousel
+            mediaList={displayedMediaList}
+            caption={currentPost?.caption}
+            className="h-[540px] rounded-[32px] overflow-hidden shadow-xl"
+          >
             <button
               onClick={() => router.back()}
-              className="absolute top-5 left-5 h-11 w-11 rounded-md bg-white/30 flex items-center justify-center shadow"
+              className="absolute top-5 left-5 h-11 w-11 rounded-md bg-white/30 flex items-center justify-center shadow z-20"
+              aria-label="Back"
             >
               <ArrowLeft className="h-5 w-5 text-gray-700" />
             </button>
-          </div>
+          </PostMediaCarousel>
 
           <div className="px-2">
             <div className="flex items-center justify-between mb-1 gap-4">
@@ -607,7 +643,26 @@ function PostDetailsContent() {
               </div>
             </div>
 
-            <div className="mb-6 flex flex-wrap gap-2">
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              {mediaCount > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-sm">
+                  <Layers className="w-3.5 h-3.5 text-blue-600" />
+                  <span>
+                    {mediaCount} {mediaCount === 1 ? "Media" : "Media items"}
+                    {imageCount > 0 && videoCount > 0 ? (
+                      <span className="text-blue-600/80 font-normal"> ({imageCount} {imageCount === 1 ? "image" : "images"}, {videoCount} {videoCount === 1 ? "video" : "videos"})</span>
+                    ) : imageCount > 1 ? (
+                      <span className="text-blue-600/80 font-normal"> ({imageCount} images)</span>
+                    ) : videoCount > 1 ? (
+                      <span className="text-blue-600/80 font-normal"> ({videoCount} videos)</span>
+                    ) : imageCount === 1 ? (
+                      <span className="text-blue-600/80 font-normal"> (1 image)</span>
+                    ) : videoCount === 1 ? (
+                      <span className="text-blue-600/80 font-normal"> (1 video)</span>
+                    ) : null}
+                  </span>
+                </span>
+              )}
               {currentPost?.categories?.map((category: any) => (
                 <span
                   key={category?.id}
@@ -718,14 +773,19 @@ function PostDetailsContent() {
               relatedPosts.map((post: any, i: number) => {
                 const isTall = i % 3 === 0 || i % 2 === 0;
                 const relatedPostId = post._id || post.id;
-                const relatedImageUrl = post.media?.location || FALLBACK_POST_IMAGE;
+                const isVideo = isPostCoverVideo(post);
+                const relatedImageUrl = getPostCoverUrl(post, FALLBACK_POST_IMAGE);
+                const relatedMediaCount = Array.isArray(post?.media)
+                  ? post.media.length
+                  : getPostMediaList(post).length;
 
                 return (
                   <div
                     key={relatedPostId || i}
                     onClick={() => router.push(`/postdetails?id=${relatedPostId}`)}
-                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition cursor-pointer group ${isTall ? "row-span-3" : "row-span-2"
-                      }`}
+                    className={`relative overflow-hidden rounded-[28px] bg-white shadow-xl hover:shadow-2xl transition cursor-pointer group ${
+                      isTall ? "row-span-3" : "row-span-2"
+                    }`}
                   >
                     <Image
                       src={relatedImageUrl}
@@ -733,6 +793,19 @@ function PostDetailsContent() {
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
+                    {relatedMediaCount > 1 && (
+                      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold shadow-md pointer-events-none">
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>{relatedMediaCount}</span>
+                      </div>
+                    )}
+                    {isVideo && (
+                      <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+                        <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <p className="text-white text-xs font-medium truncate w-full">
                         {post.caption}
@@ -804,7 +877,11 @@ function PostDetailsContent() {
 
       <EditPostModal
         post={editingPost}
-        isOpen={!!editingPost}
+        isOpen={
+          !!editingPost &&
+          editingPost?.status?.toLowerCase() !== "approved" &&
+          editingPost?.status?.toLowerCase() !== "completed"
+        }
         onClose={() => setEditingPost(null)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["post", currentPostId] });

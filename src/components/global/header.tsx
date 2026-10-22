@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, BarChart3, Globe, Lock, Pin, Sparkles, Settings, LogOut, LogIn, ChevronRight, FileText, Frame, FolderPlus, CloudCog } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationModal from "./notification-modal";
+import CreatePostTypeModal from "@/components/createpost/CreatePostTypeModal";
 import { Plus } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isPostTypeModalOpen, setIsPostTypeModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isFrameType, setIsFrameType] = useState<"public" | "private" | "personal" | null>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
@@ -148,6 +150,16 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
     { image: "/images/icons/three.png", title: "Create Personal Storage", subtitle: "Save before posting.", color: "bg-blue-100", route: "/CreatePersonalStorage" },
   ];
   const handleCardClick = (route: string) => {
+    if (route === "/Createdpost") {
+      executeWithCheck(
+        () => {
+          setIsMenuOpen(false);
+          setIsPostTypeModalOpen(true);
+        },
+        { isPendingAllowed: false }
+      );
+      return;
+    }
     // Content cards like "Create Post" are restricted for pending users
     executeWithCheck(() => {
       router.push(route);
@@ -490,6 +502,12 @@ export default function Header({ title, subtitle }: { title?: string, subtitle?:
       <NotificationModal
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
+      />
+
+      {/* Create Post Type Modal */}
+      <CreatePostTypeModal
+        isOpen={isPostTypeModalOpen}
+        onClose={() => setIsPostTypeModalOpen(false)}
       />
     </>
   );

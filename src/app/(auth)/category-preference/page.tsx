@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { ArrowLeft, Info } from "lucide-react";
@@ -121,7 +122,7 @@ export default function CategoryPreferencePage() {
       <div className="absolute inset-0 -z-10 grid grid-cols-3 gap-2 opacity-10 blur-[1px] scale-110">
         {bgImages.map((src, i) => (
           <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl grayscale">
-            <img src={src} alt="Travel bg" className="h-full w-full object-cover shadow-inner" />
+            <Image src={src} alt="Travel bg" fill className="object-cover shadow-inner" />
           </div>
         ))}
       </div>

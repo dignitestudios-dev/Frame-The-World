@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import AnalyzingModal from "./AnalyzingModalProps";
 
 export default function Imagepage({
@@ -28,15 +29,18 @@ export default function Imagepage({
 
   return (
     <div className="">
-      <div className="h-screen flex justify-center shadow-sm  m-4">
-        
-          <img
-            src={preview || ""}
-            alt="preview"
-            className=" max-w-[380px] max-h-[70vh]   rounded-xl border-dashed border-2 border-[#6CACDF]/50   "
+      <div className="h-screen flex justify-center shadow-sm m-4">
+        {preview && (
+          <div className="relative w-full max-w-[380px] h-[70vh] rounded-xl border-dashed border-2 border-[#6CACDF]/50 overflow-hidden">
+            <Image
+              src={preview}
+              alt="preview"
+              fill
+              className="object-contain"
             />
-    
-            </div>
+          </div>
+        )}
+      </div>
 
       {/* Hidden File Input */}
       <input

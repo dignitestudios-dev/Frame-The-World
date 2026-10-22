@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X, Bell, CheckCheck, AlertCircle, RefreshCw } from "lucide-react";
+import Image from "next/image";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getNotificationsApi,
@@ -91,7 +92,7 @@ interface NotificationItemProps {
 
 function NotificationItem({ notification, onRead, isMarking }: NotificationItemProps) {
   const { _id, title, description, isRead, createdAt, metadata } = notification;
-  const iconUrl = metadata?.icon?.trim() || null;
+  const iconUrl = metadata?.icon || (metadata as any)?.avatar || null;
   const [imageError, setImageError] = useState(false);
   const showMetadataImage = Boolean(iconUrl) && !imageError;
 
@@ -108,13 +109,14 @@ function NotificationItem({ notification, onRead, isMarking }: NotificationItemP
       {/* Thumbnail — metadata.icon or default bell */}
       <div className="relative shrink-0 mt-0.5">
         <div
-          className={`w-11 h-11 rounded-full overflow-hidden border-2 ${!isRead ? "border-[#5D92F3]" : "border-gray-200"}`}
+          className={`relative w-11 h-11 rounded-full overflow-hidden border-2 ${!isRead ? "border-[#5D92F3]" : "border-gray-200"}`}
         >
           {showMetadataImage ? (
-            <img
+            <Image
               src={iconUrl!}
               alt=""
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
               onError={() => setImageError(true)}
             />
           ) : (

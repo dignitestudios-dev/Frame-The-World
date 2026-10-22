@@ -2,12 +2,19 @@
 
 import Image from "next/image";
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Layers } from "lucide-react";
+import { getPostCoverUrl, isPostCoverVideo, getPostMediaList } from "@/lib/postMedia";
 
 interface Post {
   id?: string;
   _id?: string;
-  media?: { location: string } | string;
+  media?: {
+    location?: string | null;
+    type?: string | null;
+    duration?: number | null;
+    thumbnail?: { location?: string | null } | null;
+  } | string;
+  mediaType?: "image" | "video" | null;
   caption?: string;
   categories?: any[];
   status?: string;
@@ -49,10 +56,11 @@ const statusStyles: Record<string, { bg: string; dot: string; text: string }> = 
 };
 
 const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
-  const imageUrl =
-    typeof post.media === "string"
-      ? post.media
-      : post.media?.location || "/images/placeholder.jpg";
+  const isVideo = isPostCoverVideo(post);
+  const displayUrl = getPostCoverUrl(post, "/images/placeholder.jpg");
+  const mediaCount = Array.isArray(post?.media)
+    ? post.media.length
+    : getPostMediaList(post).length;
 
   const statusKey = post.status?.toLowerCase() ?? "";
   const style = statusStyles[statusKey] ?? {
@@ -67,12 +75,29 @@ const OwnPostCard: React.FC<OwnPostCardProps> = ({ post, isTall, onClick }) => {
         ${isTall ? "row-span-3" : "row-span-2"}`}
     >
       <Image
-        src={imageUrl}
+        src={displayUrl}
         alt={post.caption || "Post"}
         fill
         className="object-cover cursor-pointer"
         onClick={onClick}
       />
+
+      {/* Multi-Media Count Badge */}
+      {mediaCount > 1 && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold shadow-md pointer-events-none">
+          <Layers className="w-3.5 h-3.5" />
+          <span>{mediaCount}</span>
+        </div>
+      )}
+
+      {/* Video Indicator */}
+      {isVideo && (
+        <div className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white shadow-md">
+          <svg className="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      )}
 
       {/* Status Badge */}
       {post.status && post.status != "completed" && (

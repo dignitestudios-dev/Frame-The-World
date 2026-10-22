@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 
 
 // export const baseURL = "https://api.staging.frametheworld.org";
-export const baseURL =  process.env.NEXT_PUBLIC_API_URL ||"https://api.staging.frametheworld.org";
+export const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://api.frametheworld.org";
 // export const baseURL = "https://b97z49q3-3050.inc1.devtunnels.ms";
 
 const headers = {

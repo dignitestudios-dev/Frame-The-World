@@ -176,6 +176,17 @@ function ProfileContent() {
     queryKey: ["ownPosts"],
     queryFn: () => getOwnPostsApi({ page: 1, limit: 30 }),
     enabled: activeTab === "posts",
+    refetchInterval: (query) => {
+      const posts: any[] =
+        query.state.data?.data?.data ||
+        query.state.data?.data?.results ||
+        query.state.data?.data ||
+        [];
+      const hasPending = posts.some(
+        (p: any) => p?.status?.toLowerCase() === "pending"
+      );
+      return hasPending ? 3000 : false;
+    },
   });
 
   const ownPosts: any[] =

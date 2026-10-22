@@ -53,7 +53,8 @@ function OtherProfileContent({ userId }: { userId: string }) {
 
   const handlePostClick = (post: any) => {
     const postId = post.id || post._id;
-    if (post.status === "completed") {
+    const status = post.status?.toLowerCase();
+    if (status === "completed" || status === "approved") {
       setPostDetails(post);
       router.push(`/postdetails?id=${postId}`);
     }

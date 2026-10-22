@@ -68,7 +68,7 @@ export default function PostMediaCarousel({
             alt={caption || "Post media"}
             fill
             priority
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 pointer-events-none" />
         </>

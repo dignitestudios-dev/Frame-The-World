@@ -66,7 +66,10 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
     const getAddressComponent = (
       components: google.maps.GeocoderAddressComponent[] | undefined,
       type: string
-    ) => components?.find((component) => component.types.includes(type))?.long_name || "";
+    ) => {
+      const comp = components?.find((component) => component.types.includes(type));
+      return comp?.long_name || comp?.short_name || "";
+    };
 
     const getFirstAddressComponent = (
       components: google.maps.GeocoderAddressComponent[] | undefined,
@@ -95,6 +98,8 @@ const LocationAutocomplete = forwardRef<HTMLInputElement, LocationAutocompletePr
           state: getFirstAddressComponent(addressComponents, [
             "administrative_area_level_1",
             "administrative_area_level_2",
+            "administrative_area_level_3",
+            "locality",
           ]),
           country: getAddressComponent(addressComponents, "country"),
           postalCode: getAddressComponent(addressComponents, "postal_code"),

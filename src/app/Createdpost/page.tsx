@@ -43,6 +43,7 @@ import {
 import LocationAutocomplete, {
   PlaceSelectionDetails,
 } from "@/components/global/LocationAutocomplete";
+import { getGeocode, getLatLng } from "use-places-autocomplete";
 
 export interface MediaItemDraft {
   id: string; // unique draft ID for keys
@@ -871,7 +872,48 @@ const UploadFormContent: React.FC = () => {
           }
         });
 
-        // 3. Build POST /posts body with { posts: [ ... ] }
+        // 3. Ensure every post has geocoded location data (country, state, coordinates)
+        for (let pIdx = 0; pIdx < posts.length; pIdx++) {
+          const p = posts[pIdx];
+          if (
+            p.location.trim() &&
+            (!p.locationData ||
+              p.locationData.latitude === undefined ||
+              !p.locationData.country)
+          ) {
+            try {
+              const results = await getGeocode({ address: p.location.trim() });
+              if (results && results[0]) {
+                const { lat, lng } = await getLatLng(results[0]);
+                const addressComponents = results[0].address_components;
+                const getComp = (type: string) => {
+                  const comp = addressComponents.find((c) =>
+                    c.types.includes(type)
+                  );
+                  return comp?.long_name || comp?.short_name || "";
+                };
+                const country = getComp("country");
+                const state =
+                  getComp("administrative_area_level_1") ||
+                  getComp("administrative_area_level_2") ||
+                  getComp("administrative_area_level_3") ||
+                  getComp("locality") ||
+                  "";
+                p.locationData = {
+                  address: p.location,
+                  latitude: lat,
+                  longitude: lng,
+                  country: country || p.locationData?.country || "",
+                  state: state || p.locationData?.state || "",
+                };
+              }
+            } catch (err) {
+              console.warn("Could not geocode location before post creation:", err);
+            }
+          }
+        }
+
+        // 4. Build POST /posts body with { posts: [ ... ] }
         setUploadPhase("creating_post");
         setUploadProgress(92);
         setUploadMessage(
@@ -891,14 +933,32 @@ const UploadFormContent: React.FC = () => {
             }
           });
 
+          const rawLat = p.locationData?.latitude;
+          const rawLng = p.locationData?.longitude;
+          const lat =
+            typeof rawLat === "number"
+              ? rawLat
+              : rawLat
+              ? parseFloat(String(rawLat))
+              : undefined;
+          const lng =
+            typeof rawLng === "number"
+              ? rawLng
+              : rawLng
+              ? parseFloat(String(rawLng))
+              : undefined;
+
+          const country = p.locationData?.country?.trim() || undefined;
+          const state = p.locationData?.state?.trim() || undefined;
+
           return {
             caption: p.caption.trim() || undefined,
             categories: p.selectedCategories,
             media: mediaIds,
-            country: p.locationData?.country || undefined,
-            state: p.locationData?.state || undefined,
-            latitude: p.locationData?.latitude?.toString() || undefined,
-            longitude: p.locationData?.longitude?.toString() || undefined,
+            country: country,
+            state: state,
+            latitude: lat !== undefined && !isNaN(lat) ? lat : undefined,
+            longitude: lng !== undefined && !isNaN(lng) ? lng : undefined,
             isContentReleaseAccepted: agreedToTerms,
           };
         });
@@ -1596,7 +1656,16 @@ const UploadFormContent: React.FC = () => {
             key={`loc-${currentPost.id}`}
             placeholder="Search location..."
             value={currentPost.location}
-            onChange={(e) => setLocationForActivePost(e.target.value, null)}
+            onChange={(e) => {
+              const val = e.target.value;
+              updateActivePost((p) => ({
+                ...p,
+                location: val,
+                locationData:
+                  p.locationData?.address === val ? p.locationData : null,
+                locationError: "",
+              }));
+            }}
             onLocationSelect={(data) =>
               setLocationForActivePost(data.address, data)
             }

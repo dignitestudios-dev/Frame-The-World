@@ -39,6 +39,7 @@ import {
   Play,
   Pause,
   Copy,
+  Link as LinkIcon,
 } from "lucide-react";
 import LocationAutocomplete, {
   PlaceSelectionDetails,
@@ -61,6 +62,7 @@ export interface PostDraft {
   mediaItems: MediaItemDraft[];
   activeMediaIndex: number;
   caption: string;
+  externalLink?: string;
   selectedCategories: string[];
   location: string;
   locationData: PlaceSelectionDetails | null;
@@ -87,6 +89,7 @@ const createEmptyPostDraft = (index = 1): PostDraft => ({
   mediaItems: [],
   activeMediaIndex: 0,
   caption: "",
+  externalLink: "",
   selectedCategories: [],
   location: "",
   locationData: null,
@@ -447,6 +450,10 @@ const UploadFormContent: React.FC = () => {
 
   const setCaptionForActivePost = (caption: string) => {
     updateActivePost((p) => ({ ...p, caption }));
+  };
+
+  const setExternalLinkForActivePost = (externalLink: string) => {
+    updateActivePost((p) => ({ ...p, externalLink }));
   };
 
   const toggleCategoryForActivePost = (catId: string) => {
@@ -950,9 +957,11 @@ const UploadFormContent: React.FC = () => {
 
           const country = p.locationData?.country?.trim() || undefined;
           const state = p.locationData?.state?.trim() || undefined;
+          const extLink = p.externalLink?.trim();
 
           return {
             caption: p.caption.trim() || undefined,
+            externalLink: extLink ? (extLink.startsWith("http://") || extLink.startsWith("https://") ? extLink : `https://${extLink}`) : undefined,
             categories: p.selectedCategories,
             media: mediaIds,
             country: country,
@@ -1706,6 +1715,41 @@ const UploadFormContent: React.FC = () => {
           >
             {currentPost.caption.length}/150
           </p>
+        </div>
+
+        {/* External Link Input for Active Post (Optional) */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2 px-1">
+            <label className="text-sm font-bold text-gray-700 flex items-center gap-1.5">
+              <LinkIcon className="w-4 h-4 text-blue-500" />
+              <span>External Link</span>
+              <span className="text-xs font-normal text-gray-400">(Optional)</span>
+              {mode === "multiple" && (
+                <span className="text-xs font-normal text-gray-500">
+                  (for Post #{activePostIndex + 1})
+                </span>
+              )}
+            </label>
+          </div>
+          <div className="relative">
+            <input
+              type="url"
+              placeholder="https://example.com"
+              value={currentPost.externalLink || ""}
+              onChange={(e) => setExternalLinkForActivePost(e.target.value)}
+              className="w-full px-4 py-3 bg-blue-50/50 border border-transparent focus:border-blue-300 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm"
+            />
+            {currentPost.externalLink && (
+              <button
+                type="button"
+                onClick={() => setExternalLinkForActivePost("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full"
+                aria-label="Clear external link"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Categories Selection for Active Post */}

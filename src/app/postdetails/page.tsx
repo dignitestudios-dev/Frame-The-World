@@ -12,6 +12,7 @@ import {
   ArrowUp,
   Layers,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import Header from "@/components/global/header";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -671,6 +672,17 @@ function PostDetailsContent() {
                   {category?.name}
                 </span>
               ))}
+              {currentPost?.externalLink && (
+                <a
+                  href={currentPost.externalLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-blue-600 border border-gray-200 transition-colors shadow-sm"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Visit Link</span>
+                </a>
+              )}
             </div>
 
             <div className="flex items-center justify-between gap-4">

@@ -124,6 +124,7 @@ export interface SinglePostItemPayload {
   caption?: string | null;
   categories: string[];
   media: string[]; // 1 to 10 file ids (ordered)
+  externalLink?: string | null;
   country?: string;
   state?: string;
   latitude?: number | string;
@@ -142,6 +143,7 @@ export interface UpdatePostPayload {
   caption?: string | null;
   categories?: string[];
   media?: string[]; // full new ordered list of 1-10 fileIds
+  externalLink?: string | null;
   country?: string;
   state?: string;
   latitude?: number | string;

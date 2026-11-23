@@ -50,8 +50,7 @@ export default function CreatePostTypeModal({
             Create New Post
           </h2>
           <p className="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto">
-            Choose whether to publish a single story with multiple media or batch
-            create multiple separate posts at once.
+            Choose whether to publish a single post with multiple media items or batch create multiple separate posts at once.
           </p>
         </div>
 
@@ -75,15 +74,14 @@ export default function CreatePostTypeModal({
                 <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
               </div>
               <p className="text-xs text-gray-500 leading-relaxed mb-2">
-                Share one travel memory with up to 10 photos or videos in a
-                single post gallery.
+                Share one travel memory with up to 10 photos or videos in a single post gallery.
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100/70 text-blue-700">
                   Up to 10 photos & videos
                 </span>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600">
-                  1 Story
+                  1 Post
                 </span>
               </div>
             </div>
@@ -107,15 +105,11 @@ export default function CreatePostTypeModal({
                 <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
               </div>
               <p className="text-xs text-gray-500 leading-relaxed mb-2">
-                Draft and publish multiple independent posts (1 to 10 posts) all
-                at once, each with its own photos, videos, and locations.
+                Draft and publish multiple independent posts (1 to 10 posts) at once, each with its own photos, videos, and locations.
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100/70 text-purple-700">
                   Up to 10 separate posts
-                </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600">
-                  Add post button
                 </span>
               </div>
             </div>

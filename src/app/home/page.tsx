@@ -410,7 +410,9 @@ export default function TravelStoryPage() {
 
   const frameItems = useMemo(() => {
     if (!framesPages?.pages) return [];
-    return framesPages.pages.flatMap((page) => page.data);
+    return framesPages.pages
+      .flatMap((page) => page.data)
+      .filter((frame: any) => (Number(frame?.totalPosts) || 0) > 0);
   }, [framesPages]);
 
   const topFrameItems = useMemo(() => {
